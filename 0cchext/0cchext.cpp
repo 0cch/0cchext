@@ -6,6 +6,7 @@ class EXT_CLASS : public ExtExtension
 {
 public:
 	EXT_COMMAND_METHOD(hwnd);
+	EXT_COMMAND_METHOD(setvprot);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -107,4 +108,48 @@ EXT_COMMAND(hwnd,
 		wnd_ptr.Field("rcClient.bottom").GetLong());
 
 	Out("\n");
+}
+
+EXT_COMMAND(setvprot,
+	"Set the protection on a region of committed pages in the virtual address space of the debuggee process.",
+	"{;ed,r;Address;Base address of the region of pages}"
+	"{;ed,r;Size;The size of the region}"
+	"{;ed,r;type;The new protection type}"
+	)
+{
+	ULONG class_type = 0, qualifier_type = 0;
+	HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+	if (FAILED(hr)) {
+		Err("Failed to get debuggee type\n");
+		return;
+	}
+
+	if (class_type != DEBUG_CLASS_USER_WINDOWS) {
+		Err("This command must be used in User-Mode\n");
+		return;
+	}
+
+	ULONG64 base_address = GetUnnamedArgU64(0);
+	ULONG64 region_size = GetUnnamedArgU64(1);
+	ULONG64 protection_type = GetUnnamedArgU64(2);
+
+	ULONG64 handle = 0;
+	hr = m_System->GetCurrentProcessHandle(&handle);
+	if (FAILED(hr)) {
+		Err("Failed to get process handle.\n");
+		return;
+	}
+
+	ULONG old_type = 0;
+	if (!VirtualProtectEx((HANDLE)handle, 
+		(PVOID)base_address, 
+		(SIZE_T)region_size, 
+		(ULONG)protection_type, 
+		&old_type)) {
+			Err("Failed to set virtual protection type.\n");
+			return;
+	}
+
+	Dml("[%p - %p] Change %08X to %08X <link cmd=\"!vprot %p\">Detail</link>\n",
+		base_address, region_size, (ULONG)old_type, (ULONG)protection_type, base_address);
 }

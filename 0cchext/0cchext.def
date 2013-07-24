@@ -5,6 +5,7 @@ EXPORTS
 ;--------------------------------------------------------------------
 	help
 	hwnd
+	setvprot
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
