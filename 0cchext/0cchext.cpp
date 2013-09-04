@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "0cchext.h"
+#include "util.h"
 #include <engextcpp.hpp>
 
 class EXT_CLASS : public ExtExtension
@@ -7,6 +8,7 @@ class EXT_CLASS : public ExtExtension
 public:
 	EXT_COMMAND_METHOD(hwnd);
 	EXT_COMMAND_METHOD(setvprot);
+	EXT_COMMAND_METHOD(dpx);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -152,4 +154,78 @@ EXT_COMMAND(setvprot,
 
 	Dml("[%p - %p] Change %08X to %08X <link cmd=\"!vprot %p\">Detail</link>\n",
 		base_address, region_size, (ULONG)old_type, (ULONG)protection_type, base_address);
+}
+
+EXT_COMMAND(dpx,
+	"Display the contents of memory in the given range.",
+	"{;ed,r;Address;Base address of the memory area to display}"
+	"{;ed,o,d=10;range;The range of the memory area}"
+	)
+{
+	ULONG64 base_address = GetUnnamedArgU64(0);
+	ULONG64 range = GetUnnamedArgU64(1);
+
+	ExtRemoteData base_data;
+	ULONG64 query_data;
+	CHAR buffer[128];
+	ULONG ret_size = 0;
+	ULONG64 displacement = 0;
+	ULONG print_flag = 0;
+
+	for (ULONG64 i = 0; i < range; i++) {
+		base_data.Set(base_address + i * sizeof(PVOID), sizeof(PVOID));
+		query_data = base_data.GetPtr();
+		ret_size = 0;
+		ZeroMemory(buffer, sizeof(buffer));
+		print_flag = 0;
+
+		if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data, 
+			buffer, 
+			sizeof(buffer), 
+			&ret_size, 
+			&displacement))) {
+				print_flag |= 1;
+		}
+		
+		if (m_Data4->ReadUnicodeStringVirtual(query_data, 
+			0x1000, 
+			CP_ACP,
+			buffer, 
+			sizeof(buffer), 
+			&ret_size) != E_INVALIDARG && 
+			strlen(buffer) != 0 &&
+			IsPrintAble(buffer, strlen(buffer))) {
+				print_flag |= 2;
+		}
+		else if (m_Data4->ReadMultiByteStringVirtual(query_data, 
+			0x1000, 
+			buffer, 
+			sizeof(buffer), 
+			&ret_size) != E_INVALIDARG && 
+			strlen(buffer) != 0 &&
+			IsPrintAble(buffer, strlen(buffer))) {
+				print_flag |= 4;
+		}
+
+		if (print_flag == 0) {
+			Dml("%p  %p\n", base_address + i * sizeof(PVOID), query_data);
+		}
+		else {
+			Dml("%p  %p", base_address + i * sizeof(PVOID), query_data);
+			if (print_flag & 1) {
+				Dml("  [S] %ly", query_data);
+			}
+
+			if (print_flag & 2) {
+				Dml("  [U] \"%mu\"", query_data);
+			}
+
+			if (print_flag & 4) {
+				Dml("  [A] \"%ma\"", query_data);
+			}
+
+			Dml("\n");
+		}
+	}
+	
 }
