@@ -160,6 +160,7 @@ EXT_COMMAND(dpx,
 	"Display the contents of memory in the given range.",
 	"{;ed,r;Address;Base address of the memory area to display}"
 	"{;ed,o,d=10;range;The range of the memory area}"
+	"{i;b,o;ignore;Ignore the address that do not have any info}"
 	)
 {
 	ULONG64 base_address = GetUnnamedArgU64(0);
@@ -171,6 +172,8 @@ EXT_COMMAND(dpx,
 	ULONG ret_size = 0;
 	ULONG64 displacement = 0;
 	ULONG print_flag = 0;
+
+	BOOL ignore_flag = HasCharArg('i');
 
 	for (ULONG64 i = 0; i < range; i++) {
 		base_data.Set(base_address + i * sizeof(PVOID), sizeof(PVOID));
@@ -208,7 +211,9 @@ EXT_COMMAND(dpx,
 		}
 
 		if (print_flag == 0) {
-			Dml("%p  %p\n", base_address + i * sizeof(PVOID), query_data);
+			if (!ignore_flag) {
+				Dml("%p  %p\n", base_address + i * sizeof(PVOID), query_data);
+			}
 		}
 		else {
 			Dml("%p  %p", base_address + i * sizeof(PVOID), query_data);
