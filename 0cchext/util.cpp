@@ -11,3 +11,94 @@ BOOL IsPrintAble(CHAR *str, ULONG len)
 
 	return TRUE;
 }
+
+PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num)
+{
+	PCHAR* argv;
+	PCHAR argv_buf;
+	ULONG len;
+	ULONG argc;
+	CHAR a;
+	ULONG i, j;
+
+	BOOLEAN in_QM;
+	BOOLEAN in_TEXT;
+	BOOLEAN in_SPACE;
+
+	len = strlen(cmd_line);
+	i = ((len + 2) / 2) * sizeof(PVOID) + sizeof(PVOID);
+
+	argv = (PCHAR*)LocalAlloc(LMEM_FIXED,
+		i + (len + 2)*sizeof(CHAR));
+
+	argv_buf = (PCHAR)(((PUCHAR)argv) + i);
+
+	argc = 0;
+	argv[argc] = argv_buf;
+	in_QM = FALSE;
+	in_TEXT = FALSE;
+	in_SPACE = TRUE;
+	i = 0;
+	j = 0;
+
+	while( a = cmd_line[i] ) {
+		if(in_QM) {
+			if(a == '\'') {
+				in_QM = FALSE;
+			} else {
+				argv_buf[j] = a;
+				j++;
+			}
+		} else {
+			switch(a) {
+			case '\'':
+				in_QM = TRUE;
+				in_TEXT = TRUE;
+				if(in_SPACE) {
+					argv[argc] = argv_buf+j;
+					argc++;
+				}
+				in_SPACE = FALSE;
+				break;
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+				if(in_TEXT) {
+					argv_buf[j] = '\0';
+					j++;
+				}
+				in_TEXT = FALSE;
+				in_SPACE = TRUE;
+				break;
+			default:
+				in_TEXT = TRUE;
+				if(in_SPACE) {
+					argv[argc] = argv_buf+j;
+					argc++;
+				}
+				argv_buf[j] = a;
+				j++;
+				in_SPACE = FALSE;
+				break;
+			}
+		}
+		i++;
+	}
+	argv_buf[j] = '\0';
+	argv[argc] = NULL;
+
+	(*arg_num) = argc;
+	return argv;
+}
+
+std::string ReadLine(PCSTR str)
+{
+	std::string buf;
+	while (*str != 0 && *str != '\n') {
+		buf += *str;
+		str++;
+	}
+
+	return buf;
+}

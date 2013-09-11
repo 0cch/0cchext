@@ -2,6 +2,8 @@
 #include "0cchext.h"
 #include "util.h"
 #include <engextcpp.hpp>
+#include <regex>
+#include <string>
 
 class EXT_CLASS : public ExtExtension
 {
@@ -9,6 +11,7 @@ public:
 	EXT_COMMAND_METHOD(hwnd);
 	EXT_COMMAND_METHOD(setvprot);
 	EXT_COMMAND_METHOD(dpx);
+	EXT_COMMAND_METHOD(grep);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -232,5 +235,81 @@ EXT_COMMAND(dpx,
 			Dml("\n");
 		}
 	}
+	
+}
+
+EXT_COMMAND(grep,
+	"Search plain-text data sets for lines matching a regular expression.",
+	"{{custom}}{{s: [/i] <Command> <Regexp>}}{{l:<Command> - Windbg command to execute.\n"
+	"<Regexp> - Regular expression to search.\n/i - Make matches case-insensitive}}"
+	)
+{
+	int argc = 0;
+	LPCSTR cmd = GetRawArgStr();
+	PCHAR* argv = WdbgCommandLineToArgv((PCHAR)cmd, &argc);
+	if (argv == NULL) {
+		Err("Failed to parse command line(0).\n");
+		return;
+	}
+
+	if (argc < 2 || argc > 3) {
+		Err("Failed to parse command line(1)\n");
+		LocalFree(argv);
+		return;
+	}
+
+	BOOL case_insensitive = FALSE;
+	LPCSTR cmd_text = NULL;
+	LPCSTR pattern_text = NULL;
+	for (int i = 0; i < argc; i++) {
+		if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "/i") == 0) {
+			case_insensitive = TRUE;
+		}
+		else {
+			if (cmd_text == NULL) {
+				cmd_text = argv[i];
+			}
+			else if (pattern_text == NULL) {
+				pattern_text = argv[i];
+			}
+			else {
+				Err("Failed to parse command line(2)\n");
+				LocalFree(argv);
+				return;
+			}
+		}
+	}
+
+	if (cmd_text == NULL || pattern_text == NULL) {
+		Err("Failed to parse command line(3)\n");
+		LocalFree(argv);
+		return;
+	}
+
+	ExtCaptureOutputA capture_exec;
+	capture_exec.Execute(cmd_text);
+	LPCSTR out_text = capture_exec.GetTextNonNull();
+	BOOL except_error = FALSE;
+
+	try
+	{
+		std::tr1::regex pattern(pattern_text, 
+			case_insensitive ? std::tr1::regex::icase | std::tr1::regex::ECMAScript : std::tr1::regex::ECMAScript);
+		const std::tr1::cregex_token_iterator end;
+		for (std::tr1::cregex_token_iterator it(out_text, out_text + strlen(out_text), pattern); it != end; ++it) {
+			std::string str = ReadLine(it->first);
+			Dml("%Y{t}\n", str.c_str());
+		}
+	}
+	catch (...)
+	{
+		except_error = TRUE;
+	}
+	
+	if (except_error) {
+		Err("Failed to parse regex.\n");
+	}
+	
+	LocalFree(argv);
 	
 }
