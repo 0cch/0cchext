@@ -6,5 +6,5 @@
 
 BOOL IsPrintAble(CHAR *str, ULONG len);
 PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num);
-std::string ReadLine(PCSTR str);
+std::string ReadLines(PCSTR str, int lines);
 #endif

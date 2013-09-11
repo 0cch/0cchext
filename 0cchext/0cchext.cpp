@@ -240,8 +240,10 @@ EXT_COMMAND(dpx,
 
 EXT_COMMAND(grep,
 	"Search plain-text data sets for lines matching a regular expression.",
-	"{{custom}}{{s: [/i] <Command> <Regexp>}}{{l:<Command> - Windbg command to execute.\n"
-	"<Regexp> - Regular expression to search.\n/i - Make matches case-insensitive}}"
+	"{{custom}}{{s: [/i] <Command> <Regexp> [<Lines>]}}{{l:<Command> - Windbg command to execute.\n"
+	"<Regexp> - Regular expression to search.\n"
+	"<Lines> - The number of lines to print.\n"
+	"/i - Make matches case-insensitive}}"
 	)
 {
 	int argc = 0;
@@ -252,12 +254,13 @@ EXT_COMMAND(grep,
 		return;
 	}
 
-	if (argc < 2 || argc > 3) {
+	if (argc < 2 || argc > 4) {
 		Err("Failed to parse command line(1)\n");
 		LocalFree(argv);
 		return;
 	}
 
+	int print_lines = -1;
 	BOOL case_insensitive = FALSE;
 	LPCSTR cmd_text = NULL;
 	LPCSTR pattern_text = NULL;
@@ -271,6 +274,15 @@ EXT_COMMAND(grep,
 			}
 			else if (pattern_text == NULL) {
 				pattern_text = argv[i];
+			}
+			else if (print_lines == -1) {
+				CHAR *end_pos = argv[i];
+				print_lines = strtol(argv[i], &end_pos, 10);
+				if (*end_pos != 0) {
+					Err("Failed to parse print lines\n");
+					LocalFree(argv);
+					return;
+				}
 			}
 			else {
 				Err("Failed to parse command line(2)\n");
@@ -286,23 +298,25 @@ EXT_COMMAND(grep,
 		return;
 	}
 
+	if (print_lines < 1 || print_lines > 255) {
+		print_lines = 1;
+	}
+
 	ExtCaptureOutputA capture_exec;
 	capture_exec.Execute(cmd_text);
 	LPCSTR out_text = capture_exec.GetTextNonNull();
 	BOOL except_error = FALSE;
 
-	try
-	{
+	try {
 		std::tr1::regex pattern(pattern_text, 
 			case_insensitive ? std::tr1::regex::icase | std::tr1::regex::ECMAScript : std::tr1::regex::ECMAScript);
 		const std::tr1::cregex_token_iterator end;
 		for (std::tr1::cregex_token_iterator it(out_text, out_text + strlen(out_text), pattern); it != end; ++it) {
-			std::string str = ReadLine(it->first);
+			std::string str = ReadLines(it->first, print_lines);
 			Dml("%Y{t}\n", str.c_str());
 		}
 	}
-	catch (...)
-	{
+	catch (...) {
 		except_error = TRUE;
 	}
 	
