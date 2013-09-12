@@ -8,6 +8,8 @@ EXPORTS
 	setvprot
 	dpx
 	grep
+	version
+	url
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

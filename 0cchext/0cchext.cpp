@@ -4,6 +4,9 @@
 #include <engextcpp.hpp>
 #include <regex>
 #include <string>
+#include <Shellapi.h>
+
+#pragma comment(lib, "shell32.lib")
 
 class EXT_CLASS : public ExtExtension
 {
@@ -12,6 +15,8 @@ public:
 	EXT_COMMAND_METHOD(setvprot);
 	EXT_COMMAND_METHOD(dpx);
 	EXT_COMMAND_METHOD(grep);
+	EXT_COMMAND_METHOD(version);
+	EXT_COMMAND_METHOD(url);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -326,4 +331,23 @@ EXT_COMMAND(grep,
 	
 	LocalFree(argv);
 	
+}
+
+EXT_COMMAND(version,
+	"Displays the version information for 0cchext.dll",
+	NULL)
+{
+	Dml("0CCh extension for Windbg\n"
+		"Version: 1.0.0.1\n"
+		"Author:  nightxie\n"
+		"For more information about 0CChExt,\n"
+		"see the 0CCh website at <link cmd=\"!0cchext.url http://0cch.net\">http://0cch.net</link>.\n"
+		"You can also enter the <link cmd=\"!0cchext.help\">!0cchext.help</link> to get help\n");
+}
+
+EXT_COMMAND(url,
+	"Open a URL in a default browser.",
+	"{;x,r;url;The url of a website.}")
+{
+	ShellExecuteA(NULL, "open", GetUnnamedArgStr(0), NULL, NULL, SW_SHOWNORMAL);
 }
