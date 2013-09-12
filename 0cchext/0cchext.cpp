@@ -7,6 +7,7 @@
 #include <Shellapi.h>
 
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "Version.lib")
 
 class EXT_CLASS : public ExtExtension
 {
@@ -370,12 +371,34 @@ EXT_COMMAND(version,
 	"Displays the version information for 0cchext.dll",
 	NULL)
 {
-	Dml("0CCh extension for Windbg\n"
-		"Version: 1.0.0.1\n"
-		"Author:  nightxie\n"
-		"For more information about 0CChExt,\n"
-		"see the 0CCh website at <link cmd=\"!0cchext.url http://0cch.net\">http://0cch.net</link>.\n"
-		"You can also enter the <link cmd=\"!0cchext.help\">!0cchext.help</link> to get help\n");
+	CHAR filename[MAX_PATH];
+	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
+
+	ULONG handle = 0;
+	ULONG size = GetFileVersionInfoSizeA(filename, &handle);
+	PVOID info = malloc(size);
+	if (!GetFileVersionInfoA(filename, handle, size, info)) {
+		free(info);
+		return;
+	}
+	
+	UINT len = 0;
+	VS_FIXEDFILEINFO* vsfi = NULL;
+	if (VerQueryValueA(info, "\\", (PVOID *)&vsfi, &len)) {
+		Dml("0CCh Extension for Windbg\n"
+			"Version: %u.%u.%u.%u\n"
+			"Author:  nightxie\n"
+			"For more information about 0CChExt,\n"
+			"see the 0CCh website at <link cmd=\"!0cchext.url http://0cch.net\">http://0cch.net</link>.\n"
+			"You can also enter the <link cmd=\"!0cchext.help\">!0cchext.help</link> to get help\n", 
+			HIWORD(vsfi->dwFileVersionMS), LOWORD(vsfi->dwFileVersionMS),
+			HIWORD(vsfi->dwFileVersionLS), LOWORD(vsfi->dwFileVersionLS));
+	}
+	else {
+		Dml("Failed to get version information.");
+	}
+	
+	free(info);
 }
 
 EXT_COMMAND(url,
