@@ -248,7 +248,9 @@ EXT_COMMAND(grep,
 	"{{custom}}{{s: [/i] <Command> <Regexp> [<Lines>]}}{{l:<Command> - Windbg command to execute.\n"
 	"<Regexp> - Regular expression to search.\n"
 	"<Lines> - The number of lines to print.\n"
-	"/i - Make matches case-insensitive}}"
+	"/a - Set aliases, like @#Grep_<result_index>_<group_index>\n"
+	"/i - Make matches case-insensitive.\n"
+	"/o - Omit output information.}}"
 	)
 {
 	int argc = 0;
@@ -259,7 +261,7 @@ EXT_COMMAND(grep,
 		return;
 	}
 
-	if (argc < 2 || argc > 4) {
+	if (argc < 2 || argc > 6) {
 		Err("Failed to parse command line(1)\n");
 		LocalFree(argv);
 		return;
@@ -267,11 +269,19 @@ EXT_COMMAND(grep,
 
 	int print_lines = -1;
 	BOOL case_insensitive = FALSE;
+	BOOL omit_output = FALSE;
+	BOOL set_alias = FALSE;
 	LPCSTR cmd_text = NULL;
 	LPCSTR pattern_text = NULL;
 	for (int i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "/i") == 0) {
 			case_insensitive = TRUE;
+		}
+		else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "/o") == 0) {
+			omit_output = TRUE;
+		}
+		else if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "/a") == 0) {
+			set_alias = TRUE;
 		}
 		else {
 			if (cmd_text == NULL) {
@@ -311,15 +321,38 @@ EXT_COMMAND(grep,
 	capture_exec.Execute(cmd_text);
 	LPCSTR out_text = capture_exec.GetTextNonNull();
 	BOOL except_error = FALSE;
-
+	std::tr1::cmatch result;
+	LPCSTR cur_text = out_text;
 	try {
 		std::tr1::regex pattern(pattern_text, 
 			case_insensitive ? std::tr1::regex::icase | std::tr1::regex::ECMAScript : std::tr1::regex::ECMAScript);
-		const std::tr1::cregex_token_iterator end;
-		for (std::tr1::cregex_token_iterator it(out_text, out_text + strlen(out_text), pattern); it != end; ++it) {
-			std::string str = ReadLines(it->first, print_lines);
-			Dml("%Y{t}\n", str.c_str());
+
+		ULONG count = 0;
+		CHAR alias[64];
+		while (std::tr1::regex_search(cur_text, result, pattern)) {
+			count++;
+
+			if (!omit_output) {
+				std::string str = ReadLines(cur_text + result.position(0), print_lines);
+				Dml("%Y{t}\n", str.c_str());
+			}
+
+			cur_text += result.position(0) + result.length();
+
+			if (set_alias) {
+				for (size_t i = 1; i < result.size(); i++) {
+					sprintf_s(alias, 64, "@#Grep_%u_%u", count - 1, i - 1);
+					m_Control2->SetTextReplacement(alias, result[i].str().c_str());
+				}
+			}
+			
 		}
+
+		if (set_alias) {
+			sprintf_s(alias, 64, "%u", count);
+			m_Control2->SetTextReplacement("@#GrepCount", alias);
+		}
+		
 	}
 	catch (...) {
 		except_error = TRUE;
