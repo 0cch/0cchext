@@ -26,7 +26,7 @@ PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num)
 	BOOLEAN in_TEXT;
 	BOOLEAN in_SPACE;
 
-	len = strlen(cmd_line);
+	len = (ULONG)strlen(cmd_line);
 	i = ((len + 2) / 2) * sizeof(PVOID) + sizeof(PVOID);
 
 	argv = (PCHAR*)LocalAlloc(LMEM_FIXED,

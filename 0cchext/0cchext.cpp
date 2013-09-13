@@ -209,7 +209,7 @@ EXT_COMMAND(dpx,
 			sizeof(buffer), 
 			&ret_size) != E_INVALIDARG && 
 			strlen(buffer) != 0 &&
-			IsPrintAble(buffer, strlen(buffer))) {
+			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
 				print_flag |= 2;
 		}
 		else if (m_Data4->ReadMultiByteStringVirtual(query_data, 
@@ -218,7 +218,7 @@ EXT_COMMAND(dpx,
 			sizeof(buffer), 
 			&ret_size) != E_INVALIDARG && 
 			strlen(buffer) != 0 &&
-			IsPrintAble(buffer, strlen(buffer))) {
+			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
 				print_flag |= 4;
 		}
 
