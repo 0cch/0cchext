@@ -10,6 +10,7 @@ EXPORTS
 	grep
 	version
 	url
+	favcmd
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

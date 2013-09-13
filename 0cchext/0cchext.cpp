@@ -4,10 +4,12 @@
 #include <engextcpp.hpp>
 #include <regex>
 #include <string>
+#include <Shlwapi.h>
 #include <Shellapi.h>
 
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Version.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 class EXT_CLASS : public ExtExtension
 {
@@ -18,6 +20,7 @@ public:
 	EXT_COMMAND_METHOD(grep);
 	EXT_COMMAND_METHOD(version);
 	EXT_COMMAND_METHOD(url);
+	EXT_COMMAND_METHOD(favcmd);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -395,7 +398,7 @@ EXT_COMMAND(version,
 			HIWORD(vsfi->dwFileVersionLS), LOWORD(vsfi->dwFileVersionLS));
 	}
 	else {
-		Dml("Failed to get version information.");
+		Err("Failed to get version information.");
 	}
 	
 	free(info);
@@ -406,4 +409,36 @@ EXT_COMMAND(url,
 	"{;x,r;url;The url of a website.}")
 {
 	ShellExecuteA(NULL, "open", GetUnnamedArgStr(0), NULL, NULL, SW_SHOWNORMAL);
+}
+
+EXT_COMMAND(favcmd,
+	"Display the favorite debugger commands.(The config file is favcmd.ini)",
+	"{;ed,o,d=8;Number;The number of the commands to display.}")
+{
+	size_t display_count = (size_t)GetUnnamedArgU64(0);
+	
+	CHAR filename[MAX_PATH];
+	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
+	PathRemoveFileSpecA(filename);
+	PathAppendA(filename, "favcmd.ini");
+
+	if (!PathFileExistsA(filename)) {
+		Err("Failed to open favcmd.ini.");
+	}
+
+	std::string file_data;
+	if (!GetTxtFileDataA(filename, file_data)) {
+		Err("Failed to read favcmd.ini.");
+	}
+
+	std::vector<std::string> str_vec;
+	ReadLines(file_data.c_str(), str_vec);
+
+	display_count = display_count < str_vec.size() ? display_count : str_vec.size();
+
+	for (size_t i = 0; i < display_count; i++) {
+		Dml("%u <link cmd=\"%s\">%s</link>\n", i, str_vec[i].c_str(), str_vec[i].c_str());
+	}
+
+	Dml("Display: %u    Total: %u", display_count, str_vec.size());
 }

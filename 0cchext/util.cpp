@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "util.h"
+#include <fstream>
 
 BOOL IsPrintAble(CHAR *str, ULONG len)
 {
@@ -110,4 +111,39 @@ std::string ReadLines(PCSTR str, int lines)
 	}
 
 	return buf;
+}
+
+void ReadLines(PCSTR str, std::vector<std::string> &str_vec)
+{
+	std::string buf;
+	while (*str != 0) {
+		if (*str == '\n') {
+			str_vec.push_back(buf);
+			buf.clear();
+		}
+		else if (*str == '\r') {
+			
+		}
+		else {
+			buf += *str;
+		}
+		str++;
+	}
+
+	if (!buf.empty()) {
+		str_vec.push_back(buf);
+		buf.clear();
+	}
+}
+
+BOOL GetTxtFileDataA(LPCSTR file, std::string &data)
+{
+	std::ifstream ifs(file);
+	if (!ifs.is_open()) {
+		return FALSE;
+	}
+
+	std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+	data = str;
+	return TRUE;
 }
