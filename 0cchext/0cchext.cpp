@@ -224,7 +224,12 @@ EXT_COMMAND(dpx,
 
 		if (print_flag == 0) {
 			if (!ignore_flag) {
-				Dml("%p  %p\n", base_address + i * sizeof(PVOID), query_data);
+				Dml("%p  %p  [D] ", base_address + i * sizeof(PVOID), query_data);
+				for (int j = 0; j < sizeof(PVOID); j++) {
+					Dml("%c", ((CHAR *)&query_data)[j]);
+				}
+
+				Dml("\n");
 			}
 		}
 		else {
@@ -337,8 +342,8 @@ EXT_COMMAND(grep,
 			count++;
 
 			if (!omit_output) {
-				std::string str = ReadLines(cur_text + result.position(0), print_lines);
-				Dml("%Y{t}\n", str.c_str());
+				std::string str = ReadLines(out_text, cur_text + result.position(0), print_lines);
+				Dml("%s\n", str.c_str());
 			}
 
 			cur_text += result.position(0) + result.length();

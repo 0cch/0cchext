@@ -93,10 +93,15 @@ PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num)
 	return argv;
 }
 
-std::string ReadLines(PCSTR str, int lines)
+std::string ReadLines(PCSTR start_pos, PCSTR str, int lines)
 {
 	std::string buf;
 	int cur_lines = 0;
+	while (*str != '\n' && str >= start_pos) {
+		str--;
+	}
+	str++;
+
 	while (*str != 0) {
 		if (*str == '\n') {
 			cur_lines++;
