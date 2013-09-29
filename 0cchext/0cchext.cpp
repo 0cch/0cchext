@@ -500,6 +500,11 @@ EXT_COMMAND(dtx,
 		LEX_TOKEN_TYPE member_type = TK_NULL;
 		int count = 0;
 		if (struct_array[i].Get(j, member_name, member_type, count)) {
+			if (count > 1) {
+				char array_str[16];
+				sprintf_s(array_str, 16, "[%u]", count);
+				member_name += array_str;
+			}
 			Dml("  +%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), member_name.c_str(), GetTypeString(member_type));
 			for (int k = 0; k < count; k++) {
 				switch (member_type) {
