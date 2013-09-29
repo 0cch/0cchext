@@ -11,6 +11,7 @@ EXPORTS
 	version
 	url
 	favcmd
+	dtx
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

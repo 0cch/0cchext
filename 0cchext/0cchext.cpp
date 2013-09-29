@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "0cchext.h"
 #include "util.h"
+#include "struct_script.h"
 #include <engextcpp.hpp>
 #include <regex>
 #include <string>
@@ -21,6 +22,7 @@ public:
 	EXT_COMMAND_METHOD(version);
 	EXT_COMMAND_METHOD(url);
 	EXT_COMMAND_METHOD(favcmd);
+	EXT_COMMAND_METHOD(dtx);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -429,11 +431,13 @@ EXT_COMMAND(favcmd,
 
 	if (!PathFileExistsA(filename)) {
 		Err("Failed to open favcmd.ini.");
+		return;
 	}
 
 	std::string file_data;
 	if (!GetTxtFileDataA(filename, file_data)) {
 		Err("Failed to read favcmd.ini.");
+		return;
 	}
 
 	std::vector<std::string> str_vec;
@@ -446,4 +450,96 @@ EXT_COMMAND(favcmd,
 	}
 
 	Dml("Display: %u    Total: %u", display_count, str_vec.size());
+}
+
+EXT_COMMAND(dtx,
+	"Displays information about structures. (The config file is struct.ini)",
+	"{;s,r;Name;Specifies the name of a structure.}"
+	"{;ed,r;Address;Specifies the address of the structure to be displayed.}")
+{
+	CHAR filename[MAX_PATH];
+	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
+	PathRemoveFileSpecA(filename);
+	PathAppendA(filename, "struct.ini");
+
+	if (!PathFileExistsA(filename)) {
+		Err("Failed to open struct.ini.");
+		return;
+	}
+
+	std::string file_data;
+	if (!GetTxtFileDataA(filename, file_data)) {
+		Err("Failed to read struct.ini.");
+		return;
+	}
+
+	std::vector<StructInfo> struct_array;
+	if (!ParseStructScript(file_data.c_str(), struct_array)) {
+		Err("Failed to Parse struct.ini. @(%s)", GetErrorPosString());
+		return;
+	}
+
+	std::string struct_name(GetUnnamedArgStr(0));
+	ULONG64 address = GetUnnamedArgU64(1);
+	size_t i;
+	for (i = 0; i < struct_array.size(); i++) {
+		if (_stricmp(struct_array[i].GetName().c_str(), struct_name.c_str()) == 0) {
+			break;
+		}
+	}
+
+	if (i == struct_array.size()) {
+		Err("Failed to find structure in struct.ini. @(%s)", struct_name.c_str());
+		return;
+	}
+
+	ULONG64 tmp_addr = address;
+	Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	for (int j = 0; j < struct_array[i].GetCount(); j++) {
+		std::string member_name;
+		LEX_TOKEN_TYPE member_type = TK_NULL;
+		int count = 0;
+		if (struct_array[i].Get(j, member_name, member_type, count)) {
+			Dml("  +%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), member_name.c_str(), GetTypeString(member_type));
+			for (int k = 0; k < count; k++) {
+				switch (member_type) {
+				case TK_TYPE_BYTE:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 1);
+						tmp_addr++;
+						Dml("0x%02X ", remote_data.GetUchar());
+					}
+					break;
+				case TK_TYPE_WORD:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 2);
+						tmp_addr += 2;
+						Dml("0x%04X ", remote_data.GetUshort());
+					}
+					break;
+				case TK_TYPE_DWORD:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 4);
+						tmp_addr += 4;
+						Dml("0x%08X ", remote_data.GetUlong());
+					}
+					break;
+				case TK_TYPE_QWORD:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 8);
+						tmp_addr += 8;
+						Dml("0x%016I64X ", remote_data.GetUlong64());
+					}
+					break;
+				default:
+					__debugbreak();
+				}
+			}
+			Dml("\n");
+		}
+	}
 }
