@@ -540,6 +540,22 @@ EXT_COMMAND(dtx,
 						Dml("0x%016I64X ", remote_data.GetUlong64());
 					}
 					break;
+				case TK_TYPE_CHAR:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 1);
+						tmp_addr += 1;
+						Dml("%c", remote_data.GetChar());
+					}
+					break;
+				case TK_TYPE_WCHAR:
+					{
+						ExtRemoteData remote_data;
+						remote_data.Set(tmp_addr, 2);
+						tmp_addr += 2;
+						Dml("%C", remote_data.GetShort());
+					}
+					break;
 				default:
 					__debugbreak();
 				}

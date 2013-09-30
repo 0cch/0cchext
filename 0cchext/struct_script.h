@@ -26,7 +26,8 @@ typedef enum {
 	TK_TYPE_WORD,
 	TK_TYPE_DWORD,
 	TK_TYPE_QWORD,
-
+	TK_TYPE_CHAR,
+	TK_TYPE_WCHAR,
 } LEX_TOKEN_TYPE;
 
 class StructInfo {

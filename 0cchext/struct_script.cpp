@@ -120,6 +120,12 @@ char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err)
 		else if (_stricmp(token.c_str(), "QWORD") == 0) {
 			type = TK_TYPE_QWORD;
 		}
+		else if (_stricmp(token.c_str(), "CHAR") == 0) {
+			type = TK_TYPE_CHAR;
+		}
+		else if (_stricmp(token.c_str(), "WCHAR") == 0) {
+			type = TK_TYPE_WCHAR;
+		}
 	}
 
 	return str;
@@ -169,7 +175,9 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 			else if (type != TK_TYPE_BYTE && 
 				type != TK_TYPE_WORD && 
 				type != TK_TYPE_DWORD &&
-				type != TK_TYPE_QWORD) {
+				type != TK_TYPE_QWORD && 
+				type != TK_TYPE_CHAR &&
+				type != TK_TYPE_WCHAR) {
 					err = -2;
 					break;
 			}
@@ -259,6 +267,10 @@ const char * GetTypeString(LEX_TOKEN_TYPE type)
 		return "DWORD";
 	case TK_TYPE_QWORD:
 		return "QWORD";
+	case TK_TYPE_CHAR:
+		return "CHAR";
+	case TK_TYPE_WCHAR:
+		return "WCHAR";
 	default:
 		__debugbreak();
 	}
