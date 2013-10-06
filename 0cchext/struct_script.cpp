@@ -1,7 +1,19 @@
 #include "stdafx.h"
 #include "struct_script.h"
 
-char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err)
+BOOL IsUDT(const char * name, std::vector<StructInfo> &struct_array)
+{
+	BOOL retval = FALSE;
+	for (size_t i = 0; i < struct_array.size(); i++) {
+		if (strcmp(name, struct_array[i].GetName().c_str()) == 0) {
+			retval = TRUE;
+			break;
+		}
+	}
+	return retval;
+}
+
+char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err, std::vector<StructInfo> &struct_array)
 {
 	LEX_STATES state = LEX_START;
 	CHAR c;
@@ -29,6 +41,11 @@ char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err)
 				token = c;
 				state = LEX_DONE;
 				type = TK_ST_BEGIN;
+			}
+			else if (c == '*') {
+				token = c;
+				state = LEX_DONE;
+				type = TK_AST;
 			}
 			else if (c == ';') {
 				token = c;
@@ -108,23 +125,26 @@ char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err)
 	}
 
 	if (type == TK_ID) {
-		if (_stricmp(token.c_str(), "BYTE") == 0) {
+		if (strcmp(token.c_str(), "BYTE") == 0) {
 			type = TK_TYPE_BYTE;
 		}
-		else if (_stricmp(token.c_str(), "WORD") == 0) {
+		else if (strcmp(token.c_str(), "WORD") == 0) {
 			type = TK_TYPE_WORD;
 		}
-		else if (_stricmp(token.c_str(), "DWORD") == 0) {
+		else if (strcmp(token.c_str(), "DWORD") == 0) {
 			type = TK_TYPE_DWORD;
 		}
-		else if (_stricmp(token.c_str(), "QWORD") == 0) {
+		else if (strcmp(token.c_str(), "QWORD") == 0) {
 			type = TK_TYPE_QWORD;
 		}
-		else if (_stricmp(token.c_str(), "CHAR") == 0) {
+		else if (strcmp(token.c_str(), "CHAR") == 0) {
 			type = TK_TYPE_CHAR;
 		}
-		else if (_stricmp(token.c_str(), "WCHAR") == 0) {
+		else if (strcmp(token.c_str(), "WCHAR") == 0) {
 			type = TK_TYPE_WCHAR;
+		}
+		else if (IsUDT(token.c_str(), struct_array)) {
+			type = TK_TYPE_UDT;
 		}
 	}
 
@@ -142,7 +162,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 
 	for (;;) {
 		StructInfo info;
-		pos = GetToken(pos, token, type, err);
+		pos = GetToken(pos, token, type, err, struct_array);
 		if (err != 0) {
 			break;
 		}
@@ -153,7 +173,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 
 		info.SetName(token.c_str());
 
-		pos = GetToken(pos, token, type, err);
+		pos = GetToken(pos, token, type, err, struct_array);
 		if (err != 0) {
 			break;
 		}
@@ -164,7 +184,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 
 		for (;;) {
 
-			pos = GetToken(pos, token, type, err);
+			pos = GetToken(pos, token, type, err, struct_array);
 			if (err != 0) {
 				break;
 			}
@@ -177,17 +197,30 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 				type != TK_TYPE_DWORD &&
 				type != TK_TYPE_QWORD && 
 				type != TK_TYPE_CHAR &&
-				type != TK_TYPE_WCHAR) {
+				type != TK_TYPE_WCHAR &&
+				type != TK_TYPE_UDT) {
 					err = -2;
 					break;
 			}
 
 			LEX_TOKEN_TYPE member_type = type;
-
-			pos = GetToken(pos, token, type, err);
+			std::string member_udt_name(token);
+			
+			pos = GetToken(pos, token, type, err, struct_array);
 			if (err != 0) {
 				break;
 			}
+
+			BOOL isptr = FALSE;
+			if (type == TK_AST) {
+
+				isptr = TRUE;
+				pos = GetToken(pos, token, type, err, struct_array);
+				if (err != 0) {
+					break;
+				}
+			}
+
 			if (type != TK_ID) {
 				err = -2;
 				break;
@@ -197,7 +230,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 
 			int count = 1;
 
-			pos = GetToken(pos, token, type, err);
+			pos = GetToken(pos, token, type, err, struct_array);
 			if (err != 0) {
 				break;
 			}
@@ -208,7 +241,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 					break;
 				}
 
-				pos = GetToken(pos, token, type, err);
+				pos = GetToken(pos, token, type, err, struct_array);
 				if (err != 0) {
 					break;
 				}
@@ -222,14 +255,14 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 				break;
 			}
 
-			info.Add(member_name.c_str(), member_type, count);
+			info.Add(member_name.c_str(), member_type, isptr, member_udt_name.c_str(), count);
 		}
 
 		if (err != 0) {
 			break;
 		}
 
-		pos = GetToken(pos, token, type, err);
+		pos = GetToken(pos, token, type, err, struct_array);
 		if (err != 0) {
 			break;
 		}
@@ -254,24 +287,4 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 const char * GetErrorPosString()
 {
 	return s_err_info;
-}
-
-const char * GetTypeString(LEX_TOKEN_TYPE type)
-{
-	switch (type) {
-	case TK_TYPE_BYTE:
-		return "BYTE";
-	case TK_TYPE_WORD:
-		return "WORD";
-	case TK_TYPE_DWORD:
-		return "DWORD";
-	case TK_TYPE_QWORD:
-		return "QWORD";
-	case TK_TYPE_CHAR:
-		return "CHAR";
-	case TK_TYPE_WCHAR:
-		return "WCHAR";
-	default:
-		__debugbreak();
-	}
 }

@@ -23,6 +23,9 @@ public:
 	EXT_COMMAND_METHOD(url);
 	EXT_COMMAND_METHOD(favcmd);
 	EXT_COMMAND_METHOD(dtx);
+
+private:
+	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
 };
 
 EXT_DECLARE_GLOBALS();
@@ -452,10 +455,180 @@ EXT_COMMAND(favcmd,
 	Dml("Display: %u    Total: %u", display_count, str_vec.size());
 }
 
+
+void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level )
+{
+	std::string struct_name(name);
+	ULONG64 address = addr;
+	size_t i;
+	for (i = 0; i < struct_array.size(); i++) {
+		if (_stricmp(struct_array[i].GetName().c_str(), struct_name.c_str()) == 0) {
+			break;
+		}
+	}
+
+	if (i == struct_array.size()) {
+		Err("Failed to find structure in struct.ini. @(%s)", struct_name.c_str());
+		return;
+	}
+
+	ULONG64 tmp_addr = address;
+	for (int indent = 0; indent < level; indent++) {
+		Dml("  ");
+	}
+	Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	for (int j = 0; j < struct_array[i].GetCount(); j++) {
+		std::string member_name;
+		std::string member_type_name;
+		LEX_TOKEN_TYPE member_type = TK_NULL;
+		BOOL isptr = FALSE;
+		int count = 0;
+		if (struct_array[i].Get(j, member_name, member_type, isptr, member_type_name, count)) {
+			if (count > 1) {
+				char array_str[16];
+				sprintf_s(array_str, 16, "[%u]", count);
+				member_name += array_str;
+			}
+			for (int indent = 0; indent < level + 1; indent++) {
+				Dml("  ");
+			}
+			Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
+				member_name.c_str(), 
+				isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
+			for (int k = 0; k < count; k++) {
+				switch (member_type) {
+				case TK_TYPE_BYTE:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p ", remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 1);
+							tmp_addr++;
+							Dml("0x%02X ", remote_data.GetUchar());
+						}
+						
+					}
+					break;
+				case TK_TYPE_WORD:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p ", remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 2);
+							tmp_addr += 2;
+							Dml("0x%04X ", remote_data.GetUshort());
+						}
+						
+					}
+					break;
+				case TK_TYPE_DWORD:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p ", remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 4);
+							tmp_addr += 4;
+							Dml("0x%08X ", remote_data.GetUlong());
+						}
+						
+					}
+					break;
+				case TK_TYPE_QWORD:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p ", remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 8);
+							tmp_addr += 8;
+							Dml("0x%016I64X ", remote_data.GetUlong64());
+						}
+						
+					}
+					break;
+				case TK_TYPE_CHAR:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p %ma", remote_data.GetPtr(), remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 1);
+							tmp_addr += 1;
+							Dml("%c", remote_data.GetChar());
+						}
+						
+					}
+					break;
+				case TK_TYPE_WCHAR:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p %mu", remote_data.GetPtr(), remote_data.GetPtr());
+						}
+						else {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, 2);
+							tmp_addr += 2;
+							Dml("%C", remote_data.GetShort());
+						}
+						
+					}
+					break;
+				case TK_TYPE_UDT:
+					{
+						if (isptr) {
+							ExtRemoteData remote_data;
+							remote_data.Set(tmp_addr, sizeof(PVOID));
+							tmp_addr += sizeof(PVOID);
+							Dml("0x%p ", remote_data.GetPtr());
+						}
+						else {
+							Dml("\n");
+							PrintStruct(struct_array, member_type_name.c_str(), tmp_addr, level + 1);
+						}
+					}
+					break;
+				default:
+					__debugbreak();
+				}
+			}
+			Dml("\n");
+		}
+	}
+
+	addr = tmp_addr;
+}
+
+
 EXT_COMMAND(dtx,
 	"Displays information about structures. (The config file is struct.ini)",
 	"{;s,r;Name;Specifies the name of a structure.}"
-	"{;ed,r;Address;Specifies the address of the structure to be displayed.}")
+	"{;e,r;Address;Specifies the address of the structure to be displayed.}")
 {
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
@@ -479,88 +652,6 @@ EXT_COMMAND(dtx,
 		return;
 	}
 
-	std::string struct_name(GetUnnamedArgStr(0));
-	ULONG64 address = GetUnnamedArgU64(1);
-	size_t i;
-	for (i = 0; i < struct_array.size(); i++) {
-		if (_stricmp(struct_array[i].GetName().c_str(), struct_name.c_str()) == 0) {
-			break;
-		}
-	}
-
-	if (i == struct_array.size()) {
-		Err("Failed to find structure in struct.ini. @(%s)", struct_name.c_str());
-		return;
-	}
-
-	ULONG64 tmp_addr = address;
-	Dml("STRUCT %s %p\n", struct_name.c_str(), address);
-	for (int j = 0; j < struct_array[i].GetCount(); j++) {
-		std::string member_name;
-		LEX_TOKEN_TYPE member_type = TK_NULL;
-		int count = 0;
-		if (struct_array[i].Get(j, member_name, member_type, count)) {
-			if (count > 1) {
-				char array_str[16];
-				sprintf_s(array_str, 16, "[%u]", count);
-				member_name += array_str;
-			}
-			Dml("  +%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), member_name.c_str(), GetTypeString(member_type));
-			for (int k = 0; k < count; k++) {
-				switch (member_type) {
-				case TK_TYPE_BYTE:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 1);
-						tmp_addr++;
-						Dml("0x%02X ", remote_data.GetUchar());
-					}
-					break;
-				case TK_TYPE_WORD:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 2);
-						tmp_addr += 2;
-						Dml("0x%04X ", remote_data.GetUshort());
-					}
-					break;
-				case TK_TYPE_DWORD:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 4);
-						tmp_addr += 4;
-						Dml("0x%08X ", remote_data.GetUlong());
-					}
-					break;
-				case TK_TYPE_QWORD:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 8);
-						tmp_addr += 8;
-						Dml("0x%016I64X ", remote_data.GetUlong64());
-					}
-					break;
-				case TK_TYPE_CHAR:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 1);
-						tmp_addr += 1;
-						Dml("%c", remote_data.GetChar());
-					}
-					break;
-				case TK_TYPE_WCHAR:
-					{
-						ExtRemoteData remote_data;
-						remote_data.Set(tmp_addr, 2);
-						tmp_addr += 2;
-						Dml("%C", remote_data.GetShort());
-					}
-					break;
-				default:
-					__debugbreak();
-				}
-			}
-			Dml("\n");
-		}
-	}
+	ULONG64 addr = GetUnnamedArgU64(1);
+	PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
 }
