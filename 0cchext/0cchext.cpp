@@ -628,8 +628,9 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 
 EXT_COMMAND(dtx,
 	"Displays information about structures. (The config file is struct.ini)",
-	"{;s,r;Name;Specifies the name of a structure.}"
-	"{;e,r;Address;Specifies the address of the structure to be displayed.}")
+	"{;s,o;Name;Specifies the name of a structure.}"
+	"{;e,o;Address;Specifies the address of the structure to be displayed.}"
+	"{l;b,o;List;List the structrues in the struct.ini}")
 {
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
@@ -653,6 +654,14 @@ EXT_COMMAND(dtx,
 		return;
 	}
 
-	ULONG64 addr = GetUnnamedArgU64(1);
-	PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+	if (HasCharArg('l')) {
+		Dml("The structures in the struct.ini:\n");
+		for (size_t i = 0; i < struct_array.size(); i++) {
+			Dml("%u - %s\n", i, struct_array[i].GetName().c_str());
+		}
+	}
+	else {
+		ULONG64 addr = GetUnnamedArgU64(1);
+		PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+	}
 }
