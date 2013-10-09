@@ -571,7 +571,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, sizeof(PVOID));
 							tmp_addr += sizeof(PVOID);
-							Dml("0x%p %ma", remote_data.GetPtr(), remote_data.GetPtr());
+							Dml("<link cmd=\"da %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
 						}
 						else {
 							ExtRemoteData remote_data;
@@ -588,7 +588,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, sizeof(PVOID));
 							tmp_addr += sizeof(PVOID);
-							Dml("0x%p %mu", remote_data.GetPtr(), remote_data.GetPtr());
+							Dml("<link cmd=\"du %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
 						}
 						else {
 							ExtRemoteData remote_data;
@@ -605,7 +605,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, sizeof(PVOID));
 							tmp_addr += sizeof(PVOID);
-							Dml("0x%p ", remote_data.GetPtr());
+							Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> ", 
+								member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
 						}
 						else {
 							Dml("\n");
