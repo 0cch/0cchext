@@ -12,6 +12,7 @@ EXPORTS
 	url
 	favcmd
 	dtx
+	init_script_env
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

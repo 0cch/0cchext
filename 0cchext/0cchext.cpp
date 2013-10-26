@@ -23,6 +23,7 @@ public:
 	EXT_COMMAND_METHOD(url);
 	EXT_COMMAND_METHOD(favcmd);
 	EXT_COMMAND_METHOD(dtx);
+	EXT_COMMAND_METHOD(init_script_env);
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
@@ -664,4 +665,70 @@ EXT_COMMAND(dtx,
 		ULONG64 addr = GetUnnamedArgU64(1);
 		PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
 	}
+}
+
+EXT_COMMAND(init_script_env,
+	"Initialize script environment.",
+	"")
+{
+	ULONG platform_id;
+	ULONG major;
+	ULONG minor;
+	CHAR service_pack_string[MAX_PATH];
+	ULONG service_pack_string_used;
+	ULONG service_pack_number;
+	CHAR build_string[MAX_PATH];
+	ULONG build_string_used;
+	HRESULT hr = m_Control->GetSystemVersion(&platform_id, 
+	&major, 
+	&minor, 
+	service_pack_string, 
+	MAX_PATH, 
+	&service_pack_string_used, 
+	&service_pack_number, 
+	build_string,
+	MAX_PATH,
+	&build_string_used);
+
+	if (FAILED(hr)) {
+		return;
+	}
+
+	CHAR buffer[64];
+	sprintf_s(buffer, sizeof(buffer), "0n%u", platform_id);
+	m_Control2->SetTextReplacement("@#NtPlatformId", buffer);
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", major);
+	m_Control2->SetTextReplacement("@#NtType", buffer);
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", minor);
+	m_Control2->SetTextReplacement("@#NtBuildNumber", buffer);
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", service_pack_number);
+	m_Control2->SetTextReplacement("@#NtServicePackNumber", buffer);
+
+	m_Control2->SetTextReplacement("@#NtServicePackString", service_pack_string);
+
+	m_Control2->SetTextReplacement("@#NtBuildString", build_string);
+
+	hr = m_Control4->GetSystemVersionValues(&platform_id, &major, &minor, NULL, NULL);
+	if (FAILED(hr)) {
+		return;
+	}
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", major);
+	m_Control2->SetTextReplacement("@#NtMajorVersion", buffer);
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", minor);
+	m_Control2->SetTextReplacement("@#NtMinorVersion", buffer);
+
+	ULONG debugee_class;
+	ULONG debugee_qualifier;
+	hr = m_Control->GetDebuggeeType(&debugee_class, &debugee_qualifier);
+
+	sprintf_s(buffer, sizeof(buffer), "0x%x", debugee_class);
+	m_Control2->SetTextReplacement("@#DebugeeClass", buffer);
+
+	sprintf_s(buffer, sizeof(buffer), "0x%x", debugee_qualifier);
+	m_Control2->SetTextReplacement("@#DebugeeQualifier", buffer);
 }
