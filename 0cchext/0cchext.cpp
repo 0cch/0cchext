@@ -27,6 +27,7 @@ public:
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
+	ULONG GetAddressPtrSize();
 };
 
 EXT_DECLARE_GLOBALS();
@@ -67,7 +68,7 @@ EXT_COMMAND(hwnd,
 	ULONG entry_size = shared_info.Field("HeEntrySize").GetUlong();
 	ULONG64 entries = shared_info.Field("aheList").GetUlongPtr();
 	ULONG64 target_entry = entries + entry_size * (wnd_handle & 0xffff);
-	ExtRemoteData wnd_data(target_entry, sizeof(PVOID));
+	ExtRemoteData wnd_data(target_entry, GetAddressPtrSize());
 
 	ExtRemoteTyped wnd_ptr("(win32k!tagWnd *)@$extin", wnd_data.GetPtr());
 	Out("HWND: %p\n", wnd_ptr.Field("head.h").GetPtr());
@@ -194,7 +195,7 @@ EXT_COMMAND(dpx,
 	BOOL ignore_flag = HasCharArg('i');
 
 	for (ULONG64 i = 0; i < range; i++) {
-		base_data.Set(base_address + i * sizeof(PVOID), sizeof(PVOID));
+		base_data.Set(base_address + i * GetAddressPtrSize(), GetAddressPtrSize());
 		query_data = base_data.GetPtr();
 		ret_size = 0;
 		ZeroMemory(buffer, sizeof(buffer));
@@ -230,8 +231,8 @@ EXT_COMMAND(dpx,
 
 		if (print_flag == 0) {
 			if (!ignore_flag) {
-				Dml("%p  %p  [D] ", base_address + i * sizeof(PVOID), query_data);
-				for (int j = 0; j < sizeof(PVOID); j++) {
+				Dml("%p  %p  [D] ", base_address + i * GetAddressPtrSize(), query_data);
+				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
 					Dml("%c", ((CHAR *)&query_data)[j]);
 				}
 
@@ -239,7 +240,7 @@ EXT_COMMAND(dpx,
 			}
 		}
 		else {
-			Dml("%p  %p", base_address + i * sizeof(PVOID), query_data);
+			Dml("%p  %p", base_address + i * GetAddressPtrSize(), query_data);
 			if (print_flag & 1) {
 				Dml("  [S] %ly", query_data);
 			}
@@ -502,8 +503,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("0x%p ", remote_data.GetPtr());
 						}
 						else {
@@ -519,8 +520,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("0x%p ", remote_data.GetPtr());
 						}
 						else {
@@ -536,8 +537,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("0x%p ", remote_data.GetPtr());
 						}
 						else {
@@ -553,8 +554,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("0x%p ", remote_data.GetPtr());
 						}
 						else {
@@ -570,8 +571,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("<link cmd=\"da %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
 						}
 						else {
@@ -587,8 +588,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("<link cmd=\"du %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
 						}
 						else {
@@ -604,8 +605,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					{
 						if (isptr) {
 							ExtRemoteData remote_data;
-							remote_data.Set(tmp_addr, sizeof(PVOID));
-							tmp_addr += sizeof(PVOID);
+							remote_data.Set(tmp_addr, GetAddressPtrSize());
+							tmp_addr += GetAddressPtrSize();
 							Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> ", 
 								member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
 						}
@@ -731,4 +732,14 @@ EXT_COMMAND(init_script_env,
 
 	sprintf_s(buffer, sizeof(buffer), "0x%x", debugee_qualifier);
 	m_Control2->SetTextReplacement("@#DebugeeQualifier", buffer);
+}
+
+ULONG EXT_CLASS::GetAddressPtrSize()
+{
+	if (m_Control->IsPointer64Bit() == S_OK) {
+		return 8;
+	}
+	else {
+		return 4;
+	}
 }
