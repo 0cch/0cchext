@@ -680,16 +680,17 @@ EXT_COMMAND(init_script_env,
 	ULONG service_pack_number;
 	CHAR build_string[MAX_PATH];
 	ULONG build_string_used;
+
 	HRESULT hr = m_Control->GetSystemVersion(&platform_id, 
-	&major, 
-	&minor, 
-	service_pack_string, 
-	MAX_PATH, 
-	&service_pack_string_used, 
-	&service_pack_number, 
-	build_string,
-	MAX_PATH,
-	&build_string_used);
+		&major, 
+		&minor, 
+		service_pack_string, 
+		MAX_PATH, 
+		&service_pack_string_used, 
+		&service_pack_number, 
+		build_string,
+		MAX_PATH,
+		&build_string_used);
 
 	if (FAILED(hr)) {
 		return;
