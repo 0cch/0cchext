@@ -4,6 +4,7 @@
 #include "struct_script.h"
 #include <engextcpp.hpp>
 #include <regex>
+#include <map>
 #include <string>
 #include <Shlwapi.h>
 #include <Shellapi.h>
@@ -24,6 +25,7 @@ public:
 	EXT_COMMAND_METHOD(favcmd);
 	EXT_COMMAND_METHOD(dtx);
 	EXT_COMMAND_METHOD(init_script_env);
+	EXT_COMMAND_METHOD(autocmd);
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
@@ -742,5 +744,69 @@ ULONG EXT_CLASS::GetAddressPtrSize()
 	}
 	else {
 		return 4;
+	}
+}
+
+EXT_COMMAND(autocmd,
+	"Execute the debugger commands.(The config file is autocmd.ini)",
+	"{v;b;Verbose mode;Show commands to client.}")
+{
+	bool verbose = HasArg("v");
+
+	CHAR filename[MAX_PATH];
+	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
+	PathRemoveFileSpecA(filename);
+	PathAppendA(filename, "autocmd.ini");
+
+	if (!PathFileExistsA(filename)) {
+		Err("Failed to open autocmd.ini.");
+		return;
+	}
+
+	std::string file_data;
+	if (!GetTxtFileDataA(filename, file_data)) {
+		Err("Failed to read autocmd.ini.");
+		return;
+	}
+
+	std::vector<std::string> str_vec;
+	ReadLines(file_data.c_str(), str_vec);
+	std::string current_section_name;
+	std::map<std::string, std::vector<std::string>> cmd_map;
+
+	for (std::vector<std::string>::iterator it = str_vec.begin(); it != str_vec.end(); ++it) {
+		if ((*it)[0] == '[') {
+			size_t pos = it->find(']');
+			if (pos != std::string::npos) {
+				current_section_name = it->substr(1, pos - 1);
+				transform(current_section_name.begin(), current_section_name.end(), current_section_name.begin(), tolower);
+				continue;
+			}
+		}
+		
+		cmd_map[current_section_name].push_back(*it);
+	}
+
+	CHAR execute_path[MAX_PATH] = {0};
+	if (FAILED(m_System->GetCurrentProcessExecutableName(execute_path, MAX_PATH, NULL))) {
+		Err("Failed to get execute path.");
+		return;
+	}
+
+	_strlwr_s(execute_path, MAX_PATH);
+	
+	CHAR *execute_name = PathFindFileNameA(execute_path);
+	if (execute_name == NULL) {
+		Err("Failed to get execute name.");
+		return;
+	}
+
+	ULONG execute_flags = DEBUG_EXECUTE_NO_REPEAT;
+	if (verbose) {
+		execute_flags |= DEBUG_EXECUTE_ECHO;
+	}
+
+	for (std::vector<std::string>::iterator it = cmd_map[execute_name].begin(); it != cmd_map[execute_name].end(); ++it) {
+		m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
 	}
 }
