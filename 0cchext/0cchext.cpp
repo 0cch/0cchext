@@ -825,10 +825,12 @@ typedef struct _EXPORT_FUNC_INFO
 EXT_COMMAND(pe_export,
 	"Dump PE export functions",
 	"{;ed;Address;Specifies the address of the module.}"
-	"{;s;Pattern;Specifies the pattern.}") 
+	"{;s;Pattern;Specifies the pattern.}"
+	"{o;b;original;Display function without name.}") 
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
+	bool original = HasArg("o");
 	
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
@@ -917,9 +919,19 @@ EXT_COMMAND(pe_export,
 	free(name_id_array);
 
 	int i = 0;
+	Out("ID   Address   Export Name    Symbol Name\n");
 	for (std::vector<EXPORT_FUNC_INFO>::iterator it = funcs_info.begin(); it != funcs_info.end(); ++it) {
-		if (MatchPattern(it->name.c_str(), pattern)) {
-			Out("%04X] %p  %s\n", i++, (ULONG64)it->address, it->name.c_str());
+		if (original) {
+			if (it->name.empty()) {
+				Out("%04X %p  N/A  %y\n", i++, (ULONG64)it->address, (ULONG64)it->address);
+			}
+			
 		}
+		else {
+			if (MatchPattern(it->name.c_str(), pattern)) {
+				Out("%04X %p  %s  %y\n", i++, (ULONG64)it->address, it->name.c_str(), (ULONG64)it->address);
+			}
+		}
+		
 	}
 }
