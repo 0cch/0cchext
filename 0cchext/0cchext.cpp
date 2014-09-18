@@ -5,6 +5,7 @@
 #include <engextcpp.hpp>
 #include <regex>
 #include <map>
+#include <vector>
 #include <string>
 #include <Shlwapi.h>
 #include <Shellapi.h>
@@ -26,6 +27,7 @@ public:
 	EXT_COMMAND_METHOD(dtx);
 	EXT_COMMAND_METHOD(init_script_env);
 	EXT_COMMAND_METHOD(autocmd);
+	EXT_COMMAND_METHOD(pe_export);
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
@@ -775,6 +777,9 @@ EXT_COMMAND(autocmd,
 	std::map<std::string, std::vector<std::string>> cmd_map;
 
 	for (std::vector<std::string>::iterator it = str_vec.begin(); it != str_vec.end(); ++it) {
+		if (it->empty()) {
+			continue;
+		}
 		if ((*it)[0] == '[') {
 			size_t pos = it->find(']');
 			if (pos != std::string::npos) {
@@ -808,5 +813,113 @@ EXT_COMMAND(autocmd,
 
 	for (std::vector<std::string>::iterator it = cmd_map[execute_name].begin(); it != cmd_map[execute_name].end(); ++it) {
 		m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+	}
+}
+
+typedef struct _EXPORT_FUNC_INFO
+{
+	PVOID address;
+	std::string name;
+} EXPORT_FUNC_INFO;
+
+EXT_COMMAND(pe_export,
+	"Dump PE export functions",
+	"{;ed;Address;Specifies the address of the module.}"
+	"{;s;Pattern;Specifies the pattern.}") 
+{
+	ULONG64 addr = GetUnnamedArgU64(0);
+	PCSTR pattern = GetUnnamedArgStr(1);
+	
+	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
+
+	IMAGE_DOS_HEADER dos_header;
+	remote_data.ReadBuffer(&dos_header, sizeof(dos_header), TRUE);
+
+	if (dos_header.e_magic != IMAGE_DOS_SIGNATURE) {
+		Err("Failed to get DOS signature.");
+		return;
+	}
+
+	ULONG64 cur = addr + dos_header.e_lfanew;
+	remote_data.Set(cur, sizeof(IMAGE_NT_HEADERS));
+
+	IMAGE_NT_HEADERS nt_header;
+	remote_data.ReadBuffer(&nt_header, sizeof(nt_header), TRUE);
+	
+	if (nt_header.Signature != IMAGE_NT_SIGNATURE) {
+		Err("Failed to get NT signature.");
+		return;
+	}
+	
+	cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	remote_data.Set(cur, sizeof(IMAGE_EXPORT_DIRECTORY));
+
+	IMAGE_EXPORT_DIRECTORY dir;
+	remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+
+	std::vector<EXPORT_FUNC_INFO> funcs_info;
+	ULONG func_count = dir.NumberOfFunctions;
+	cur = addr + dir.AddressOfFunctions;
+
+	ULONG func_addr_array_size = func_count * sizeof(ULONG);
+	remote_data.Set(cur, func_addr_array_size);
+
+	ULONG *func_addr_array = (ULONG *)malloc(func_addr_array_size);
+	if (func_addr_array == NULL) {
+		Err("Failed to allocate functions address array.");
+		return;
+	}
+	
+	remote_data.ReadBuffer(func_addr_array, func_addr_array_size, TRUE);
+
+	for (ULONG i = 0; i < func_count; i++) {
+		EXPORT_FUNC_INFO info;
+		info.address = (PUCHAR)addr + func_addr_array[i];
+		funcs_info.push_back(info);
+	}
+
+	free(func_addr_array);
+
+	ULONG name_count = dir.NumberOfNames;
+	ULONG name_array_size = name_count * sizeof(ULONG);
+	cur = addr + dir.AddressOfNames;
+	remote_data.Set(cur, name_array_size);
+
+	ULONG *name_array = (ULONG *)malloc(name_array_size);
+	if (name_array == NULL) {
+		Err("Failed to allocate name array.");
+		return;
+	}
+
+	remote_data.ReadBuffer(name_array, name_array_size, TRUE);
+
+	ULONG name_id_size = name_count * sizeof(USHORT);
+	cur = addr + dir.AddressOfNameOrdinals;
+	remote_data.Set(cur, name_id_size);
+
+	USHORT *name_id_array = (USHORT *)malloc(name_id_size);
+	if (name_id_array == NULL) {
+		Err("Failed to allocate name id array.");
+		return;
+	}
+
+	remote_data.ReadBuffer(name_id_array, name_id_size, TRUE);
+	
+	for (ULONG i = 0; i < name_count; i++) {
+		ExtBuffer<char> func_name;
+		remote_data.Set(addr + name_array[i], 1024);
+		remote_data.GetString(&func_name);
+		USHORT func_id = name_id_array[i];
+		funcs_info[func_id].name = func_name.GetBuffer();
+	}
+
+	free(name_array);
+	free(name_id_array);
+
+	int i = 0;
+	for (std::vector<EXPORT_FUNC_INFO>::iterator it = funcs_info.begin(); it != funcs_info.end(); ++it) {
+		if (MatchPattern(it->name.c_str(), pattern)) {
+			Out("%04X] %p  %s\n", i++, (ULONG64)it->address, it->name.c_str());
+		}
 	}
 }
