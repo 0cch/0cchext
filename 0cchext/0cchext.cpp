@@ -28,6 +28,7 @@ public:
 	EXT_COMMAND_METHOD(init_script_env);
 	EXT_COMMAND_METHOD(autocmd);
 	EXT_COMMAND_METHOD(pe_export);
+	EXT_COMMAND_METHOD(pe_import);
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
@@ -816,21 +817,21 @@ EXT_COMMAND(autocmd,
 	}
 }
 
-typedef struct _EXPORT_FUNC_INFO
+typedef struct _FUNC_INFO
 {
 	PVOID address;
 	std::string name;
-} EXPORT_FUNC_INFO;
+} EXPORT_FUNC_INFO, IMPORT_FUNC_INFO;
 
 EXT_COMMAND(pe_export,
 	"Dump PE export functions",
 	"{;ed;Address;Specifies the address of the module.}"
 	"{;s;Pattern;Specifies the pattern.}"
-	"{o;b;original;Display function without name.}") 
+	"{o;b;ordinal;Display function without name.}") 
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
-	bool original = HasArg("o");
+	bool ordinal = HasArg("o");
 	
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
@@ -920,8 +921,8 @@ EXT_COMMAND(pe_export,
 
 	
 	Out("ID   Address   Export Name    Symbol Name\n");
-	for (int i = 0; i < funcs_info.size(); i++) {
-		if (original) {
+	for (size_t i = 0; i < funcs_info.size(); i++) {
+		if (ordinal) {
 			if (funcs_info[i].name.empty()) {
 				Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
 			}
@@ -931,6 +932,122 @@ EXT_COMMAND(pe_export,
 			if (MatchPattern(funcs_info[i].name.c_str(), pattern)) {
 				Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
 			}
+		}
+		
+	}
+}
+
+EXT_COMMAND(pe_import,
+	"Dump PE import modules and functions",
+	"{;ed;Address;Specifies the address of the module.}"
+	"{f;s;Pattern;Specifies the pattern.}"
+	) 
+{
+	ULONG64 addr = GetUnnamedArgU64(0);
+	LPCSTR pattern = NULL;
+	if (HasArg("f")) {
+		pattern = GetArgStr("f");
+	}
+	
+	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
+
+	IMAGE_DOS_HEADER dos_header;
+	remote_data.ReadBuffer(&dos_header, sizeof(dos_header), TRUE);
+
+	if (dos_header.e_magic != IMAGE_DOS_SIGNATURE) {
+		Err("Failed to get DOS signature.");
+		return;
+	}
+
+	ULONG64 cur = addr + dos_header.e_lfanew;
+	remote_data.Set(cur, sizeof(IMAGE_NT_HEADERS));
+
+	IMAGE_NT_HEADERS nt_header;
+	remote_data.ReadBuffer(&nt_header, sizeof(nt_header), TRUE);
+
+	if (nt_header.Signature != IMAGE_NT_SIGNATURE) {
+		Err("Failed to get NT signature.");
+		return;
+	}
+
+	cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+	ULONG64 cur_dir = cur;
+	remote_data.Set(cur_dir, sizeof(IMAGE_IMPORT_DESCRIPTOR));
+
+	IMAGE_IMPORT_DESCRIPTOR dir;
+	remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+
+	std::map<std::string, std::vector<IMPORT_FUNC_INFO>> func_map;
+
+	for (;;) {
+		if (dir.Name == 0) {
+			break;
+		}
+
+		std::vector<IMPORT_FUNC_INFO> funcs_info;
+
+		ExtBuffer<char> module_name;
+		remote_data.Set(addr + dir.Name, 1024);
+		remote_data.GetString(&module_name);
+
+		ULONG64 cur_thunk = addr + dir.FirstThunk;
+		ULONG64 cur_ori_thunk = addr + dir.OriginalFirstThunk;
+		
+		IMAGE_THUNK_DATA thunk_data;
+		IMAGE_THUNK_DATA ori_thunk_data;
+
+		remote_data.Set(cur_thunk, sizeof(IMAGE_THUNK_DATA));
+		remote_data.ReadBuffer(&thunk_data, sizeof(thunk_data), TRUE);
+		remote_data.Set(cur_ori_thunk, sizeof(IMAGE_THUNK_DATA));
+		remote_data.ReadBuffer(&ori_thunk_data, sizeof(ori_thunk_data), TRUE);
+
+		for (;;) {
+			if (thunk_data.u1.Function == NULL) {
+				break;
+			}
+
+			IMPORT_FUNC_INFO func_info;
+			func_info.address = (PVOID)thunk_data.u1.Function;
+
+			if (IMAGE_SNAP_BY_ORDINAL(ori_thunk_data.u1.AddressOfData)) {
+				char ordinal[64];
+				sprintf_s(ordinal, "%04X", IMAGE_ORDINAL(ori_thunk_data.u1.AddressOfData));
+				func_info.name = ordinal;
+			}
+			else {
+				remote_data.Set(addr + ori_thunk_data.u1.AddressOfData + sizeof(USHORT), 1024);
+				ExtBuffer<char> func_name;
+				remote_data.GetString(&func_name);
+				func_info.name = func_name.GetBuffer();
+			}
+
+			funcs_info.push_back(func_info);
+
+			cur_thunk += sizeof(IMAGE_THUNK_DATA);
+			cur_ori_thunk += sizeof(IMAGE_THUNK_DATA);
+			remote_data.Set(cur_thunk, sizeof(IMAGE_THUNK_DATA));
+			remote_data.ReadBuffer(&thunk_data, sizeof(thunk_data), TRUE);
+			remote_data.Set(cur_ori_thunk, sizeof(IMAGE_THUNK_DATA));
+			remote_data.ReadBuffer(&ori_thunk_data, sizeof(ori_thunk_data), TRUE);
+		}
+
+		func_map[module_name.GetBuffer()] = funcs_info;
+
+		cur_dir += sizeof(IMAGE_IMPORT_DESCRIPTOR);
+		remote_data.Set(cur_dir, sizeof(IMAGE_IMPORT_DESCRIPTOR));
+		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+	}
+	
+	for (std::map<std::string, std::vector<IMPORT_FUNC_INFO>>::iterator it = func_map.begin(); it != func_map.end(); ++it) {
+		Out("%s\n", it->first.c_str());
+		if (pattern != NULL) {
+			for (size_t i = 0; i < it->second.size(); i++) {
+				if (MatchPattern(it->second[i].name.c_str(), pattern)) {
+					Out("%04X  %p  %s  %y\n", i, (ULONG64)it->second[i].address, it->second[i].name.c_str(), (ULONG64)it->second[i].address);
+				}
+			}
+
+			Out("\n");
 		}
 		
 	}
