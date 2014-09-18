@@ -918,18 +918,18 @@ EXT_COMMAND(pe_export,
 	free(name_array);
 	free(name_id_array);
 
-	int i = 0;
+	
 	Out("ID   Address   Export Name    Symbol Name\n");
-	for (std::vector<EXPORT_FUNC_INFO>::iterator it = funcs_info.begin(); it != funcs_info.end(); ++it) {
+	for (int i = 0; i < funcs_info.size(); i++) {
 		if (original) {
-			if (it->name.empty()) {
-				Out("%04X %p  N/A  %y\n", i++, (ULONG64)it->address, (ULONG64)it->address);
+			if (funcs_info[i].name.empty()) {
+				Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
 			}
 			
 		}
 		else {
-			if (MatchPattern(it->name.c_str(), pattern)) {
-				Out("%04X %p  %s  %y\n", i++, (ULONG64)it->address, it->name.c_str(), (ULONG64)it->address);
+			if (MatchPattern(funcs_info[i].name.c_str(), pattern)) {
+				Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
 			}
 		}
 		
