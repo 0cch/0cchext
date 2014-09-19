@@ -1039,7 +1039,7 @@ EXT_COMMAND(pe_import,
 	}
 	
 	for (std::map<std::string, std::vector<IMPORT_FUNC_INFO>>::iterator it = func_map.begin(); it != func_map.end(); ++it) {
-		Out("%s\n", it->first.c_str());
+		Dml("%s  <link cmd=\"lmva %p;!lmi %p\">(detail)</link>\n", it->first.c_str(), addr, addr);
 		if (pattern != NULL) {
 			for (size_t i = 0; i < it->second.size(); i++) {
 				if (MatchPattern(it->second[i].name.c_str(), pattern)) {
