@@ -16,6 +16,7 @@ EXPORTS
 	autocmd
 	pe_export
 	pe_import
+	logcmd
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

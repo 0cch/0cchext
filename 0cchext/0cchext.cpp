@@ -14,9 +14,11 @@
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
+
 class EXT_CLASS : public ExtExtension
 {
 public:
+
 	EXT_COMMAND_METHOD(hwnd);
 	EXT_COMMAND_METHOD(setvprot);
 	EXT_COMMAND_METHOD(dpx);
@@ -29,6 +31,10 @@ public:
 	EXT_COMMAND_METHOD(autocmd);
 	EXT_COMMAND_METHOD(pe_export);
 	EXT_COMMAND_METHOD(pe_import);
+	EXT_COMMAND_METHOD(logcmd);
+
+	virtual HRESULT Initialize(void);
+	virtual void Uninitialize(void);
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
@@ -387,6 +393,8 @@ EXT_COMMAND(grep,
 	
 }
 
+
+
 EXT_COMMAND(version,
 	"Displays the version information for 0cchext.dll",
 	NULL)
@@ -440,13 +448,13 @@ EXT_COMMAND(favcmd,
 	PathAppendA(filename, "favcmd.ini");
 
 	if (!PathFileExistsA(filename)) {
-		Err("Failed to open favcmd.ini.");
+		Err("Failed to open favcmd.ini.\n");
 		return;
 	}
 
 	std::string file_data;
 	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read favcmd.ini.");
+		Err("Failed to read favcmd.ini.\n");
 		return;
 	}
 
@@ -459,7 +467,7 @@ EXT_COMMAND(favcmd,
 		Dml("%u <link cmd=\"%s\">%s</link>\n", i, str_vec[i].c_str(), str_vec[i].c_str());
 	}
 
-	Dml("Display: %u    Total: %u", display_count, str_vec.size());
+	Dml("Display: %u    Total: %u\n", display_count, str_vec.size());
 }
 
 
@@ -645,19 +653,19 @@ EXT_COMMAND(dtx,
 	PathAppendA(filename, "struct.ini");
 
 	if (!PathFileExistsA(filename)) {
-		Err("Failed to open struct.ini.");
+		Err("Failed to open struct.ini.\n");
 		return;
 	}
 
 	std::string file_data;
 	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read struct.ini.");
+		Err("Failed to read struct.ini.\n");
 		return;
 	}
 
 	std::vector<StructInfo> struct_array;
 	if (!ParseStructScript(file_data.c_str(), struct_array)) {
-		Err("Failed to Parse struct.ini. @(%s)", GetErrorPosString());
+		Err("Failed to Parse struct.ini. @(%s)\n", GetErrorPosString());
 		return;
 	}
 
@@ -762,13 +770,13 @@ EXT_COMMAND(autocmd,
 	PathAppendA(filename, "autocmd.ini");
 
 	if (!PathFileExistsA(filename)) {
-		Err("Failed to open autocmd.ini.");
+		Err("Failed to open autocmd.ini.\n");
 		return;
 	}
 
 	std::string file_data;
 	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read autocmd.ini.");
+		Err("Failed to read autocmd.ini.\n");
 		return;
 	}
 
@@ -795,7 +803,7 @@ EXT_COMMAND(autocmd,
 
 	CHAR execute_path[MAX_PATH] = {0};
 	if (FAILED(m_System->GetCurrentProcessExecutableName(execute_path, MAX_PATH, NULL))) {
-		Err("Failed to get execute path.");
+		Err("Failed to get execute path.\n");
 		return;
 	}
 
@@ -803,7 +811,7 @@ EXT_COMMAND(autocmd,
 	
 	CHAR *execute_name = PathFindFileNameA(execute_path);
 	if (execute_name == NULL) {
-		Err("Failed to get execute name.");
+		Err("Failed to get execute name.\n");
 		return;
 	}
 
@@ -839,7 +847,7 @@ EXT_COMMAND(pe_export,
 	remote_data.ReadBuffer(&dos_header, sizeof(dos_header), TRUE);
 
 	if (dos_header.e_magic != IMAGE_DOS_SIGNATURE) {
-		Err("Failed to get DOS signature.");
+		Err("Failed to get DOS signature.\n");
 		return;
 	}
 
@@ -850,7 +858,7 @@ EXT_COMMAND(pe_export,
 	remote_data.ReadBuffer(&nt_header, sizeof(nt_header), TRUE);
 	
 	if (nt_header.Signature != IMAGE_NT_SIGNATURE) {
-		Err("Failed to get NT signature.");
+		Err("Failed to get NT signature.\n");
 		return;
 	}
 	
@@ -869,7 +877,7 @@ EXT_COMMAND(pe_export,
 
 	ULONG *func_addr_array = (ULONG *)malloc(func_addr_array_size);
 	if (func_addr_array == NULL) {
-		Err("Failed to allocate functions address array.");
+		Err("Failed to allocate functions address array.\n");
 		return;
 	}
 	
@@ -890,7 +898,7 @@ EXT_COMMAND(pe_export,
 
 	ULONG *name_array = (ULONG *)malloc(name_array_size);
 	if (name_array == NULL) {
-		Err("Failed to allocate name array.");
+		Err("Failed to allocate name array.\n");
 		return;
 	}
 
@@ -902,7 +910,7 @@ EXT_COMMAND(pe_export,
 
 	USHORT *name_id_array = (USHORT *)malloc(name_id_size);
 	if (name_id_array == NULL) {
-		Err("Failed to allocate name id array.");
+		Err("Failed to allocate name id array.\n");
 		return;
 	}
 
@@ -955,7 +963,7 @@ EXT_COMMAND(pe_import,
 	remote_data.ReadBuffer(&dos_header, sizeof(dos_header), TRUE);
 
 	if (dos_header.e_magic != IMAGE_DOS_SIGNATURE) {
-		Err("Failed to get DOS signature.");
+		Err("Failed to get DOS signature.\n");
 		return;
 	}
 
@@ -966,7 +974,7 @@ EXT_COMMAND(pe_import,
 	remote_data.ReadBuffer(&nt_header, sizeof(nt_header), TRUE);
 
 	if (nt_header.Signature != IMAGE_NT_SIGNATURE) {
-		Err("Failed to get NT signature.");
+		Err("Failed to get NT signature.\n");
 		return;
 	}
 
@@ -1051,4 +1059,207 @@ EXT_COMMAND(pe_import,
 		}
 		
 	}
+}
+
+
+
+class LogDebugOutputCallbacks : public IDebugOutputCallbacks2 {
+public:
+	LogDebugOutputCallbacks() : cmd_log_file_(0) {}
+	~LogDebugOutputCallbacks() {}
+
+	virtual HRESULT __stdcall QueryInterface(REFIID InterfaceId, PVOID *Interface)
+	{
+		*Interface = NULL;
+
+		if (IsEqualIID(InterfaceId, __uuidof(IUnknown)) || IsEqualIID(InterfaceId, __uuidof(IDebugOutputCallbacks))) {
+			*Interface = (IDebugOutputCallbacks *)this;
+			AddRef();
+			return S_OK;
+		}
+		// 		else if (IsEqualIID(InterfaceId, __uuidof(IDebugOutputCallbacks2))) {
+		// 			*Interface = (IDebugOutputCallbacks2 *)this;
+		// 			AddRef();
+		// 			return S_OK;
+		// 		}
+		else {
+			return E_NOINTERFACE;
+		}
+	}
+
+	virtual ULONG __stdcall AddRef() {
+		return 1;
+	}
+
+	virtual ULONG __stdcall Release() {
+		return 0;
+	}
+
+	virtual HRESULT __stdcall Output(ULONG Mask, PCSTR Text)
+	{
+		if (Mask == DEBUG_OUTPUT_PROMPT) {
+			const CHAR *pos = strchr(Text, ' ');
+			if (pos != NULL) {
+				WriteCmdLog((LPSTR)pos + 1);
+			}
+		}
+
+		return S_OK;
+	}
+
+	virtual HRESULT __stdcall GetInterestMask(PULONG Mask)
+	{
+		return S_OK;
+	}
+
+	virtual HRESULT __stdcall Output2(__in ULONG Which,
+		ULONG Flags,
+		ULONG64 Arg,
+		PCWSTR Text)
+	{
+		return S_OK;
+	}
+
+	BOOL CreateCmdLogFile(LPCSTR file_path) 
+	{
+		CloseCmdLogFile();
+		cmd_log_file_ = CreateFileA(file_path, 
+			GENERIC_READ | GENERIC_WRITE, 
+			FILE_SHARE_READ, 
+			NULL, 
+			OPEN_ALWAYS, 
+			FILE_ATTRIBUTE_NORMAL, 
+			NULL);
+
+		return cmd_log_file_ != INVALID_HANDLE_VALUE;
+	}
+
+	void CloseCmdLogFile()
+	{
+		if (cmd_log_file_ != NULL) {
+			CloseHandle(cmd_log_file_);
+			cmd_log_file_ = NULL;
+		}
+	}
+
+	BOOL WriteCmdLog(LPSTR log_str)
+	{
+		if (cmd_log_file_ == NULL || log_str == NULL || log_str[0] == '\0') {
+			return FALSE;
+		}
+
+		if (_strnicmp(log_str, "!logcmd", 7) == 0) {
+			return FALSE;
+		}
+
+		SetFilePointer(cmd_log_file_, 0, 0, FILE_END);
+
+		int log_str_length = strlen(log_str);
+		for (int i = 0; i < log_str_length; i++) {
+			if (log_str[i] == '\r' || log_str[i] == '\n' || log_str[i] == '\t') {
+				log_str[i] = ' ';
+			}
+		}
+
+		ULONG return_length = 0;
+		return WriteFile(cmd_log_file_, log_str, log_str_length + 1, &return_length, NULL);
+	}
+
+	BOOL ReadCmdLog(std::vector<std::string> &log_items)
+	{
+		if (cmd_log_file_ == NULL) {
+			return FALSE;
+		}
+
+		ULONG log_size = GetFileSize(cmd_log_file_, NULL);
+		if (log_size == 0) {
+			return FALSE;
+		}
+
+		SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN);
+
+		CHAR *log_buffer = (CHAR *)malloc(log_size);
+		if (log_buffer == NULL) {
+			return FALSE;
+		}
+
+		ULONG return_length = 0;
+		if (!ReadFile(cmd_log_file_, log_buffer, log_size, &return_length, NULL)) {
+			free(log_buffer);
+			return FALSE;
+		}
+
+		for (CHAR *cur = log_buffer; cur < log_buffer + log_size;) {
+			if (*cur == '\0') {
+				break;
+			}
+
+			log_items.push_back(cur);
+			cur += strlen(cur) + 1;
+		}
+
+
+		free(log_buffer);
+		return TRUE;
+	}
+
+private:
+	HANDLE cmd_log_file_;
+};
+
+LogDebugOutputCallbacks g_log_callback;
+PDEBUG_OUTPUT_CALLBACKS g_original_output_callback = NULL;
+
+EXT_COMMAND(logcmd,
+	"Log command line to log file",
+	"{i;x;Install;Install command log.}"
+	"{u;b;Uninstall;Uninstall command log.}"
+	"{;e,d=10;Number;The number of command to be displayed}")
+{
+
+	if (HasArg("u")) {
+		g_log_callback.CloseCmdLogFile();
+		return;
+	}
+	else if (HasArg("i")) {
+		
+		LPCSTR log_file_path = GetArgStr("i");
+		if (!g_log_callback.CreateCmdLogFile(log_file_path)) {
+			Err("Failed to open log file.\n");
+		}
+		return;
+	}
+
+	size_t cmd_number = (size_t)GetUnnamedArgU64(0);
+
+	std::vector<std::string> log_items;
+	if (!g_log_callback.ReadCmdLog(log_items)) {
+		Err("Failed to get commands.\n");
+		return;
+	}
+
+	for (size_t i = log_items.size() > cmd_number ? log_items.size() - cmd_number : 0, j = 0; i < log_items.size(); i++, j++) {
+		Out("%u  %s\n", j, log_items[i].c_str());
+	}
+}
+
+
+HRESULT EXT_CLASS::Initialize( void )
+{
+	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&m_Client))) {
+		if (SUCCEEDED(m_Client->GetOutputCallbacks(&g_original_output_callback))) {
+			m_Client->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)&g_log_callback);
+		}
+	}
+
+	return S_OK;
+}
+
+void EXT_CLASS::Uninitialize( void )
+{
+	if (g_original_output_callback != NULL) {
+		m_Client->SetOutputCallbacks(g_original_output_callback);
+		g_original_output_callback = NULL;
+	}
+	
 }
