@@ -1152,8 +1152,6 @@ public:
 			return FALSE;
 		}
 
-		SetFilePointer(cmd_log_file_, 0, 0, FILE_END);
-
 		int log_str_length = strlen(log_str);
 		for (int i = 0; i < log_str_length; i++) {
 			if (log_str[i] == '\r' || log_str[i] == '\n' || log_str[i] == '\t') {
@@ -1161,6 +1159,13 @@ public:
 			}
 		}
 
+		if (last_command_ == log_str) {
+			return FALSE;
+		}
+
+		last_command_ = log_str;
+
+		SetFilePointer(cmd_log_file_, 0, 0, FILE_END);
 		ULONG return_length = 0;
 		return WriteFile(cmd_log_file_, log_str, log_str_length + 1, &return_length, NULL);
 	}
@@ -1205,6 +1210,7 @@ public:
 
 private:
 	HANDLE cmd_log_file_;
+	std::string last_command_;
 };
 
 LogDebugOutputCallbacks g_log_callback;
