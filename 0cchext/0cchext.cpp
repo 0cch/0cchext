@@ -1212,7 +1212,7 @@ PDEBUG_OUTPUT_CALLBACKS g_original_output_callback = NULL;
 
 EXT_COMMAND(logcmd,
 	"Log command line to log file",
-	"{i;x;Install;Install command log.}"
+	"{i;x;Log path;Install command log.}"
 	"{u;b;Uninstall;Uninstall command log.}"
 	"{;e,d=10;Number;The number of command to be displayed}")
 {
