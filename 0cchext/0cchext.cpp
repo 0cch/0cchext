@@ -1154,7 +1154,7 @@ public:
 			return FALSE;
 		}
 
-		int log_str_length = strlen(log_str);
+		int log_str_length = (int)strlen(log_str);
 		for (int i = 0; i < log_str_length; i++) {
 			if (log_str[i] == '\r' || log_str[i] == '\n' || log_str[i] == '\t') {
 				log_str[i] = ' ';
