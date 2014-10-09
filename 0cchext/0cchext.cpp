@@ -1268,4 +1268,6 @@ void EXT_CLASS::Uninitialize( void )
 	log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)g_original_output_callback);
 	g_original_output_callback = NULL;
 	g_log_callback.CloseCmdLogFile();
+
+	__super::Uninitialize();
 }
