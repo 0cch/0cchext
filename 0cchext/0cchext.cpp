@@ -39,6 +39,8 @@ public:
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
 	ULONG GetAddressPtrSize();
+
+	CComPtr<IDebugClient> log_client_;
 };
 
 EXT_DECLARE_GLOBALS();
@@ -1252,9 +1254,9 @@ EXT_COMMAND(logcmd,
 
 HRESULT EXT_CLASS::Initialize( void )
 {
-	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&m_Client))) {
-		if (SUCCEEDED(m_Client->GetOutputCallbacks(&g_original_output_callback))) {
-			m_Client->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)&g_log_callback);
+	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&log_client_))) {
+		if (SUCCEEDED(log_client_->GetOutputCallbacks(&g_original_output_callback))) {
+			log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)&g_log_callback);
 		}
 	}
 
@@ -1263,9 +1265,7 @@ HRESULT EXT_CLASS::Initialize( void )
 
 void EXT_CLASS::Uninitialize( void )
 {
-	if (g_original_output_callback != NULL) {
-		m_Client->SetOutputCallbacks(g_original_output_callback);
-		g_original_output_callback = NULL;
-	}
-	
+	log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)g_original_output_callback);
+	g_original_output_callback = NULL;
+	g_log_callback.CloseCmdLogFile();
 }
