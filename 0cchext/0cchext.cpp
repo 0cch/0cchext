@@ -1218,6 +1218,29 @@ private:
 LogDebugOutputCallbacks g_log_callback;
 PDEBUG_OUTPUT_CALLBACKS g_original_output_callback = NULL;
 
+template<typename T>
+int replace_all(T& str,  const T& pattern,  const T& newpat)
+{
+	int count = 0;
+	const size_t nsize = newpat.size();
+	const size_t psize = pattern.size();
+
+	for (size_t pos = str.find(pattern, 0);  pos != T::npos; pos = str.find(pattern, pos + nsize)) {
+		str.replace(pos, psize, newpat);
+		count++;
+	}
+
+	return count; 
+}
+
+void HandleDmlEscape(std::string &s)
+{
+	replace_all<std::string>(s, "&", "&amp;");
+	replace_all<std::string>(s, "<", "&lt;");
+	replace_all<std::string>(s, ">", "&gt;");
+	replace_all<std::string>(s, "\"", "&quot;");
+}
+
 EXT_COMMAND(logcmd,
 	"Log command line to log file",
 	"{i;x;Log path;Install command log.}"
@@ -1247,7 +1270,8 @@ EXT_COMMAND(logcmd,
 	}
 
 	for (size_t i = log_items.size() > cmd_number ? log_items.size() - cmd_number : 0, j = 0; i < log_items.size(); i++, j++) {
-		Out("%u  %s\n", j, log_items[i].c_str());
+		HandleDmlEscape(log_items[i]);
+		Dml("%u  <link cmd=\"%s\">%s</link>\n", j, log_items[i].c_str(), log_items[i].c_str());
 	}
 }
 
