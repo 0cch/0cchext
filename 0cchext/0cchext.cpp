@@ -5,6 +5,7 @@
 #include <engextcpp.hpp>
 #include <regex>
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 #include <Shlwapi.h>
@@ -1144,6 +1145,14 @@ public:
 		}
 	}
 
+	void ClearCmdLogFile()
+	{
+		if (cmd_log_file_ != NULL) {
+			SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN);
+			SetEndOfFile(cmd_log_file_);
+		}
+	}
+
 	BOOL WriteCmdLog(LPSTR log_str)
 	{
 		if (cmd_log_file_ == NULL || log_str == NULL || log_str[0] == '\0') {
@@ -1161,9 +1170,20 @@ public:
 			}
 		}
 
+		for (int i = log_str_length - 1; i >= 0; i--) {
+			if (log_str[i] == ' ') {
+				log_str[i] = '\0';
+			}
+			else {
+				break;
+			}
+		}
+
 		if (last_command_ == log_str) {
 			return FALSE;
 		}
+
+		log_str_length = (int)strlen(log_str);
 
 		last_command_ = log_str;
 
@@ -1245,11 +1265,39 @@ EXT_COMMAND(logcmd,
 	"Log command line to log file",
 	"{i;x;Log path;Install command log.}"
 	"{u;b;Uninstall;Uninstall command log.}"
-	"{;e,d=10;Number;The number of command to be displayed}")
+	"{d;b;Delete;Delete repeat command log.}"
+	"{c;b;Clear;Clear command log.}"
+	"{;e,d=10;Number;The number of command to be displayed}"
+	"{;s,d=*;Pattern;Specifies the pattern.}")
 {
+	std::vector<std::string> log_items;
 
 	if (HasArg("u")) {
 		g_log_callback.CloseCmdLogFile();
+		return;
+	}
+	else if (HasArg("d")) {
+		if (!g_log_callback.ReadCmdLog(log_items)) {
+			Err("Failed to get commands.\n");
+			return;
+		}
+
+		std::set<std::string> log_set;
+		for (std::vector<std::string>::iterator it = log_items.begin();
+			it != log_items.end(); ++it) {
+				log_set.insert(*it);
+		}
+
+		g_log_callback.ClearCmdLogFile();
+		for (std::set<std::string>::iterator it = log_set.begin();
+			it != log_set.end(); ++it) {
+			g_log_callback.WriteCmdLog((LPSTR)it->c_str());	
+		}
+
+		return;
+	}
+	else if (HasArg("c")) {
+		g_log_callback.ClearCmdLogFile();
 		return;
 	}
 	else if (HasArg("i")) {
@@ -1262,16 +1310,16 @@ EXT_COMMAND(logcmd,
 	}
 
 	size_t cmd_number = (size_t)GetUnnamedArgU64(0);
-
-	std::vector<std::string> log_items;
 	if (!g_log_callback.ReadCmdLog(log_items)) {
 		Err("Failed to get commands.\n");
 		return;
 	}
 
-	for (size_t i = log_items.size() > cmd_number ? log_items.size() - cmd_number : 0, j = 0; i < log_items.size(); i++, j++) {
-		HandleDmlEscape(log_items[i]);
-		Dml("%u  <link cmd=\"%s\">%s</link>\n", j, log_items[i].c_str(), log_items[i].c_str());
+	for (size_t i = log_items.size() > cmd_number ? log_items.size() - cmd_number : 0, j = 0; i < log_items.size(); i++) {
+		if (MatchPattern(log_items[i].c_str(), GetUnnamedArgStr(1))) {
+			HandleDmlEscape(log_items[i]);
+			Dml("<link cmd=\"%s\">%u</link> %s\n", log_items[i].c_str(), j++, log_items[i].c_str());
+		}
 	}
 }
 
