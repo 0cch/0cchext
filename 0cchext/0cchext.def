@@ -17,6 +17,8 @@ EXPORTS
 	pe_export
 	pe_import
 	logcmd
+	google
+	bing
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

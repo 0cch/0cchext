@@ -10,7 +10,7 @@
 #include <string>
 #include <Shlwapi.h>
 #include <Shellapi.h>
-
+#include <WinInet.h>
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -33,6 +33,8 @@ public:
 	EXT_COMMAND_METHOD(pe_export);
 	EXT_COMMAND_METHOD(pe_import);
 	EXT_COMMAND_METHOD(logcmd);
+	EXT_COMMAND_METHOD(google);
+	EXT_COMMAND_METHOD(bing);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1321,6 +1323,32 @@ EXT_COMMAND(logcmd,
 			Dml("<link cmd=\"%s\">%u</link> %s\n", log_items[i].c_str(), j++, log_items[i].c_str());
 		}
 	}
+}
+
+EXT_COMMAND(google,
+	"Use google to search.",
+	"{;x;Key;Specifies the key word.}") 
+{
+	char url[INTERNET_MAX_URL_LENGTH] = "https://www.google.com/#q=";
+	if (GetNumUnnamedArgs() >= 1) {
+		PCSTR key_word = GetUnnamedArgStr(0);
+		strcat_s(url, key_word);
+	}
+	
+	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+}
+
+EXT_COMMAND(bing,
+	"Use bing to search.",
+	"{;x;Key;Specifies the key word.}") 
+{
+	char url[INTERNET_MAX_URL_LENGTH] = "http://global.bing.com/search?q=";
+	if (GetNumUnnamedArgs() >= 1) {
+		PCSTR key_word = GetUnnamedArgStr(0);
+		strcat_s(url, key_word);
+	}
+
+	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 }
 
 
