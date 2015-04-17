@@ -657,8 +657,9 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
 							if (level <= display_sublevel) {
-								Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> \n", 
-									member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
+								ULONG64 tmp_addr_ptr = remote_data.GetPtr();
+								Dml("0x%p \n", tmp_addr_ptr);
+								PrintStruct(struct_array, member_type_name.c_str(), tmp_addr_ptr, level + 1, display_sublevel);
 							}
 						}
 						else {
@@ -729,8 +730,15 @@ EXT_COMMAND(dtx,
 		}
 		
 		for (int i = 0; i < array_number; i++) {
-			PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
-			Dml("\n");
+			if (array_number == 1) {
+				PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
+				Dml("\n");
+			}
+			else {
+				Dml("[%u]  ", i);
+				PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
+				Dml("\n");
+			}
 		}
 	}
 }
