@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-typedef enum {
+typedef enum _LEX_STATES {
 	LEX_START,
 	LEX_INID,
 	LEX_INNUM,
@@ -15,7 +15,7 @@ typedef enum {
 	LEX_DONE
 } LEX_STATES;
 
-typedef enum {
+typedef enum _LEX_TOKEN_TYPE {
 	TK_NULL,
 	TK_NUMBER,
 	TK_ID,

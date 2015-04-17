@@ -650,7 +650,8 @@ EXT_COMMAND(dtx,
 	"Displays information about structures. (The config file is struct.ini)",
 	"{;s,o;Name;Specifies the name of a structure.}"
 	"{;e,o;Address;Specifies the address of the structure to be displayed.}"
-	"{l;b,o;List;List the structrues in the struct.ini}")
+	"{l;b,o;List;List the structrues in the struct.ini}"
+	"{a;e,o;Array;Specifies the display number of structure.}")
 {
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
@@ -682,7 +683,15 @@ EXT_COMMAND(dtx,
 	}
 	else {
 		ULONG64 addr = GetUnnamedArgU64(1);
-		PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+		int array_number = 1;
+		if (HasCharArg('a')) {
+			array_number = (int)GetArgU64("a");
+		}
+		
+		for (int i = 0; i < array_number; i++) {
+			PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+			Dml("\n");
+		}
 	}
 }
 
