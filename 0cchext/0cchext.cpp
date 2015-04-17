@@ -40,7 +40,7 @@ public:
 	virtual void Uninitialize(void);
 
 private:
-	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
+	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level, int display_sublevel);
 	ULONG GetAddressPtrSize();
 
 	CComPtr<IDebugClient> log_client_;
@@ -476,7 +476,7 @@ EXT_COMMAND(favcmd,
 }
 
 
-void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level )
+void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level, int display_sublevel )
 {
 	std::string struct_name(name);
 	ULONG64 address = addr;
@@ -494,9 +494,13 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 
 	ULONG64 tmp_addr = address;
 	for (int indent = 0; indent < level; indent++) {
-		Dml("  ");
+		if (level <= display_sublevel) {
+			Dml("  ");
+		}
 	}
-	Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	if (level <= display_sublevel) {
+		Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	}
 	for (int j = 0; j < struct_array[i].GetCount(); j++) {
 		std::string member_name;
 		std::string member_type_name;
@@ -510,11 +514,14 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 				member_name += array_str;
 			}
 			for (int indent = 0; indent < level + 1; indent++) {
-				Dml("  ");
+				if (level <= display_sublevel) {
+					Dml("  ");
+				}
 			}
-			Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
-				member_name.c_str(), 
-				isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
+			if (level <= display_sublevel) {
+				Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
+					member_name.c_str(), isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
+			}
 			for (int k = 0; k < count; k++) {
 				switch (member_type) {
 				case TK_TYPE_BYTE:
@@ -523,13 +530,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 1);
 							tmp_addr++;
-							Dml("0x%02X ", remote_data.GetUchar());
+							if (level <= display_sublevel) {
+								Dml("0x%02X \n", remote_data.GetUchar());
+							}
 						}
 						
 					}
@@ -540,13 +551,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 2);
 							tmp_addr += 2;
-							Dml("0x%04X ", remote_data.GetUshort());
+							if (level <= display_sublevel) {
+								Dml("0x%04X \n", remote_data.GetUshort());
+							}
 						}
 						
 					}
@@ -557,13 +572,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 4);
 							tmp_addr += 4;
-							Dml("0x%08X ", remote_data.GetUlong());
+							if (level <= display_sublevel) {
+								Dml("0x%08X \n", remote_data.GetUlong());
+							}
 						}
 						
 					}
@@ -574,13 +593,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 8);
 							tmp_addr += 8;
-							Dml("0x%016I64X ", remote_data.GetUlong64());
+							if (level <= display_sublevel) {
+								Dml("0x%016I64X \n", remote_data.GetUlong64());
+							}
 						}
 						
 					}
@@ -591,13 +614,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"da %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("<link cmd=\"da %p\">0x%p</link> \n", remote_data.GetPtr(), remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 1);
 							tmp_addr += 1;
-							Dml("%c", remote_data.GetChar());
+							if (level <= display_sublevel) {
+								Dml("%c \n", remote_data.GetChar());
+							}
 						}
 						
 					}
@@ -608,13 +635,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"du %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("<link cmd=\"du %p\">0x%p</link> \n", remote_data.GetPtr(), remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 2);
 							tmp_addr += 2;
-							Dml("%C", remote_data.GetShort());
+							if (level <= display_sublevel) {
+								Dml("%C \n", remote_data.GetShort());
+							}
 						}
 						
 					}
@@ -625,12 +656,16 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> ", 
-								member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> \n", 
+									member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
+							}
 						}
 						else {
-							Dml("\n");
-							PrintStruct(struct_array, member_type_name.c_str(), tmp_addr, level + 1);
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", tmp_addr);
+								PrintStruct(struct_array, member_type_name.c_str(), tmp_addr, level + 1, display_sublevel);
+							}
 						}
 					}
 					break;
@@ -638,7 +673,6 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					__debugbreak();
 				}
 			}
-			Dml("\n");
 		}
 	}
 
@@ -648,10 +682,11 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 
 EXT_COMMAND(dtx,
 	"Displays information about structures. (The config file is struct.ini)",
-	"{;s,o;Name;Specifies the name of a structure.}"
-	"{;e,o;Address;Specifies the address of the structure to be displayed.}"
+	"{r;ed,o;depth;Recursively dumps the subtype fields.}"
 	"{l;b,o;List;List the structrues in the struct.ini}"
-	"{a;e,o;Array;Specifies the display number of structure.}")
+	"{a;ed,o;Array;Specifies the display number of structure.}"
+	"{;s,o;Name;Specifies the name of a structure.}"
+	"{;e,o;Address;Specifies the address of the structure to be displayed.}")
 {
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
@@ -687,9 +722,14 @@ EXT_COMMAND(dtx,
 		if (HasCharArg('a')) {
 			array_number = (int)GetArgU64("a");
 		}
+
+		int display_sublevel = 0;
+		if (HasCharArg('r')) {
+			display_sublevel = (int)GetArgU64("r");
+		}
 		
 		for (int i = 0; i < array_number; i++) {
-			PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+			PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
 			Dml("\n");
 		}
 	}
