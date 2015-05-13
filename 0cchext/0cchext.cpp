@@ -35,6 +35,7 @@ public:
 	EXT_COMMAND_METHOD(logcmd);
 	EXT_COMMAND_METHOD(google);
 	EXT_COMMAND_METHOD(bing);
+	EXT_COMMAND_METHOD(a);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1408,6 +1409,23 @@ EXT_COMMAND(bing,
 	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 }
 
+EXT_COMMAND(a,
+	"Assembles instruction mnemonics and puts the resulting instruction codes into memory.",
+	"{;ed,r;Address;Specifies the address where the resulting codes are put.}"
+	"{;x,r;Instruction;Assemble a new instruction.}")
+{
+	ULONG64 address = GetUnnamedArgU64(0);
+	PCSTR instruction = GetUnnamedArgStr(1);
+	ULONG64 end_address;
+	if (FAILED(m_Control->Assemble(address, instruction, &end_address))) {
+		Err("Failed to assemble.\n");
+		return;
+	}
+	
+	char buffer[64];
+	sprintf_s(buffer, sizeof(buffer), "0x%x", end_address);
+	m_Control2->SetTextReplacement("@#LastAsmAddr", buffer);
+}
 
 HRESULT EXT_CLASS::Initialize( void )
 {

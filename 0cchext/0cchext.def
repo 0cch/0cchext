@@ -19,6 +19,7 @@ EXPORTS
 	logcmd
 	google
 	bing
+	a
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
