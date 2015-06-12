@@ -898,11 +898,13 @@ EXT_COMMAND(pe_export,
 	"Dump PE export functions",
 	"{;ed;Address;Specifies the address of the module.}"
 	"{;s;Pattern;Specifies the pattern.}"
-	"{o;b;ordinal;Display function without name.}") 
+	"{o;b;ordinal;Display function without name.}"
+	"{b;b,o;simplification;Only output address.}") 
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
 	bool ordinal = HasArg("o");
+	bool simplification = HasArg("b");
 	
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
@@ -991,17 +993,30 @@ EXT_COMMAND(pe_export,
 	free(name_id_array);
 
 	
-	Out("ID   Address   Export Name    Symbol Name\n");
+	if (!simplification) {
+		Out("ID   Address   Export Name    Symbol Name\n");
+	}
+	
 	for (size_t i = 0; i < funcs_info.size(); i++) {
 		if (ordinal) {
 			if (funcs_info[i].name.empty()) {
-				Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
+				if (simplification) {
+					Out("%p\n", (ULONG64)funcs_info[i].address);
+				}
+				else {
+					Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
+				}
 			}
 			
 		}
 		else {
 			if (MatchPattern(funcs_info[i].name.c_str(), pattern)) {
-				Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
+				if (simplification) {
+					Out("%p\n", (ULONG64)funcs_info[i].address);
+				}
+				else {
+					Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
+				}
 			}
 		}
 		
