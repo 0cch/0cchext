@@ -1,7 +1,7 @@
 0CCh Windbg extension
 =======
 Author: nightxie
-site:   http://0cch.net
+site:   http://0cch.com
 
 ### Usage
 		Commands for 0cchext.dll:
