@@ -1481,7 +1481,7 @@ BOOL GetBreakPointsList(LPCWSTR suo_path, std::vector<std::pair<std::wstring, UL
 	ULONG first_line = TRUE;
 	ULONG buffer_size = (ULONG)buffer.size();
 	for (ULONG i = 0; i < buffer_size; i++) {
-		if (buffer[i] == ':' && i + 3 < buffer_size && i > 10 && buffer[i + 2] == '\\') {
+		if (buffer[i] == ':' && i + 3 < buffer_size && i >= 10 && buffer[i + 2] == '\\') {
 			if (first_line) {
 				first_line = FALSE;
 			}
