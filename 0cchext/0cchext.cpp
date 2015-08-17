@@ -36,6 +36,7 @@ public:
 	EXT_COMMAND_METHOD(google);
 	EXT_COMMAND_METHOD(bing);
 	EXT_COMMAND_METHOD(a);
+	EXT_COMMAND_METHOD(import_vs_bps);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1440,6 +1441,105 @@ EXT_COMMAND(a,
 	char buffer[64];
 	sprintf_s(buffer, sizeof(buffer), "0x%x", end_address);
 	m_Control2->SetTextReplacement("@#LastAsmAddr", buffer);
+}
+
+
+BOOL GetBreakPointsBufferFromSUO(LPCWSTR suo_path, std::vector<UCHAR> &buffer)
+{
+	CComPtr<IStorage> root;
+	HRESULT hr = StgOpenStorage(suo_path, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, NULL, 0, &root);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	CComPtr<IStream> bp_stream;
+	hr = root->OpenStream(L"DebuggerBreakpoints", 0, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &bp_stream);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	STATSTG stg = {0};
+	hr = bp_stream->Stat(&stg, STATFLAG_NONAME);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	buffer.resize(stg.cbSize.LowPart);
+	ULONG read_length = 0;
+	hr = bp_stream->Read(buffer.data(), stg.cbSize.LowPart, &read_length);
+
+	return SUCCEEDED(hr);
+}
+
+BOOL GetBreakPointsList(LPCWSTR suo_path, std::vector<std::pair<std::wstring, ULONG>> &bp_list)
+{
+	std::vector<UCHAR> buffer;
+	if (!GetBreakPointsBufferFromSUO(suo_path, buffer)) {
+		return FALSE;
+	}
+
+	ULONG first_line = TRUE;
+	ULONG buffer_size = (ULONG)buffer.size();
+	for (ULONG i = 0; i < buffer_size; i++) {
+		if (buffer[i] == ':' && i + 3 < buffer_size && i > 10 && buffer[i + 2] == '\\') {
+			if (first_line) {
+				first_line = FALSE;
+			}
+			else {
+
+				if (*(ULONG *)(&buffer[i - 10]) == 4) {
+					ULONG line_length = *(ULONG *)(&buffer[i - 6]);
+					WCHAR *line_buffer = (WCHAR *)(&buffer[i - 2]);
+					ULONG line_number = *(ULONG *)(&buffer[i - 2 + line_length]);
+
+					bp_list.push_back(std::make_pair(line_buffer, line_number + 1));
+				}
+			}
+		}
+	}
+
+	return TRUE;
+}
+
+
+EXT_COMMAND(import_vs_bps,
+	"Import visual studio breakpoints.",
+	"{;x,r;suo file path;Solution User Options File path}")
+{
+	PCSTR suo_path = GetUnnamedArgStr(0);
+	std::vector<std::pair<std::wstring, ULONG>> bp_list;
+	if (!GetBreakPointsList(CA2W(suo_path), bp_list)) {
+		Err("Failed to load SUO file.\n");
+		return;
+	}
+
+	std::set<std::wstring> src_path_list;
+	for (std::vector<std::pair<std::wstring, ULONG>>::iterator it = bp_list.begin();
+		it != bp_list.end(); ++it) {
+			CPathW path = it->first.c_str();
+			path.RemoveFileSpec();
+
+			src_path_list.insert(path.m_strPath.GetString());
+	}
+	
+	for (std::set<std::wstring>::iterator it = src_path_list.begin();
+		it != src_path_list.end(); ++it) {
+			m_Symbols3->AppendSourcePathWide(it->c_str());
+	}
+	
+	for (std::vector<std::pair<std::wstring, ULONG>>::iterator it = bp_list.begin();
+		it != bp_list.end(); ++it) {
+			CPathW path = it->first.c_str();
+			
+			PDEBUG_BREAKPOINT2 bp = NULL;
+			m_Control4->AddBreakpoint2(DEBUG_BREAKPOINT_CODE, DEBUG_ANY_ID, &bp);
+			if (bp != NULL) {
+				CStringW bp_format;
+				bp_format.Format(L"`%s:%u`", path.m_strPath.GetString() + path.FindFileName(), it->second);
+				bp->SetOffsetExpressionWide(bp_format.GetString());
+				bp->SetFlags(DEBUG_BREAKPOINT_ENABLED);
+			}
+	}
 }
 
 HRESULT EXT_CLASS::Initialize( void )
