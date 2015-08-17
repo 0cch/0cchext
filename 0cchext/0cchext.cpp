@@ -10,7 +10,7 @@
 #include <string>
 #include <Shlwapi.h>
 #include <Shellapi.h>
-
+#include <WinInet.h>
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -33,12 +33,16 @@ public:
 	EXT_COMMAND_METHOD(pe_export);
 	EXT_COMMAND_METHOD(pe_import);
 	EXT_COMMAND_METHOD(logcmd);
+	EXT_COMMAND_METHOD(google);
+	EXT_COMMAND_METHOD(bing);
+	EXT_COMMAND_METHOD(a);
+	EXT_COMMAND_METHOD(import_vs_bps);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
 
 private:
-	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level);
+	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level, int display_sublevel);
 	ULONG GetAddressPtrSize();
 
 	CComPtr<IDebugClient> log_client_;
@@ -474,7 +478,7 @@ EXT_COMMAND(favcmd,
 }
 
 
-void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level )
+void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level, int display_sublevel )
 {
 	std::string struct_name(name);
 	ULONG64 address = addr;
@@ -492,9 +496,13 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 
 	ULONG64 tmp_addr = address;
 	for (int indent = 0; indent < level; indent++) {
-		Dml("  ");
+		if (level <= display_sublevel) {
+			Dml("  ");
+		}
 	}
-	Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	if (level <= display_sublevel) {
+		Dml("STRUCT %s %p\n", struct_name.c_str(), address);
+	}
 	for (int j = 0; j < struct_array[i].GetCount(); j++) {
 		std::string member_name;
 		std::string member_type_name;
@@ -508,11 +516,14 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 				member_name += array_str;
 			}
 			for (int indent = 0; indent < level + 1; indent++) {
-				Dml("  ");
+				if (level <= display_sublevel) {
+					Dml("  ");
+				}
 			}
-			Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
-				member_name.c_str(), 
-				isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
+			if (level <= display_sublevel) {
+				Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
+					member_name.c_str(), isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
+			}
 			for (int k = 0; k < count; k++) {
 				switch (member_type) {
 				case TK_TYPE_BYTE:
@@ -521,13 +532,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 1);
 							tmp_addr++;
-							Dml("0x%02X ", remote_data.GetUchar());
+							if (level <= display_sublevel) {
+								Dml("0x%02X \n", remote_data.GetUchar());
+							}
 						}
 						
 					}
@@ -538,13 +553,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 2);
 							tmp_addr += 2;
-							Dml("0x%04X ", remote_data.GetUshort());
+							if (level <= display_sublevel) {
+								Dml("0x%04X \n", remote_data.GetUshort());
+							}
 						}
 						
 					}
@@ -555,13 +574,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 4);
 							tmp_addr += 4;
-							Dml("0x%08X ", remote_data.GetUlong());
+							if (level <= display_sublevel) {
+								Dml("0x%08X \n", remote_data.GetUlong());
+							}
 						}
 						
 					}
@@ -572,13 +595,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("0x%p ", remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 8);
 							tmp_addr += 8;
-							Dml("0x%016I64X ", remote_data.GetUlong64());
+							if (level <= display_sublevel) {
+								Dml("0x%016I64X \n", remote_data.GetUlong64());
+							}
 						}
 						
 					}
@@ -589,13 +616,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"da %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("<link cmd=\"da %p\">0x%p</link> \n", remote_data.GetPtr(), remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 1);
 							tmp_addr += 1;
-							Dml("%c", remote_data.GetChar());
+							if (level <= display_sublevel) {
+								Dml("%c \n", remote_data.GetChar());
+							}
 						}
 						
 					}
@@ -606,13 +637,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"du %p\">0x%p</link> ", remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								Dml("<link cmd=\"du %p\">0x%p</link> \n", remote_data.GetPtr(), remote_data.GetPtr());
+							}
 						}
 						else {
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, 2);
 							tmp_addr += 2;
-							Dml("%C", remote_data.GetShort());
+							if (level <= display_sublevel) {
+								Dml("%C \n", remote_data.GetShort());
+							}
 						}
 						
 					}
@@ -623,12 +658,17 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 							ExtRemoteData remote_data;
 							remote_data.Set(tmp_addr, GetAddressPtrSize());
 							tmp_addr += GetAddressPtrSize();
-							Dml("<link cmd=\"!0cchext.dtx %s %p\">0x%p</link> ", 
-								member_type_name.c_str(), remote_data.GetPtr(), remote_data.GetPtr());
+							if (level <= display_sublevel) {
+								ULONG64 tmp_addr_ptr = remote_data.GetPtr();
+								Dml("0x%p \n", tmp_addr_ptr);
+								PrintStruct(struct_array, member_type_name.c_str(), tmp_addr_ptr, level + 1, display_sublevel);
+							}
 						}
 						else {
-							Dml("\n");
-							PrintStruct(struct_array, member_type_name.c_str(), tmp_addr, level + 1);
+							if (level <= display_sublevel) {
+								Dml("0x%p \n", tmp_addr);
+								PrintStruct(struct_array, member_type_name.c_str(), tmp_addr, level + 1, display_sublevel);
+							}
 						}
 					}
 					break;
@@ -636,7 +676,6 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					__debugbreak();
 				}
 			}
-			Dml("\n");
 		}
 	}
 
@@ -646,9 +685,11 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 
 EXT_COMMAND(dtx,
 	"Displays information about structures. (The config file is struct.ini)",
+	"{r;ed,o;depth;Recursively dumps the subtype fields.}"
+	"{l;b,o;List;List the structrues in the struct.ini}"
+	"{a;ed,o;Array;Specifies the display number of structure.}"
 	"{;s,o;Name;Specifies the name of a structure.}"
-	"{;e,o;Address;Specifies the address of the structure to be displayed.}"
-	"{l;b,o;List;List the structrues in the struct.ini}")
+	"{;e,o;Address;Specifies the address of the structure to be displayed.}")
 {
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
@@ -680,7 +721,27 @@ EXT_COMMAND(dtx,
 	}
 	else {
 		ULONG64 addr = GetUnnamedArgU64(1);
-		PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0);
+		int array_number = 1;
+		if (HasCharArg('a')) {
+			array_number = (int)GetArgU64("a");
+		}
+
+		int display_sublevel = 0;
+		if (HasCharArg('r')) {
+			display_sublevel = (int)GetArgU64("r");
+		}
+		
+		for (int i = 0; i < array_number; i++) {
+			if (array_number == 1) {
+				PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
+				Dml("\n");
+			}
+			else {
+				Dml("[%u]  ", i);
+				PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
+				Dml("\n");
+			}
+		}
 	}
 }
 
@@ -838,11 +899,13 @@ EXT_COMMAND(pe_export,
 	"Dump PE export functions",
 	"{;ed;Address;Specifies the address of the module.}"
 	"{;s;Pattern;Specifies the pattern.}"
-	"{o;b;ordinal;Display function without name.}") 
+	"{o;b;ordinal;Display function without name.}"
+	"{b;b,o;simplification;Only output address.}") 
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
 	bool ordinal = HasArg("o");
+	bool simplification = HasArg("b");
 	
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
@@ -931,17 +994,30 @@ EXT_COMMAND(pe_export,
 	free(name_id_array);
 
 	
-	Out("ID   Address   Export Name    Symbol Name\n");
+	if (!simplification) {
+		Out("ID   Address   Export Name    Symbol Name\n");
+	}
+	
 	for (size_t i = 0; i < funcs_info.size(); i++) {
 		if (ordinal) {
 			if (funcs_info[i].name.empty()) {
-				Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
+				if (simplification) {
+					Out("%p\n", (ULONG64)funcs_info[i].address);
+				}
+				else {
+					Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
+				}
 			}
 			
 		}
 		else {
 			if (MatchPattern(funcs_info[i].name.c_str(), pattern)) {
-				Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
+				if (simplification) {
+					Out("%p\n", (ULONG64)funcs_info[i].address);
+				}
+				else {
+					Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
+				}
 			}
 		}
 		
@@ -1323,6 +1399,148 @@ EXT_COMMAND(logcmd,
 	}
 }
 
+EXT_COMMAND(google,
+	"Use google to search.",
+	"{;x;Key;Specifies the key word.}") 
+{
+	char url[INTERNET_MAX_URL_LENGTH] = "https://www.google.com/#q=";
+	if (GetNumUnnamedArgs() >= 1) {
+		PCSTR key_word = GetUnnamedArgStr(0);
+		strcat_s(url, key_word);
+	}
+	
+	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+}
+
+EXT_COMMAND(bing,
+	"Use bing to search.",
+	"{;x;Key;Specifies the key word.}") 
+{
+	char url[INTERNET_MAX_URL_LENGTH] = "http://global.bing.com/search?q=";
+	if (GetNumUnnamedArgs() >= 1) {
+		PCSTR key_word = GetUnnamedArgStr(0);
+		strcat_s(url, key_word);
+	}
+
+	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+}
+
+EXT_COMMAND(a,
+	"Assembles instruction mnemonics and puts the resulting instruction codes into memory.",
+	"{;ed,r;Address;Specifies the address where the resulting codes are put.}"
+	"{;x,r;Instruction;Assemble a new instruction.}")
+{
+	ULONG64 address = GetUnnamedArgU64(0);
+	PCSTR instruction = GetUnnamedArgStr(1);
+	ULONG64 end_address;
+	if (FAILED(m_Control->Assemble(address, instruction, &end_address))) {
+		Err("Failed to assemble.\n");
+		return;
+	}
+	
+	char buffer[64];
+	sprintf_s(buffer, sizeof(buffer), "0x%x", end_address);
+	m_Control2->SetTextReplacement("@#LastAsmAddr", buffer);
+}
+
+
+BOOL GetBreakPointsBufferFromSUO(LPCWSTR suo_path, std::vector<UCHAR> &buffer)
+{
+	CComPtr<IStorage> root;
+	HRESULT hr = StgOpenStorage(suo_path, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, NULL, 0, &root);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	CComPtr<IStream> bp_stream;
+	hr = root->OpenStream(L"DebuggerBreakpoints", 0, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &bp_stream);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	STATSTG stg = {0};
+	hr = bp_stream->Stat(&stg, STATFLAG_NONAME);
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	buffer.resize(stg.cbSize.LowPart);
+	ULONG read_length = 0;
+	hr = bp_stream->Read(buffer.data(), stg.cbSize.LowPart, &read_length);
+
+	return SUCCEEDED(hr);
+}
+
+BOOL GetBreakPointsList(LPCWSTR suo_path, std::vector<std::pair<std::wstring, ULONG>> &bp_list)
+{
+	std::vector<UCHAR> buffer;
+	if (!GetBreakPointsBufferFromSUO(suo_path, buffer)) {
+		return FALSE;
+	}
+
+	ULONG first_line = TRUE;
+	ULONG buffer_size = (ULONG)buffer.size();
+	for (ULONG i = 0; i < buffer_size; i++) {
+		if (buffer[i] == ':' && i + 3 < buffer_size && i > 10 && buffer[i + 2] == '\\') {
+			if (first_line) {
+				first_line = FALSE;
+			}
+			else {
+
+				if (*(ULONG *)(&buffer[i - 10]) == 4) {
+					ULONG line_length = *(ULONG *)(&buffer[i - 6]);
+					WCHAR *line_buffer = (WCHAR *)(&buffer[i - 2]);
+					ULONG line_number = *(ULONG *)(&buffer[i - 2 + line_length]);
+
+					bp_list.push_back(std::make_pair(line_buffer, line_number + 1));
+				}
+			}
+		}
+	}
+
+	return TRUE;
+}
+
+
+EXT_COMMAND(import_vs_bps,
+	"Import visual studio breakpoints.",
+	"{;x,r;suo file path;Solution User Options File path}")
+{
+	PCSTR suo_path = GetUnnamedArgStr(0);
+	std::vector<std::pair<std::wstring, ULONG>> bp_list;
+	if (!GetBreakPointsList(CA2W(suo_path), bp_list)) {
+		Err("Failed to load SUO file.\n");
+		return;
+	}
+
+	std::set<std::wstring> src_path_list;
+	for (std::vector<std::pair<std::wstring, ULONG>>::iterator it = bp_list.begin();
+		it != bp_list.end(); ++it) {
+			CPathW path = it->first.c_str();
+			path.RemoveFileSpec();
+
+			src_path_list.insert(path.m_strPath.GetString());
+	}
+	
+	for (std::set<std::wstring>::iterator it = src_path_list.begin();
+		it != src_path_list.end(); ++it) {
+			m_Symbols3->AppendSourcePathWide(it->c_str());
+	}
+	
+	for (std::vector<std::pair<std::wstring, ULONG>>::iterator it = bp_list.begin();
+		it != bp_list.end(); ++it) {
+			CPathW path = it->first.c_str();
+			
+			PDEBUG_BREAKPOINT2 bp = NULL;
+			m_Control4->AddBreakpoint2(DEBUG_BREAKPOINT_CODE, DEBUG_ANY_ID, &bp);
+			if (bp != NULL) {
+				CStringW bp_format;
+				bp_format.Format(L"`%s:%u`", path.m_strPath.GetString() + path.FindFileName(), it->second);
+				bp->SetOffsetExpressionWide(bp_format.GetString());
+				bp->SetFlags(DEBUG_BREAKPOINT_ENABLED);
+			}
+	}
+}
 
 HRESULT EXT_CLASS::Initialize( void )
 {

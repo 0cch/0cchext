@@ -7,7 +7,9 @@
 #define KDEXT_32BIT
 #endif
 
-#include <windows.h>
+#include <atlbase.h>
+#include <atlstr.h>
+#include <atlpath.h>
 #include "wdbgexts.h"
 #include "dbgeng.h"
 
