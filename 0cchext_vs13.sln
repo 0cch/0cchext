@@ -1,7 +1,8 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "0cchext", "0cchext\0cchext.vcxproj", "{DE22F3DF-FBA9-4639-8196-EFD75CC74B66}"
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "0cchext", "0cchext\0cchext_vs13.vcxproj", "{DE22F3DF-FBA9-4639-8196-EFD75CC74B66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
