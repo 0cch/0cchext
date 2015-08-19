@@ -147,6 +147,12 @@ EXT_COMMAND(hwnd,
 	}
 	else {
 		HWND wnd = (HWND)wnd_handle;
+
+		if (!IsWindow(wnd)) {
+			Err("Invalidate window handle value.\n");
+			return;
+		}
+
 		WCHAR window_name[1024] = {0};
 		GetWindowTextW(wnd, window_name, 1023);
 
