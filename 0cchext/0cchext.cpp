@@ -62,91 +62,159 @@ EXT_COMMAND(hwnd,
 		return;
 	}
 
-	if (class_type != DEBUG_CLASS_KERNEL) {
-		Err("This command must be used in Kernel-Mode\n");
-		return;
-	}
-
 	ULONG64 wnd_handle = GetUnnamedArgU64(0);
-	DEBUG_VALUE dbg_value = {0};
-	hr = m_Control->Evaluate("win32k!gSharedInfo", DEBUG_VALUE_INT64, &dbg_value, NULL);
-	if (FAILED(hr)) {
-		Err("Failed to get win32k!gSharedInfo\n");
-		return;
-	}
 
-	ExtRemoteTyped shared_info("(win32k!tagSHAREDINFO *)@$extin", dbg_value.I64);
-	ULONG handle_Count = shared_info.Field("psi.cHandleEntries").GetUlong();
+	if (class_type == DEBUG_CLASS_KERNEL) {
+		DEBUG_VALUE dbg_value = {0};
+		hr = m_Control->Evaluate("win32k!gSharedInfo", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get win32k!gSharedInfo\n");
+			return;
+		}
 
-	if ((wnd_handle & 0xffff) >= handle_Count) {
-		Err("Invalidate window handle value.\n");
-		return;
-	}
+		ExtRemoteTyped shared_info("(win32k!tagSHAREDINFO *)@$extin", dbg_value.I64);
+		ULONG handle_Count = shared_info.Field("psi.cHandleEntries").GetUlong();
 
-	ULONG entry_size = shared_info.Field("HeEntrySize").GetUlong();
-	ULONG64 entries = shared_info.Field("aheList").GetUlongPtr();
-	ULONG64 target_entry = entries + entry_size * (wnd_handle & 0xffff);
-	ExtRemoteData wnd_data(target_entry, GetAddressPtrSize());
+		if ((wnd_handle & 0xffff) >= handle_Count) {
+			Err("Invalidate window handle value.\n");
+			return;
+		}
 
-	ExtRemoteTyped wnd_ptr("(win32k!tagWnd *)@$extin", wnd_data.GetPtr());
-	Out("HWND: %p\n", wnd_ptr.Field("head.h").GetPtr());
-	Dml("tagWnd * @ <link cmd=\"dt %p win32k!tagWnd\">%p</link>\n", wnd_data.GetPtr(), wnd_data.GetPtr());
+		ULONG entry_size = shared_info.Field("HeEntrySize").GetUlong();
+		ULONG64 entries = shared_info.Field("aheList").GetUlongPtr();
+		ULONG64 target_entry = entries + entry_size * (wnd_handle & 0xffff);
+		ExtRemoteData wnd_data(target_entry, GetAddressPtrSize());
 
-	if (wnd_ptr.Field("strName.Buffer").GetPtr() != 0) {
-		Out("Window Name: %mu\n", wnd_ptr.Field("strName.Buffer").GetPtr());
-	}
+		ExtRemoteTyped wnd_ptr("(win32k!tagWnd *)@$extin", wnd_data.GetPtr());
+		Out("HWND: %p\n", wnd_ptr.Field("head.h").GetPtr());
+		Dml("tagWnd * @ <link cmd=\"dt %p win32k!tagWnd\">%p</link>\n", wnd_data.GetPtr(), wnd_data.GetPtr());
 
-	Dml("tagCLS * @ <link cmd=\"r @$t0=%p;dt @@C++(((win32k!tagWnd *)@$t0)->pcls) win32k!tagCLS\">%p</link>\n", 
-		wnd_data.GetPtr(), wnd_ptr.Field("pcls").GetPtr());
+		if (wnd_ptr.Field("strName.Buffer").GetPtr() != 0) {
+			Out("Window Name: %mu\n", wnd_ptr.Field("strName.Buffer").GetPtr());
+		}
 
-	if (wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr() != 0) {
-		Out("Window Class Name: %ma\n", wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr());
-	}
-	if (wnd_ptr.Field("spwndNext").GetPtr() != 0) {
-		Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
-			wnd_ptr.Field("spwndNext.head.h").GetPtr(), wnd_ptr.Field("spwndNext.head.h").GetPtr());
-	}
-	if (wnd_ptr.Field("spwndPrev").GetPtr() != 0) {
-		Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
-			wnd_ptr.Field("spwndPrev.head.h").GetPtr(), wnd_ptr.Field("spwndPrev.head.h").GetPtr());
-	}
-	if (wnd_ptr.Field("spwndParent").GetPtr() != 0) {
-		Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
-			wnd_ptr.Field("spwndParent.head.h").GetPtr(), wnd_ptr.Field("spwndParent.head.h").GetPtr());
-	}
-	if (wnd_ptr.Field("spwndChild").GetPtr() != 0) {
-		Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
-			wnd_ptr.Field("spwndChild.head.h").GetPtr(), wnd_ptr.Field("spwndChild.head.h").GetPtr());
-	}
-	if (wnd_ptr.Field("spwndOwner").GetPtr() != 0) {
-		Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
-			wnd_ptr.Field("spwndOwner.head.h").GetPtr(), wnd_ptr.Field("spwndOwner.head.h").GetPtr());
-	}
-	if (wnd_ptr.Field("lpfnWndProc").GetPtr() != 0) {
-		Dml("pfnWndProc:   "
-			"<link cmd=\"r @$t0=%p;.process /p /r @@C++(((nt!_ETHREAD *)((win32k!tagWnd *)@$t0)->head.pti->pEThread)->Tcb.Process);"
-			"u @@C++(((win32k!tagWnd *)@$t0)->lpfnWndProc)\">%p</link>\n", 
-			wnd_data.GetPtr(), wnd_ptr.Field("lpfnWndProc").GetPtr());
-	}
+		Dml("tagCLS * @ <link cmd=\"r @$t0=%p;dt @@C++(((win32k!tagWnd *)@$t0)->pcls) win32k!tagCLS\">%p</link>\n", 
+			wnd_data.GetPtr(), wnd_ptr.Field("pcls").GetPtr());
 
-	ULONG style = wnd_ptr.Field("style").GetUlong();
+		if (wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr() != 0) {
+			Out("Window Class Name: %ma\n", wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr());
+		}
+		if (wnd_ptr.Field("spwndNext").GetPtr() != 0) {
+			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+				wnd_ptr.Field("spwndNext.head.h").GetPtr(), wnd_ptr.Field("spwndNext.head.h").GetPtr());
+		}
+		if (wnd_ptr.Field("spwndPrev").GetPtr() != 0) {
+			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+				wnd_ptr.Field("spwndPrev.head.h").GetPtr(), wnd_ptr.Field("spwndPrev.head.h").GetPtr());
+		}
+		if (wnd_ptr.Field("spwndParent").GetPtr() != 0) {
+			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+				wnd_ptr.Field("spwndParent.head.h").GetPtr(), wnd_ptr.Field("spwndParent.head.h").GetPtr());
+		}
+		if (wnd_ptr.Field("spwndChild").GetPtr() != 0) {
+			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+				wnd_ptr.Field("spwndChild.head.h").GetPtr(), wnd_ptr.Field("spwndChild.head.h").GetPtr());
+		}
+		if (wnd_ptr.Field("spwndOwner").GetPtr() != 0) {
+			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+				wnd_ptr.Field("spwndOwner.head.h").GetPtr(), wnd_ptr.Field("spwndOwner.head.h").GetPtr());
+		}
+		if (wnd_ptr.Field("lpfnWndProc").GetPtr() != 0) {
+			Dml("pfnWndProc:   "
+				"<link cmd=\"r @$t0=%p;.process /p /r @@C++(((nt!_ETHREAD *)((win32k!tagWnd *)@$t0)->head.pti->pEThread)->Tcb.Process);"
+				"u @@C++(((win32k!tagWnd *)@$t0)->lpfnWndProc)\">%p</link>\n", 
+				wnd_data.GetPtr(), wnd_ptr.Field("lpfnWndProc").GetPtr());
+		}
 
-	Out("Visible:  %d\n", (style & (1<<28)) != 0);
-	Out("Child:    %d\n", (style & (1<<30)) != 0);
-	Out("Minimized:%d\n", (style & (1<<29)) != 0);
-	Out("Disabled: %d\n", (style & (1<<27)) != 0);
-	Out("Window Rect {%d, %d, %d, %d}\n", 
-		wnd_ptr.Field("rcWindow.left").GetLong(),
-		wnd_ptr.Field("rcWindow.top").GetLong(),
-		wnd_ptr.Field("rcWindow.right").GetLong(),
-		wnd_ptr.Field("rcWindow.bottom").GetLong());
-	Out("Clent Rect  {%d, %d, %d, %d}\n",
-		wnd_ptr.Field("rcClient.left").GetLong(),
-		wnd_ptr.Field("rcClient.top").GetLong(),
-		wnd_ptr.Field("rcClient.right").GetLong(),
-		wnd_ptr.Field("rcClient.bottom").GetLong());
+		ULONG style = wnd_ptr.Field("style").GetUlong();
 
-	Out("\n");
+		Out("Visible:  %d\n", (style & (1<<28)) != 0);
+		Out("Child:    %d\n", (style & (1<<30)) != 0);
+		Out("Minimized:%d\n", (style & (1<<29)) != 0);
+		Out("Disabled: %d\n", (style & (1<<27)) != 0);
+		Out("Window Rect {%d, %d, %d, %d}\n", 
+			wnd_ptr.Field("rcWindow.left").GetLong(),
+			wnd_ptr.Field("rcWindow.top").GetLong(),
+			wnd_ptr.Field("rcWindow.right").GetLong(),
+			wnd_ptr.Field("rcWindow.bottom").GetLong());
+		Out("Clent Rect  {%d, %d, %d, %d}\n",
+			wnd_ptr.Field("rcClient.left").GetLong(),
+			wnd_ptr.Field("rcClient.top").GetLong(),
+			wnd_ptr.Field("rcClient.right").GetLong(),
+			wnd_ptr.Field("rcClient.bottom").GetLong());
+
+		Out("\n");
+	}
+	else {
+		HWND wnd = (HWND)wnd_handle;
+		WCHAR window_name[1024] = {0};
+		GetWindowTextW(wnd, window_name, 1023);
+
+		WCHAR class_name[1024] = {0};
+		GetClassNameW(wnd, class_name, 1023);
+
+		Out("HWND: %I64X\n", (ULONG64)wnd);
+
+		if (window_name[0] != 0) {
+			Out(L"Window Name: %s\n", window_name);
+		}
+
+		if (class_name[0] != 0) {
+			Out(L"Window Class Name: %s\n", class_name);
+		}
+
+		HWND next_wnd = GetWindow(wnd, GW_HWNDNEXT);
+		if (next_wnd != 0) {
+			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+				(ULONG64)next_wnd, (ULONG64)next_wnd);
+		}
+
+		HWND prev_wnd = GetWindow(wnd, GW_HWNDPREV);
+		if (prev_wnd != 0) {
+			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+				(ULONG64)prev_wnd, (ULONG64)prev_wnd);
+		}
+
+		HWND parent_wnd = GetParent(wnd);
+		if (parent_wnd != 0) {
+			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+				(ULONG64)parent_wnd, (ULONG64)parent_wnd);
+		}
+
+		HWND child_wnd = GetWindow(wnd, GW_CHILD);
+		if (child_wnd != 0) {
+			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+				(ULONG64)child_wnd, (ULONG64)child_wnd);
+		}
+
+		HWND own_wnd = GetWindow(wnd, GW_OWNER);
+		if (own_wnd != 0) {
+			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+				(ULONG64)own_wnd, (ULONG64)own_wnd);
+		}
+
+		ULONG64 style = GetWindowLongPtr(wnd, GWL_STYLE);
+		Out("Visible:  %d\n", (style & (1<<28)) != 0);
+		Out("Child:    %d\n", (style & (1<<30)) != 0);
+		Out("Minimized:%d\n", (style & (1<<29)) != 0);
+		Out("Disabled: %d\n", (style & (1<<27)) != 0);
+		
+		RECT rc;
+		GetWindowRect(wnd, &rc);
+		Out("Window Rect {%d, %d, %d, %d}\n", 
+			rc.left,
+			rc.top,
+			rc.right,
+			rc.bottom);
+		GetClientRect(wnd, &rc);
+		Out("Clent Rect  {%d, %d, %d, %d}\n",
+			rc.left,
+			rc.top,
+			rc.right,
+			rc.bottom);
+
+		Out("\n");
+	}
 }
 
 EXT_COMMAND(setvprot,
@@ -163,8 +231,8 @@ EXT_COMMAND(setvprot,
 		return;
 	}
 
-	if (class_type != DEBUG_CLASS_USER_WINDOWS) {
-		Err("This command must be used in User-Mode\n");
+	if (class_type != DEBUG_CLASS_USER_WINDOWS || qualifier_type != DEBUG_USER_WINDOWS_PROCESS) {
+		Err("This command must be used in User-Mode and same computer\n");
 		return;
 	}
 
