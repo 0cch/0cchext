@@ -1,0 +1,8 @@
+version: 1.0.{build}
+configuration: Release
+platform:
+- Win32
+- x64
+build:
+  project: 0cchext_vs13.sln
+  verbosity: minimal
