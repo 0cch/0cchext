@@ -8,3 +8,4 @@ platform:
 build:
   project: 0cchext_vs13.sln
   verbosity: minimal 
+build: off

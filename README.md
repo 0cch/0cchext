@@ -3,6 +3,8 @@
 Author: nightxie
 site:   http://0cch.com
 
+[![Build status](https://ci.appveyor.com/api/projects/status/lum8m63fig6bk94x?svg=true)](https://ci.appveyor.com/project/0cch/0cchext)
+
 ### Usage
 ```
 Commands for 0cchext.dll:
