@@ -5,6 +5,7 @@ configuration: Release
 platform:
 - Win32
 - x64
-build: off
+build:
   project: 0cchext_vs13.sln
   verbosity: minimal 
+#build: off
