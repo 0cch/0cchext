@@ -1,8 +1,16 @@
-version: 1.0.{build}
+version: 1.0.3.2.{build}
+pull_requests:
+  do_not_increment_build_number: true
 configuration: Release
-platform:
-- Win32
-- x64
 build:
   project: 0cchext_vs13.sln
   verbosity: minimal
+after_build:
+- mkdir bin\x86
+- mkdir bin\x64
+- copy Release\0cchext_vs13.dll bin\x86\0cchext.dll
+- copy x64\Release\0cchext_vs13.dll bin\x64\0cchext.dll
+- 7z a -tzip 0cchext.zip bin\*
+artifacts:
+  - path: 0cchext.zip
+    name: 0cchext.zip
