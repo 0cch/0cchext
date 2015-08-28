@@ -8,12 +8,15 @@ platform:
 build:
   project: 0cchext_vs13.sln
   verbosity: minimal 
-after_build:
+before_deploy:
 - mkdir bin\x86
 - mkdir bin\x64
 - copy Release\0cchext_vs13.dll bin\x86\0cchext.dll
 - copy x64\Release\0cchext_vs13.dll bin\x64\0cchext.dll
 - 7z a -tzip 0cchext.zip bin\*
-artifacts:
-  - path: 0cchext.zip
-    name: 0cchext.zip
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: 09I81/fViMNRGwQghr338X3m1JN07DGMgwlbng3cFFKkJJ9L+Ys7Ds3Z/uNdD+hD
+  artifact: 0cchext.zip
+  draft: true
