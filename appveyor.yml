@@ -16,6 +16,9 @@ build_script:
 - copy Release\0cchext_vs13.dll bin\x86\0cchext.dll
 - copy x64\Release\0cchext_vs13.dll bin\x64\0cchext.dll
 - 7z a -tzip 0cchext.zip bin\*
+artifacts:
+- path: 0cchext.zip
+  name: 0cchext.zip
 deploy:
 - provider: GitHub
   auth_token:
