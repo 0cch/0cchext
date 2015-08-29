@@ -5,6 +5,9 @@ configuration: Release
 platform:
 - Win32
 - x64
-build:
-  project: 0cchext_vs13.sln
-  verbosity: minimal 
+# build:
+#   project: 0cchext_vs13.sln
+#   verbosity: minimal 
+build_script:
+- MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="Win32"
+- MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="x64"
