@@ -11,3 +11,14 @@ configuration: Release
 build_script:
 - MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="Win32"
 - MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="x64"
+- mkdir bin\x86
+- mkdir bin\x64
+- copy Release\0cchext_vs13.dll bin\x86\0cchext.dll
+- copy x64\Release\0cchext_vs13.dll bin\x64\0cchext.dll
+- 7z a -tzip 0cchext.zip bin\*
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: On0Jnl8PQJ1Hte1ady5k67nXkpHs1jWlygKY0gPs+fumKiZp2xBuqyoxr/fIokd3
+  artifact: 0cchext.zip
+  draft: true
