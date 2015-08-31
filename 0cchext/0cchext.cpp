@@ -1090,7 +1090,9 @@ EXT_COMMAND(pe_export,
 					Out("%p\n", (ULONG64)funcs_info[i].address);
 				}
 				else {
-					Out("%04X %p  %s  %y\n", i, (ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
+					Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n", 
+						i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address, 
+						(ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
 				}
 			}
 		}
@@ -1101,14 +1103,13 @@ EXT_COMMAND(pe_export,
 EXT_COMMAND(pe_import,
 	"Dump PE import modules and functions",
 	"{;ed;Address;Specifies the address of the module.}"
-	"{f;s;Pattern;Specifies the pattern.}"
+	"{;s;Pattern;Specifies the pattern.}"
+	"{b;b,o;simplification;Only output address.}"
 	) 
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
-	LPCSTR pattern = NULL;
-	if (HasArg("f")) {
-		pattern = GetArgStr("f");
-	}
+	PCSTR pattern = GetUnnamedArgStr(1);
+	bool simplification = HasArg("b");
 	
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
@@ -1200,15 +1201,27 @@ EXT_COMMAND(pe_import,
 	}
 	
 	for (std::map<std::string, std::vector<IMPORT_FUNC_INFO>>::iterator it = func_map.begin(); it != func_map.end(); ++it) {
-		Dml("%s  <link cmd=\"lmva %p;!lmi %p\">(detail)</link>\n", it->first.c_str(), addr, addr);
+		if (!simplification) {
+			Dml("%s  <link cmd=\"lmva %p;!lmi %p\">(detail)</link>\n", it->first.c_str(), addr, addr);
+		}
 		if (pattern != NULL) {
 			for (size_t i = 0; i < it->second.size(); i++) {
 				if (MatchPattern(it->second[i].name.c_str(), pattern)) {
-					Out("%04X  %p  %s  %y\n", i, (ULONG64)it->second[i].address, it->second[i].name.c_str(), (ULONG64)it->second[i].address);
+					if (simplification) {
+						Out("%p\n", (ULONG64)it->second[i].address);
+					}
+					else {
+						Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n", 
+							i, (ULONG64)it->second[i].address, (ULONG64)it->second[i].address,
+							(ULONG64)it->second[i].address, it->second[i].name.c_str(), (ULONG64)it->second[i].address);	
+					}
 				}
 			}
 
-			Out("\n");
+			if (!simplification) {
+				Out("\n");
+			}
+			
 		}
 		
 	}
