@@ -305,7 +305,7 @@ EXT_COMMAND(dpx,
 			0x1000, 
 			CP_ACP,
 			buffer, 
-			sizeof(buffer), 
+			sizeof(buffer) - 1, 
 			&ret_size) != E_INVALIDARG && 
 			strlen(buffer) != 0 &&
 			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
@@ -314,7 +314,7 @@ EXT_COMMAND(dpx,
 		else if (m_Data4->ReadMultiByteStringVirtual(query_data, 
 			0x1000, 
 			buffer, 
-			sizeof(buffer), 
+			sizeof(buffer) - 1, 
 			&ret_size) != E_INVALIDARG && 
 			strlen(buffer) != 0 &&
 			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
