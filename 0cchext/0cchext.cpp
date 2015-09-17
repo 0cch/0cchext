@@ -1639,6 +1639,7 @@ EXT_COMMAND(wql,
 
 	CoInitialize(NULL);
 	if (WmiQueryInfoImpl(CA2W(query_str), query_result)) {
+		query_result.Replace(TEXT("%"), TEXT("%%"));
 		Out(query_result.GetString());
 	}
 	CoUninitialize();
