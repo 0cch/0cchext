@@ -202,7 +202,7 @@ void WmiTimeToString(LPCWSTR cimdatetime, CString &datatime_str)
 void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flavor, CString &out_str)
 {
 	CString flavor_str;
-	switch (flavor)
+	switch (flavor & WBEM_FLAVOR_MASK_ORIGIN)
 	{
 	case WBEM_FLAVOR_ORIGIN_SYSTEM:
 		flavor_str = TEXT("system");
@@ -221,23 +221,25 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 		cim_array = TRUE;
 	}
 
-	LONG array_upper_bound = 0;
-	LONG array_lower_bound = 0;
-	LONG array_count = 0;
-	PVOID array_raw_data = 0;
-	if (cim_array) {
-		SafeArrayGetLBound(V_ARRAY(&value), 1, &array_lower_bound);
-		SafeArrayGetUBound(V_ARRAY(&value), 1, &array_upper_bound);
-		array_count = array_upper_bound - array_lower_bound + 1;
-		SafeArrayAccessData(V_ARRAY(&value), &array_raw_data);
-	}
-
 	CString line;
 	line.Format(TEXT("  %-40s  %-10s  "), name, flavor_str.GetString());
 
 	if (value.vt == VT_NULL) {
 		line.Append(TEXT("\r\n"));
 	}
+
+	LONG array_upper_bound = 0;
+	LONG array_lower_bound = 0;
+	LONG array_count = 0;
+	PVOID array_raw_data = 0;
+	if (cim_array && (value.vt & VT_ARRAY) != 0) {
+		SafeArrayGetLBound(V_ARRAY(&value), 1, &array_lower_bound);
+		SafeArrayGetUBound(V_ARRAY(&value), 1, &array_upper_bound);
+		array_count = array_upper_bound - array_lower_bound + 1;
+		SafeArrayAccessData(V_ARRAY(&value), &array_raw_data);
+	}
+
+	
 
 	switch (type)
 	{
