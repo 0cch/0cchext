@@ -32,5 +32,6 @@ Commands for 0cchext.dll:
                      virtual address space of the debuggee process.
   !url             - Open a URL in a default browser.
   !version         - Displays the version information for 0cchext.dll
+  !wql             - Query system information with WMI.
 !help <cmd> will give more information for a particular command
 ```
