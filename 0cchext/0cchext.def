@@ -21,6 +21,7 @@ EXPORTS
 	bing
 	a
 	import_vs_bps
+	wql
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

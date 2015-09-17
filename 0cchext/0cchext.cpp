@@ -2,18 +2,6 @@
 #include "0cchext.h"
 #include "util.h"
 #include "struct_script.h"
-#include <engextcpp.hpp>
-#include <regex>
-#include <map>
-#include <set>
-#include <vector>
-#include <string>
-#include <Shlwapi.h>
-#include <Shellapi.h>
-#include <WinInet.h>
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "Version.lib")
-#pragma comment(lib, "Shlwapi.lib")
 
 
 class EXT_CLASS : public ExtExtension
@@ -37,6 +25,7 @@ public:
 	EXT_COMMAND_METHOD(bing);
 	EXT_COMMAND_METHOD(a);
 	EXT_COMMAND_METHOD(import_vs_bps);
+	EXT_COMMAND_METHOD(wql);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1627,6 +1616,32 @@ EXT_COMMAND(import_vs_bps,
 				bp->SetFlags(DEBUG_BREAKPOINT_ENABLED);
 			}
 	}
+}
+
+EXT_COMMAND(wql,
+	"Query system information with WMI.",
+	"{;x,r;query string;WMI Query Language string.}")
+{
+	PCSTR query_str = GetUnnamedArgStr(0);
+	CStringW query_result;
+
+	ULONG class_type = 0, qualifier_type = 0;
+	HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+	if (FAILED(hr)) {
+		Err("Failed to get debuggee type\n");
+		return;
+	}
+
+	if (class_type != DEBUG_CLASS_USER_WINDOWS || qualifier_type != DEBUG_USER_WINDOWS_PROCESS) {
+		Err("This command must be used in User-Mode and same computer\n");
+		return;
+	}
+
+	CoInitialize(NULL);
+	if (WmiQueryInfoImpl(CA2W(query_str), query_result)) {
+		Out(query_result.GetString());
+	}
+	CoUninitialize();
 }
 
 HRESULT EXT_CLASS::Initialize( void )
