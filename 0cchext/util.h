@@ -6,6 +6,7 @@
 #include <vector>
 
 BOOL IsPrintAble(CHAR *str, ULONG len);
+BOOL IsPrintAbleW(WCHAR *str, ULONG len);
 PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num);
 std::string ReadLines(PCSTR start_pos, PCSTR str, int lines);
 void ReadLines(PCSTR str, std::vector<std::string> &str_vec);

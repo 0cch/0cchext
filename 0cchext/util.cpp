@@ -5,7 +5,26 @@
 BOOL IsPrintAble(CHAR *str, ULONG len)
 {
 	for (ULONG i = 0; i < len; i++) {
+		if (iscntrl((UCHAR)str[i])) {
+			str[i] = '.';
+		}
+
 		if (!isprint((UCHAR)str[i])) {
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+BOOL IsPrintAbleW(WCHAR *str, ULONG len)
+{
+	for (ULONG i = 0; i < len; i++) {
+		if (iswcntrl(str[i])) {
+			str[i] = L'.';
+		}
+
+		if (!iswprint(str[i])) {
 			return FALSE;
 		}
 	}

@@ -268,7 +268,9 @@ EXT_COMMAND(dpx,
 
 	ExtRemoteData base_data;
 	ULONG64 query_data;
+	CHAR sym_buffer[128];
 	CHAR buffer[128];
+	WCHAR unicode_buffer[128];
 	ULONG ret_size = 0;
 	ULONG64 displacement = 0;
 	ULONG print_flag = 0;
@@ -283,24 +285,26 @@ EXT_COMMAND(dpx,
 		print_flag = 0;
 
 		if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data, 
-			buffer, 
-			sizeof(buffer), 
+			sym_buffer, 
+			sizeof(sym_buffer), 
 			&ret_size, 
 			&displacement))) {
 				print_flag |= 1;
 		}
 		
-		if (m_Data4->ReadUnicodeStringVirtual(query_data, 
-			0x1000, 
-			CP_ACP,
-			buffer, 
-			sizeof(buffer) - 1, 
+		ZeroMemory(unicode_buffer, sizeof(unicode_buffer));
+		if (m_Data4->ReadUnicodeStringVirtualWide(query_data, 
+			_countof(unicode_buffer) - 1, 
+			unicode_buffer, 
+			_countof(unicode_buffer) - 1, 
 			&ret_size) != E_INVALIDARG && 
-			strlen(buffer) != 0 &&
-			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
+			wcslen(unicode_buffer) != 0 &&
+			IsPrintAbleW(unicode_buffer, (ULONG)wcslen(unicode_buffer))) {
 				print_flag |= 2;
 		}
-		else if (m_Data4->ReadMultiByteStringVirtual(query_data, 
+		
+		ZeroMemory(buffer, sizeof(buffer));
+		if (m_Data4->ReadMultiByteStringVirtual(query_data, 
 			0x1000, 
 			buffer, 
 			sizeof(buffer) - 1, 
@@ -314,7 +318,7 @@ EXT_COMMAND(dpx,
 			if (!ignore_flag) {
 				Dml("%p  %p  [D] ", base_address + i * GetAddressPtrSize(), query_data);
 				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
-					Dml("%c", ((CHAR *)&query_data)[j]);
+					Dml("%c", iscntrl(((CHAR *)&query_data)[j]) ? '.' : ((CHAR *)&query_data)[j]);
 				}
 
 				Dml("\n");
@@ -327,11 +331,11 @@ EXT_COMMAND(dpx,
 			}
 
 			if (print_flag & 2) {
-				Dml("  [U] \"%mu\"", query_data);
+				Dml(L"  [U] \"%s\"", unicode_buffer);
 			}
 
 			if (print_flag & 4) {
-				Dml("  [A] \"%ma\"", query_data);
+				Dml("  [A] \"%s\"", buffer);
 			}
 
 			Dml("\n");
