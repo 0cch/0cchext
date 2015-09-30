@@ -22,6 +22,7 @@ EXPORTS
 	a
 	import_vs_bps
 	wql
+	err
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

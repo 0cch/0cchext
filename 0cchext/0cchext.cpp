@@ -26,6 +26,7 @@ public:
 	EXT_COMMAND_METHOD(a);
 	EXT_COMMAND_METHOD(import_vs_bps);
 	EXT_COMMAND_METHOD(wql);
+	EXT_COMMAND_METHOD(err);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1647,6 +1648,37 @@ EXT_COMMAND(wql,
 		Out(query_result.GetString());
 	}
 	CoUninitialize();
+}
+
+EXT_COMMAND(err,
+	"Decodes and displays information about an error value..",
+	"{n;b,o;NTSTATUS;Specifies the error code is read as an NTSTATUS code.}"
+	"{;ed,r;Value;Specifies an error code.}")
+{
+	bool ntcode = HasArg("n");
+	ULONG err_code = (ULONG)GetUnnamedArgU64(0);
+	HMODULE h = NULL;
+	CStringW err_msg = L"<Unable to get error code text>";
+	if (!ntcode) {
+		h = GetModuleHandle(TEXT("kernelbase.dll"));
+		if (h == NULL) {
+			h = GetModuleHandle(TEXT("kernel32.dll"));
+		}
+
+		if (h != NULL) {
+			FindMessage(h, err_code, err_msg);
+		}
+		Out(L"Error code: (Win32) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
+	}
+
+	h = NULL;
+	err_msg = L"<Unable to get error code text>";
+	h = GetModuleHandle(TEXT("ntdll.dll"));
+	
+	if (h != NULL) {
+		FindMessage(h, err_code, err_msg);
+	}
+	Out(L"Error code: (NTSTATUS) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 }
 
 HRESULT EXT_CLASS::Initialize( void )

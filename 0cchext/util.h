@@ -12,4 +12,5 @@ std::string ReadLines(PCSTR start_pos, PCSTR str, int lines);
 void ReadLines(PCSTR str, std::vector<std::string> &str_vec);
 BOOL GetTxtFileDataA(LPCSTR file, std::string &data);
 BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result);
+BOOL FindMessage(PVOID dll, ULONG id, CStringW &message);
 #endif

@@ -629,3 +629,42 @@ BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result)
 
 	return TRUE;
 }
+
+
+LONG (NTAPI *RtlFindMessage)(
+	PVOID DllHandle,
+	ULONG MessageTableId,
+	ULONG MessageLanguageId,
+	ULONG MessageId,
+	PMESSAGE_RESOURCE_ENTRY *MessageEntry
+	) = NULL;
+
+BOOL FindMessage(PVOID dll, ULONG id, CStringW &message)
+{
+	if (RtlFindMessage == NULL) {
+		HMODULE h = GetModuleHandle(TEXT("ntdll.dll"));
+		if (h == NULL) {
+			return FALSE;
+		}
+
+		*(FARPROC *)&RtlFindMessage = GetProcAddress(h, "RtlFindMessage");
+		if (RtlFindMessage == NULL) {
+			return FALSE;
+		}
+	}
+	
+	PMESSAGE_RESOURCE_ENTRY msg = NULL;
+	LONG ns = RtlFindMessage(dll, 0xb, 0, id, &msg);
+	if (ns < 0) {
+		return FALSE;
+	}
+
+	if (msg->Flags & MESSAGE_RESOURCE_UNICODE) {
+		message = (WCHAR *)msg->Text;
+	}
+	else {
+		message = (CHAR *)msg->Text;
+	}
+
+	return TRUE;
+}
