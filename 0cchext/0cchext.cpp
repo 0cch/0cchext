@@ -1651,7 +1651,7 @@ EXT_COMMAND(wql,
 }
 
 EXT_COMMAND(err,
-	"Decodes and displays information about an error value..",
+	"Decodes and displays information about an error value.",
 	"{n;b,o;NTSTATUS;Specifies the error code is read as an NTSTATUS code.}"
 	"{;ed,r;Value;Specifies an error code.}")
 {
