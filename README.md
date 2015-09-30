@@ -16,6 +16,7 @@ Commands for 0cchext.dll:
   !dpx             - Display the contents of memory in the given range.
   !dtx             - Displays information about structures. (The config file is
                      struct.ini)
+  !err             - Decodes and displays information about an error value.
   !favcmd          - Display the favorite debugger commands.(The config file is
                      favcmd.ini)
   !google          - Use google to search.
