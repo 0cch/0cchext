@@ -1665,20 +1665,18 @@ EXT_COMMAND(err,
 			h = GetModuleHandle(TEXT("kernel32.dll"));
 		}
 
-		if (h != NULL) {
-			FindMessage(h, err_code, err_msg);
+		if (h != NULL && FindMessage(h, err_code, err_msg)) {
+			Out(L"Error code: (Win32) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 		}
-		Out(L"Error code: (Win32) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 	}
 
 	h = NULL;
 	err_msg = L"<Unable to get error code text>";
 	h = GetModuleHandle(TEXT("ntdll.dll"));
 	
-	if (h != NULL) {
-		FindMessage(h, err_code, err_msg);
+	if (h != NULL && FindMessage(h, err_code, err_msg)) {
+		Out(L"Error code: (NTSTATUS) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 	}
-	Out(L"Error code: (NTSTATUS) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 }
 
 HRESULT EXT_CLASS::Initialize( void )
