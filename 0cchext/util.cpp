@@ -529,7 +529,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 		break;
 	}
 
-	if (cim_array) {
+	if (cim_array && (value.vt & VT_ARRAY) != 0) {
 		SafeArrayUnaccessData(V_ARRAY(&value));
 	}
 
