@@ -319,7 +319,7 @@ EXT_COMMAND(dpx,
 			if (!ignore_flag) {
 				Dml("%p  %p  [D] ", base_address + i * GetAddressPtrSize(), query_data);
 				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
-					Dml("%c", iscntrl(((CHAR *)&query_data)[j]) ? '.' : ((CHAR *)&query_data)[j]);
+					Dml("%c", iscntrl(((UCHAR *)&query_data)[j]) ? '.' : ((UCHAR *)&query_data)[j]);
 				}
 
 				Dml("\n");

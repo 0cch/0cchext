@@ -5,6 +5,7 @@
 BOOL IsPrintAble(CHAR *str, ULONG len)
 {
 	for (ULONG i = 0; i < len; i++) {
+
 		if (iscntrl((UCHAR)str[i])) {
 			str[i] = '.';
 		}
@@ -20,6 +21,7 @@ BOOL IsPrintAble(CHAR *str, ULONG len)
 BOOL IsPrintAbleW(WCHAR *str, ULONG len)
 {
 	for (ULONG i = 0; i < len; i++) {
+
 		if (iswcntrl(str[i])) {
 			str[i] = L'.';
 		}
