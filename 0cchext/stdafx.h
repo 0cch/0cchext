@@ -4,6 +4,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <Psapi.h>
 #include <atlbase.h>
 #include <atlstr.h>
 #include <engextcpp.hpp>
@@ -22,3 +23,4 @@
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "Psapi.lib")

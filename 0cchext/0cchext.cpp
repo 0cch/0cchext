@@ -27,6 +27,7 @@ public:
 	EXT_COMMAND_METHOD(import_vs_bps);
 	EXT_COMMAND_METHOD(wql);
 	EXT_COMMAND_METHOD(err);
+	EXT_COMMAND_METHOD(filepath);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1794,6 +1795,112 @@ EXT_COMMAND(err,
 	}
 }
 
+
+BOOL GetFilePathFromHandle(HANDLE file_handle, CString &file_path)
+{
+	BOOL retval = FALSE;
+	TCHAR maped_file_name[MAX_PATH];
+	HANDLE file_map_handle;
+
+	if (file_handle == NULL) {
+		return FALSE;
+	}
+
+	ULONG file_size_high = 0;
+	ULONG file_size_low = GetFileSize(file_handle, &file_size_high);
+	if (file_size_low == 0 && file_size_high == 0) {
+		return FALSE;
+	}
+
+	file_map_handle = CreateFileMapping(file_handle,
+		NULL,
+		PAGE_READONLY,
+		0,
+		1,
+		NULL);
+
+	if (file_map_handle == NULL) {
+		return FALSE;
+	}
+
+	// Create a file mapping to get the file name.
+	PVOID file_map_addr = MapViewOfFile(file_map_handle, FILE_MAP_READ, 0, 0, 1);
+	if (file_map_addr) {
+		if (GetMappedFileName(GetCurrentProcess(),
+			file_map_addr,
+			maped_file_name,
+			MAX_PATH)) 	{
+
+				file_path = maped_file_name;
+
+				const int buffer_length = 512;
+				TCHAR buffer[buffer_length] = {0};
+
+				if (GetLogicalDriveStrings(buffer_length - 1, buffer)) 	{
+
+					TCHAR dos_name[MAX_PATH];
+					TCHAR drive_template[3] = TEXT(" :");
+					BOOL foundit = FALSE;
+					TCHAR* p = buffer;
+
+					do
+					{
+						// Copy the drive letter to the template string
+						*drive_template = *p;
+
+						// Look up each device name
+						if (QueryDosDevice(drive_template, dos_name, MAX_PATH)) {
+							size_t dos_name_length = _tcslen(dos_name);
+							foundit = _tcsnicmp(maped_file_name, dos_name, dos_name_length) == 0
+								&& *(maped_file_name + dos_name_length) == TEXT('\\');
+
+							if (foundit) {
+								file_path.Format(TEXT("%s%s"), drive_template, maped_file_name + dos_name_length);
+							}
+						}
+						p += _tcslen(p) + 1;
+					} while (!foundit && *p); // end of string
+				}
+		}
+		retval = TRUE;
+		UnmapViewOfFile(file_map_addr);
+	}
+
+	CloseHandle(file_map_handle);
+	return retval;
+}
+
+
+EXT_COMMAND(filepath,
+	"Show file path by handle.",
+	"{;ed,r;file handle;A handle to the file}")
+{
+	ULONG64 file_handle = GetUnnamedArgU64(0);
+	ULONG64 src_handle;
+	
+	if (FAILED(m_System->GetCurrentProcessHandle(&src_handle))) {
+		Err("Failed to get debuggee handle.\n");
+		return;
+	}
+
+	HANDLE dst_file_handle;
+	if (!DuplicateHandle((HANDLE)src_handle, (HANDLE)file_handle, GetCurrentProcess(), &dst_file_handle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+		Err("Failed to get file handle.\n");
+		return;
+	}
+
+	CString file_path;
+	if (!GetFinalPathNameByHandle(dst_file_handle, file_path.GetBufferSetLength(MAX_PATH), MAX_PATH, 0)) {
+		Err("Failed to get file path.\n");
+		return;
+	}
+
+	file_path.ReleaseBuffer();
+	Out(L"   %s\n", file_path.GetString());
+
+	CloseHandle(dst_file_handle);
+}
+
 HRESULT EXT_CLASS::Initialize( void )
 {
 	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&log_client_))) {
@@ -1813,3 +1920,4 @@ void EXT_CLASS::Uninitialize( void )
 
 	__super::Uninitialize();
 }
+
