@@ -1877,6 +1877,18 @@ EXT_COMMAND(filepath,
 {
 	ULONG64 file_handle = GetUnnamedArgU64(0);
 	ULONG64 src_handle;
+
+	ULONG class_type = 0, qualifier_type = 0;
+	HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+	if (FAILED(hr)) {
+		Err("Failed to get debuggee type\n");
+		return;
+	}
+
+	if (class_type != DEBUG_CLASS_USER_WINDOWS || qualifier_type != DEBUG_USER_WINDOWS_PROCESS) {
+		Err("This command must be used in User-Mode and same computer\n");
+		return;
+	}
 	
 	if (FAILED(m_System->GetCurrentProcessHandle(&src_handle))) {
 		Err("Failed to get debuggee handle.\n");
