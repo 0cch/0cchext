@@ -268,7 +268,6 @@ EXT_COMMAND(dpx,
 	ULONG64 base_address = GetUnnamedArgU64(0);
 	ULONG64 range = GetUnnamedArgU64(1);
 
-	ExtRemoteData base_data;
 	ULONG64 query_data;
 	CHAR sym_buffer[128];
 	CHAR buffer[128];
@@ -276,12 +275,35 @@ EXT_COMMAND(dpx,
 	ULONG ret_size = 0;
 	ULONG64 displacement = 0;
 	ULONG print_flag = 0;
+	ULONG read_done = 0;
 
 	BOOL ignore_flag = HasCharArg('i');
 
 	for (ULONG64 i = 0; i < range; i++) {
-		base_data.Set(base_address + i * GetAddressPtrSize(), GetAddressPtrSize());
-		query_data = base_data.GetPtr();
+
+		HRESULT hr = m_Data->ReadVirtual(base_address + i * GetAddressPtrSize(), &query_data, GetAddressPtrSize(), &read_done);
+		if (GetAddressPtrSize() == 4) {
+			query_data &= 0xffffffff;
+		}
+
+		if (hr == S_OK && read_done != GetAddressPtrSize()) {
+			break;
+		}
+
+		if (hr != S_OK) {
+			if (!ignore_flag) {
+				Dml("%p  ", base_address + i * GetAddressPtrSize());
+				for (int j = 0; j < (int)(GetAddressPtrSize() << 1); j++) {
+					if (j == 8) {
+						Dml("`");
+					}
+					Dml("?");
+				}
+				Dml("\n");
+			}
+			continue;
+		}
+
 		ret_size = 0;
 		ZeroMemory(buffer, sizeof(buffer));
 		print_flag = 0;
