@@ -294,9 +294,6 @@ EXT_COMMAND(dpx,
 			if (!ignore_flag) {
 				Dml("%p  ", base_address + i * GetAddressPtrSize());
 				for (int j = 0; j < (int)(GetAddressPtrSize() << 1); j++) {
-					if (j == 8) {
-						Dml("`");
-					}
 					Dml("?");
 				}
 				Dml("\n");
