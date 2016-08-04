@@ -28,6 +28,7 @@ public:
 	EXT_COMMAND_METHOD(wql);
 	EXT_COMMAND_METHOD(err);
 	EXT_COMMAND_METHOD(filepath);
+	EXT_COMMAND_METHOD(stackstat);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1930,6 +1931,64 @@ EXT_COMMAND(filepath,
 	Out(L"   %s\n", file_path.GetString());
 
 	CloseHandle(dst_file_handle);
+}
+
+EXT_COMMAND(stackstat,
+	"Statistics duplicate stack data.",
+	"")
+{
+	ULONG thread_count = 0;
+	m_System->GetNumberThreads(&thread_count);
+
+	if (thread_count == 0) {
+		return;
+	}
+
+	std::vector<ULONG> tids, dtids;
+	tids.resize(thread_count);
+	dtids.resize(thread_count);
+
+	if (FAILED(m_System->GetThreadIdsByIndex(0, thread_count, dtids.data(), tids.data()))) {
+		return;
+	}
+
+	ULONG current_dtid = 0;
+	m_System->GetCurrentThreadId(&current_dtid);
+
+	std::map<CString, std::vector<CString>> stat_info;
+
+	for (ULONG i = 0; i < thread_count; i++) {
+		m_System->SetCurrentThreadId(dtids[i]);
+		std::vector<DEBUG_STACK_FRAME> stack_frames;
+		ULONG fill_count = 0;
+		stack_frames.resize(0x1000);
+		m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), 0x1000, &fill_count);
+
+		CString stack_key;
+		for (ULONG j = 0; j < fill_count; j++) {
+			if (GetAddressPtrSize() == 4) {
+				stack_key.AppendFormat(TEXT("%X"), (ULONG)stack_frames[j].InstructionOffset);
+			}
+			else {
+				stack_key.AppendFormat(TEXT("%I64X"), stack_frames[j].InstructionOffset);
+			}
+		}
+
+		CString stack_id_info;
+		stack_id_info.Format(TEXT("%u(%x)"), dtids[i], tids[i]);
+		stat_info[stack_key].push_back(stack_id_info);
+	}
+
+	m_System->SetCurrentThreadId(current_dtid);
+	Dml("Duplicate threads stack:\r\n\r\n");
+	int i = 0;
+	for (std::map<CString, std::vector<CString>>::iterator it = stat_info.begin(); it != stat_info.end(); ++it) {
+		Dml("%u:\tCount = %u\r\n\t", i++, (*it).second.size());
+		for (std::vector<CString>::iterator it2 = (*it).second.begin(); it2 != (*it).second.end(); ++it2) {
+			Dml("%S ", (*it2).GetString());
+		}
+		Dml("\r\n\r\n");
+	}
 }
 
 HRESULT EXT_CLASS::Initialize( void )
