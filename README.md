@@ -8,6 +8,7 @@ site:   http://0cch.com
 ### Usage
 ```
 Commands for 0cchext.dll:
+Commands for D:\MyCode\0cchext\Debug\0cchext.dll:
   !a               - Assembles instruction mnemonics and puts the resulting
                      instruction codes into memory.
   !autocmd         - Execute the debugger commands.(The config file is
@@ -19,6 +20,7 @@ Commands for 0cchext.dll:
   !err             - Decodes and displays information about an error value.
   !favcmd          - Display the favorite debugger commands.(The config file is
                      favcmd.ini)
+  !filepath        - Show file path by handle.
   !google          - Use google to search.
   !grep            - Search plain-text data sets for lines matching a regular
                      expression.
@@ -31,10 +33,12 @@ Commands for 0cchext.dll:
   !pe_import       - Dump PE import modules and functions
   !setvprot        - Set the protection on a region of committed pages in the
                      virtual address space of the debuggee process.
+  !stackstat       - Statistics duplicate stack data.
   !url             - Open a URL in a default browser.
   !version         - Displays the version information for 0cchext.dll
   !wql             - Query system information with WMI.
 !help <cmd> will give more information for a particular command
+
 ```
 
 ### Detail
@@ -241,3 +245,69 @@ This command is a reverse engineering command. Because we cannot load symbols wh
 [![20151005172455](http://0cch.com/uploads/2015/10/20151005172455.png)](/uploads/2015/10/20151005172455.png)
 
 the script parser supports some basic types like BYTE WORD DWORD QWORD CHAR WCHAR, it also supports arrays, pointers and  nested structure.
+
+#### !filepath
+> !filepath        - Show file path by handle.
+
+This command can help us check the path of file handle that !handle cannot.
+
+```
+0:000> !handle 1c
+Handle 1c
+  Type         	File
+0:000> !handle 1c f
+Handle 1c
+  Type         	File
+  Attributes   	0
+  GrantedAccess	0x100020:
+         Synch
+         Execute/Traverse
+  HandleCount  	2
+  PointerCount 	3
+  No Object Specific Information available
+  
+0:000> .load 0cchext.dll
+0:000> !filepath 1c
+   \\?\D:\Program Files (x86)\Windows Kits\10\Debuggers
+
+```
+
+#### !stackstat
+> !stackstat       - Statistics duplicate stack data.
+
+This command can statistic duplicate stack data, this is useful for troubleshooting thread leak.
+
+```
+
+0:000:x86> !stackstat
+Duplicate threads stack:
+
+0:	Count = 1
+	4(25e0) 
+
+1:	Count = 1
+	0(25b4) 
+
+2:	Count = 7
+	9(188c) 11(27d0) 13(460) 67(279c) 72(1d90) 73(21c8) 1384(b74) 
+
+3:	Count = 6
+	74(13e4) 75(d28) 76(1e20) 77(1f4c) 78(14c0) 79(18ac) 
+
+4:	Count = 3
+	6(24dc) 51(54c) 56(d54) 
+
+5:	Count = 7
+	7(ec4) 8(1d20) 10(194c) 12(16b0) 66(1a50) 70(1c08) 71(1120) 
+
+...
+
+18:	Count = 1296
+	83(2030) 84(1bfc) 85(1348) 86(1ea8) 87(1e7c) 88(1510) 89(1484) 90(14d4) 91(f44) 92(1768) 93(1ecc) 94(174c) 95(1758) 96(1b88) 97(1ce0) 98(4dc) 99(1bb0) 100(1354) ... ... 1329(1368) 1330(1dd8) 1331(a50) ... ... 1368(145c) 1369(1078) 1370(22a8) 1371(13e8) 1372(1f74) 1373(e68) 1374(24c8) 1375(144c) 1376(1d48) 1377(1cf4) 1378(12a0) 1383(1cd0) 
+
+19:	Count = 1
+	16(1aec) 
+
+...
+
+```
