@@ -25,6 +25,12 @@ EXPORTS
 	err
 	filepath
 	stackstat
+	addmodule
+	addsymbol
+	removemodule
+	removesymbol
+	listmodule
+	listsymbol
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

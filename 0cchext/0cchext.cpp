@@ -29,6 +29,12 @@ public:
 	EXT_COMMAND_METHOD(err);
 	EXT_COMMAND_METHOD(filepath);
 	EXT_COMMAND_METHOD(stackstat);
+	EXT_COMMAND_METHOD(addmodule);
+	EXT_COMMAND_METHOD(removemodule);
+	EXT_COMMAND_METHOD(removesymbol);
+	EXT_COMMAND_METHOD(addsymbol);
+	EXT_COMMAND_METHOD(listmodule);
+	EXT_COMMAND_METHOD(listsymbol);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1989,6 +1995,160 @@ EXT_COMMAND(stackstat,
 		}
 		Dml("\r\n\r\n");
 	}
+}
+
+class synthetic_symbol {
+public:
+	ULONG64 offset;
+	ULONG symbol_size;
+	std::string symbol_name;
+	DEBUG_MODULE_AND_ID id;
+};
+
+std::map<ULONG64, synthetic_symbol> g_synthetic_symbols_list;
+
+EXT_COMMAND(addsymbol,
+	"Adds a synthetic symbol to a module in the current process.",
+	"{;ed,r;Offset;Specifies the location in the process's virtual address space of the synthetic symbol.}"
+	"{;ed,r;Size;Specifies the size in bytes of the synthetic symbol.}"
+	"{;s,r;Name;Specifies the name of the synthetic symbol.}"
+	)
+{
+	ULONG64 offset = GetUnnamedArgU64(0);
+	ULONG64 sym_size = GetUnnamedArgU64(1);
+	PCSTR sym_name = GetUnnamedArgStr(2);
+	
+	std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.find(offset);
+	if (it != g_synthetic_symbols_list.end()) {
+		m_Symbols3->RemoveSyntheticSymbol(&it->second.id);
+	}
+
+	DEBUG_MODULE_AND_ID id = {0};
+	if (SUCCEEDED(m_Symbols3->AddSyntheticSymbol(offset, (ULONG)sym_size, sym_name, DEBUG_ADDSYNTHSYM_DEFAULT, &id))) {
+		synthetic_symbol symbol_info;
+		symbol_info.offset = offset;
+		symbol_info.symbol_size = (ULONG)sym_size;
+		symbol_info.symbol_name = sym_name;
+		symbol_info.id = id;
+		g_synthetic_symbols_list[offset] = symbol_info;
+	}
+}
+
+EXT_COMMAND(removesymbol,
+	"Specifies the synthetic symbol to remove.",
+	"{;ed,o;Offset;Specifies the location in the process's virtual address space of the synthetic symbol.}"
+	"{a;b;All;Remove all synthetic symbols.}"
+	)
+{
+	if (HasArg("a")) {
+		for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin(); 
+			it != g_synthetic_symbols_list.end(); ++it) {
+				m_Symbols3->RemoveSyntheticSymbol(&it->second.id);
+		}
+
+		g_synthetic_symbols_list.clear();
+	}
+	else {
+		ULONG64 offset = GetUnnamedArgU64(0);
+		std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.find(offset);
+		if (it != g_synthetic_symbols_list.end()) {
+			m_Symbols3->RemoveSyntheticSymbol(&it->second.id);
+			g_synthetic_symbols_list.erase(it);
+		}
+	}
+}
+
+EXT_COMMAND(listsymbol,
+	"List the synthetic symbols.",
+	""
+	)
+{
+	Dml("ID  Offset  Size  Name\r\n");
+	ULONG i = 0;
+	for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin(); 
+		it != g_synthetic_symbols_list.end(); ++it) {
+			Dml("%u  %p  %u  %s\r\n", i++, it->second.offset, it->second.symbol_size, it->second.symbol_name.c_str());
+	}
+	Dml("\r\n");
+}
+
+class synthetic_module {
+public:
+	ULONG64 base_addr;
+	ULONG module_size;
+	std::string module_name;
+	std::string module_path;
+};
+
+std::map<ULONG64, synthetic_module> g_synthetic_module_list;
+
+
+EXT_COMMAND(addmodule,
+	"Adds a synthetic module to the module list the debugger maintains for the current process.",
+	"{;ed,r;Base address;Specifies the location in the process's virtual address space of the base of the synthetic module.}"
+	"{;ed,r;Size;Specifies the size in bytes of the synthetic module.}"
+	"{;s,r;Name;Specifies the module name for the synthetic module.}"
+	"{;x,r;Path;Specifies the image name of the synthetic module."
+	"This is the name that will be returned as the name of the executable file for the synthetic module. The full path should be included if known.}"
+	)
+{
+	ULONG64 base_addr = GetUnnamedArgU64(0);
+	ULONG64 module_size = GetUnnamedArgU64(1);
+	PCSTR module_name = GetUnnamedArgStr(2);
+	PCSTR module_path = GetUnnamedArgStr(3);
+
+	if (g_synthetic_module_list.find(base_addr) != g_synthetic_module_list.end()) {
+		m_Symbols3->RemoveSyntheticModule(base_addr);
+	}
+
+	if (SUCCEEDED(m_Symbols3->AddSyntheticModule(base_addr, (ULONG)module_size, module_path, module_name, DEBUG_ADDSYNTHMOD_DEFAULT))) {
+		synthetic_module module_info;
+		module_info.base_addr = base_addr;
+		module_info.module_size = (ULONG)module_size;
+		module_info.module_name = module_name;
+		module_info.module_path = module_path;
+		g_synthetic_module_list[base_addr] = module_info;
+	}
+
+}
+
+EXT_COMMAND(removemodule,
+	"removes a synthetic module from the module list the debugger maintains for the current process.",
+	"{;ed,o;Base address;Specifies the location in the process's virtual address space of the base of the synthetic module.}"
+	"{a;b;All;Remove all synthetic modules.}"
+	)
+{
+	if (HasArg("a")) {
+		for (std::map<ULONG64, synthetic_module>::iterator it = g_synthetic_module_list.begin();
+			it != g_synthetic_module_list.end(); ++it) {
+
+				m_Symbols3->RemoveSyntheticModule(it->second.base_addr);
+		}
+
+		g_synthetic_module_list.clear();
+	}
+	else {
+		ULONG64 base_addr = GetUnnamedArgU64(0);
+		m_Symbols3->RemoveSyntheticModule(base_addr);
+		std::map<ULONG64, synthetic_module>::iterator it = g_synthetic_module_list.find(base_addr);
+		if (it != g_synthetic_module_list.end()) {
+			g_synthetic_module_list.erase(it);
+		}
+	}
+}
+
+EXT_COMMAND(listmodule,
+	"List the synthetic modules.",
+	""
+	)
+{
+	Dml("ID  Address  Size  Name  Path\r\n");
+	ULONG i = 0;
+	for (std::map<ULONG64, synthetic_module>::iterator it = g_synthetic_module_list.begin(); 
+		it != g_synthetic_module_list.end(); ++it) {
+			Dml("%u  %p  %u  %-12s  %s\r\n", i++, it->second.base_addr, it->second.module_size, it->second.module_name.c_str(), it->second.module_path.c_str());
+	}
+	Dml("\r\n");
 }
 
 HRESULT EXT_CLASS::Initialize( void )
