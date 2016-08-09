@@ -2012,11 +2012,14 @@ EXT_COMMAND(addsymbol,
 	"{;ed,r;Offset;Specifies the location in the process's virtual address space of the synthetic symbol.}"
 	"{;ed,r;Size;Specifies the size in bytes of the synthetic symbol.}"
 	"{;s,r;Name;Specifies the name of the synthetic symbol.}"
+	"{;ed,o,d=0;Base;Specifies base address of the synthetic symbol.}"
 	)
 {
 	ULONG64 offset = GetUnnamedArgU64(0);
 	ULONG64 sym_size = GetUnnamedArgU64(1);
 	PCSTR sym_name = GetUnnamedArgStr(2);
+	
+	offset += GetUnnamedArgU64(3);
 	
 	std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.find(offset);
 	if (it != g_synthetic_symbols_list.end()) {
