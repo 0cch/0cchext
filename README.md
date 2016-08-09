@@ -8,9 +8,12 @@ site:   http://0cch.com
 ### Usage
 ```
 Commands for 0cchext.dll:
-Commands for D:\MyCode\0cchext\Debug\0cchext.dll:
   !a               - Assembles instruction mnemonics and puts the resulting
                      instruction codes into memory.
+  !addmodule       - Adds a synthetic module to the module list the debugger
+                     maintains for the current process.
+  !addsymbol       - Adds a synthetic symbol to a module in the current
+                     process.
   !autocmd         - Execute the debugger commands.(The config file is
                      autocmd.ini)
   !bing            - Use bing to search.
@@ -28,9 +31,14 @@ Commands for D:\MyCode\0cchext\Debug\0cchext.dll:
   !hwnd            - Show window information by handle.
   !import_vs_bps   - Import visual studio breakpoints.
   !init_script_env - Initialize script environment.
+  !listmodule      - List the synthetic modules.
+  !listsymbol      - List the synthetic symbols.
   !logcmd          - Log command line to log file
   !pe_export       - Dump PE export functions
   !pe_import       - Dump PE import modules and functions
+  !removemodule    - removes a synthetic module from the module list the
+                     debugger maintains for the current process.
+  !removesymbol    - Specifies the synthetic symbol to remove.
   !setvprot        - Set the protection on a region of committed pages in the
                      virtual address space of the debuggee process.
   !stackstat       - Statistics duplicate stack data.
