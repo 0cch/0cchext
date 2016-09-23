@@ -35,6 +35,7 @@ public:
 	EXT_COMMAND_METHOD(addsymbol);
 	EXT_COMMAND_METHOD(listmodule);
 	EXT_COMMAND_METHOD(listsymbol);
+	EXT_COMMAND_METHOD(memstat);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -1994,6 +1995,66 @@ EXT_COMMAND(stackstat,
 			Dml("%S ", (*it2).GetString());
 		}
 		Dml("\r\n\r\n");
+	}
+}
+
+typedef struct  _DBG_MEMORY_BASIC_INFORMATION64 {
+	ULONGLONG BaseAddress;
+	ULONGLONG AllocationBase;
+	DWORD     AllocationProtect;
+	DWORD     __alignment1;
+	ULONGLONG RegionSize;
+	DWORD     State;
+	DWORD     Protect;
+	DWORD     Type;
+	DWORD     __alignment2;
+} DBG_MEMORY_BASIC_INFORMATION64, *PDBG_MEMORY_BASIC_INFORMATION64;
+
+EXT_COMMAND(memstat,
+	"Statistics virtual memory allocation.",
+	"")
+{
+	MEMORY_BASIC_INFORMATION64 info;
+	ULONG64 cur = 0;
+
+	std::map<CString, std::vector<DBG_MEMORY_BASIC_INFORMATION64>> stat_result;
+
+	while (SUCCEEDED(m_Data2->QueryVirtual(cur, &info))) {
+
+		if (info.State != MEM_FREE) {
+			CString key;
+			key.Format(L"%I64x%x%x%x", info.RegionSize, info.Protect, info.State, info.Type);
+			stat_result[key].push_back(*(PDBG_MEMORY_BASIC_INFORMATION64)&info);
+		}
+
+		cur = info.BaseAddress + info.RegionSize;
+		if (cur == 0) {
+			break;
+		}
+
+		ZeroMemory(&info, sizeof(info));
+	}
+
+	std::vector<std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *>> sort_result;
+	for(std::map<CString, std::vector<DBG_MEMORY_BASIC_INFORMATION64>>::iterator it = stat_result.begin(); 
+		it != stat_result.end(); ++it) {
+		sort_result.push_back(std::make_pair(it->second.size(), &it->second));
+	}
+
+	struct {
+		bool operator()(std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> &a, std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> & b)
+		{   
+			return a.first > b.first;
+		}   
+	} mem_sort;
+
+	std::sort(sort_result.begin(), sort_result.end(), mem_sort);
+	
+	Dml("Size              Count     State     Protect   Type\r\n");
+	for(std::vector<std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *>>::iterator it = sort_result.begin(); 
+		it != sort_result.end(); ++it) {
+			Dml("%016I64x  %8u  %08x  %08x  %08x\r\n", 
+				(*it->second)[0].RegionSize, it->first, (*it->second)[0].State, (*it->second)[0].Protect, (*it->second)[0].Type);
 	}
 }
 
