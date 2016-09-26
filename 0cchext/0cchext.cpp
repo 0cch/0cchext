@@ -2217,7 +2217,7 @@ EXT_COMMAND(listmodule,
 
 HRESULT EXT_CLASS::Initialize( void )
 {
-	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&log_client_))) {
+	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&log_client_.p))) {
 		if (SUCCEEDED(log_client_->GetOutputCallbacks(&g_original_output_callback))) {
 			log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)&g_log_callback);
 		}
