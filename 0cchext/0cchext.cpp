@@ -2010,9 +2010,31 @@ typedef struct  _DBG_MEMORY_BASIC_INFORMATION64 {
 	DWORD     __alignment2;
 } DBG_MEMORY_BASIC_INFORMATION64, *PDBG_MEMORY_BASIC_INFORMATION64;
 
+CStringA FormatSize(ULONGLONG size)
+{
+	const ULONG kBytePerKB = 1024;
+	const ULONG kBytePerMB = 1024 * 1024;
+	const ULONG kBytePerGB = 1024 * 1024 * 1024;
+	CStringA size_str;
+	if (size > kBytePerGB) {
+		size_str.Format("%8.3lf (GB)", (double)size / kBytePerGB);
+	}
+	else if (size > kBytePerMB) {
+		size_str.Format("%8.3lf (MB)", (double)size / kBytePerMB);
+	}
+	else if (size > kBytePerKB) {
+		size_str.Format("%8.3lf (KB)", (double)size / kBytePerKB);
+	}
+	else {
+		size_str.Format("%8u ( B)", size);
+	}
+
+	return size_str;
+}
+
 EXT_COMMAND(memstat,
 	"Statistics virtual memory allocation.",
-	"")
+	"{m;b,o;Sort;Sort by total memory.}")
 {
 	MEMORY_BASIC_INFORMATION64 info;
 	ULONG64 cur = 0;
@@ -2045,16 +2067,29 @@ EXT_COMMAND(memstat,
 		bool operator()(std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> &a, std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> & b)
 		{   
 			return a.first > b.first;
-		}   
+		}
 	} mem_sort;
 
-	std::sort(sort_result.begin(), sort_result.end(), mem_sort);
+	struct {
+		bool operator()(std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> &a, std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> & b)
+		{   
+			return (*a.second)[0].RegionSize * a.first > (*b.second)[0].RegionSize * b.first;
+		}
+	} mem_total_sort;
+
+	if (HasArg("m")) {
+		std::sort(sort_result.begin(), sort_result.end(), mem_total_sort);
+	}
+	else {
+		std::sort(sort_result.begin(), sort_result.end(), mem_sort);
+	}
 	
-	Dml("Size              Count     State     Protect   Type\r\n");
+	Dml("Size              Count     Total(MB)      State     Protect   Type\r\n");
 	for(std::vector<std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *>>::iterator it = sort_result.begin(); 
 		it != sort_result.end(); ++it) {
-			Dml("%016I64x  %8u  %08x  %08x  %08x\r\n", 
-				(*it->second)[0].RegionSize, it->first, (*it->second)[0].State, (*it->second)[0].Protect, (*it->second)[0].Type);
+			Dml("%016I64x  %8u  %s  %08x  %08x  %08x\r\n", 
+				(*it->second)[0].RegionSize, it->first, FormatSize((*it->second)[0].RegionSize * it->first).GetString(), 
+				(*it->second)[0].State, (*it->second)[0].Protect, (*it->second)[0].Type);
 	}
 }
 
