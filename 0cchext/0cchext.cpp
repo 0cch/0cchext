@@ -1667,7 +1667,7 @@ EXT_COMMAND(a,
 	}
 	
 	char buffer[64];
-	sprintf_s(buffer, sizeof(buffer), "0x%x", end_address);
+	sprintf_s(buffer, sizeof(buffer), "0x%I64x", end_address);
 	m_Control2->SetTextReplacement("@#LastAsmAddr", buffer);
 }
 
@@ -2214,11 +2214,12 @@ EXT_COMMAND(tracedisplay,
 
 		Out(L"Count = %u    KeyCount = %u    ", (ULONG)(*it)->second.second.size(), key_count);
 		for (int i = 0; i < key_count; i++) {
-			Out(L"Key%u = %s    ", i, key[i].GetString());
+			Out(L"Key%u = %s    ", i + 1, key[i].GetString());
 		}
 		Out("\r\n");
 
-		m_Control->OutputStackTrace(DEBUG_OUTCTL_THIS_CLIENT, (*it)->second.first.data(), (ULONG)(*it)->second.first.size(), 0);
+		m_Control->OutputStackTrace(DEBUG_OUTCTL_ALL_CLIENTS, (*it)->second.first.data(),
+			(ULONG)(*it)->second.first.size(), DEBUG_STACK_FRAME_NUMBERS);
 		Out("\r\n");
 	}
 }
