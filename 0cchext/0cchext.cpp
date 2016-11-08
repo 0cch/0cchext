@@ -36,6 +36,10 @@ public:
 	EXT_COMMAND_METHOD(listmodule);
 	EXT_COMMAND_METHOD(listsymbol);
 	EXT_COMMAND_METHOD(memstat);
+	EXT_COMMAND_METHOD(tracecreate);
+	EXT_COMMAND_METHOD(traceclose);
+	EXT_COMMAND_METHOD(traceclear);
+	EXT_COMMAND_METHOD(tracedisplay);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -2090,6 +2094,132 @@ EXT_COMMAND(memstat,
 			Dml("%016I64x  %8u  %s  %08x  %08x  %08x\r\n", 
 				(*it->second)[0].RegionSize, it->first, FormatSize((*it->second)[0].RegionSize * it->first).GetString(), 
 				(*it->second)[0].State, (*it->second)[0].Protect, (*it->second)[0].Type);
+	}
+}
+
+std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>> g_trace_object_list;
+
+EXT_COMMAND(tracecreate,
+	"Create a trace event.",
+	"{;ed,r;Object;Trace object.}"
+	"{;ed,o;Key1;Trace index key 1.}"
+	"{;ed,o;Key2;Trace index key 2.}"
+	"{;ed,o;Key3;Trace index key 3.}"
+	)
+{
+	int key_count = 0;
+	ULONG64 key[3] = {0};
+
+	ULONG64 obj_addr = GetUnnamedArgU64(0);
+
+	for (int i = 0; i < 3; i++) {
+		if (HasUnnamedArg(i + 1)) {
+			key[i] = GetUnnamedArgU64(i + 1);
+			key_count++;
+		}
+	}
+	
+	CString key_str;
+	key_str.Format(TEXT("%u_"), key_count);
+	for (int i = 0; i < key_count; i++) {
+		key_str.AppendFormat(TEXT("%I64X_"), key[i]);
+	}
+
+	std::vector<DEBUG_STACK_FRAME> stack_frames;
+	ULONG fill_count = 0;
+	stack_frames.resize(0x1000);
+	m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), 0x1000, &fill_count);
+	stack_frames.resize(fill_count);
+	stack_frames.shrink_to_fit();
+
+	ULONG64 hashkey = 0xf0ad9ceb16352478;
+	for (ULONG j = 0; j < fill_count; j++) {
+		hashkey ^= stack_frames[j].InstructionOffset;
+	}
+
+	key_str.AppendFormat(TEXT("%I64X"), hashkey);
+
+	g_trace_object_list[key_str].first = stack_frames;
+	g_trace_object_list[key_str].second.insert(obj_addr);
+}
+
+EXT_COMMAND(traceclose,
+	"Close a trace event.",
+	"{;ed,r;Object;Trace object.}"
+	"{k;b,o;Keep;Keep stack if object count is 0.}"
+	)
+{
+	ULONG64 obj_addr = GetUnnamedArgU64(0);
+	BOOL keep = HasArg("k");
+	for (std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator it = g_trace_object_list.begin();
+		it != g_trace_object_list.end();) {
+			if ((*it).second.second.find(obj_addr) != (*it).second.second.end()) {
+				(*it).second.second.erase(obj_addr);
+			}
+
+			if (!keep) {
+				if ((*it).second.second.empty()) {
+					it = g_trace_object_list.erase(it);
+					continue;
+				}
+			}
+
+			++it;
+	}
+}
+
+EXT_COMMAND(traceclear,
+	"Clear trace event.",
+	""
+	)
+{
+	g_trace_object_list.clear();
+}
+
+EXT_COMMAND(tracedisplay,
+	"Display trace event.",
+	""
+	)
+{
+	std::vector<std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator> object_vector;
+
+	for (std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator it = g_trace_object_list.begin();
+		it != g_trace_object_list.end(); ++it) {
+
+			object_vector.push_back(it);
+	}
+
+	struct {
+		bool operator()(std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator &a, 
+			std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator &b)
+		{   
+			return a->second.second.size() > b->second.second.size();
+		}
+	} count_sort;
+
+	std::sort(object_vector.begin(), object_vector.end(), count_sort);
+
+	for (std::vector<std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator>::iterator it = object_vector.begin();
+		it != object_vector.end(); ++it) {
+		int cur_pos = 0;
+		int key_count = 0;
+		CString key_token = (*it)->first.Tokenize(TEXT("_"), cur_pos);
+		key_count = wcstoul(key_token.GetString(), NULL, 10);
+
+		CString key[3];
+		for (int i = 0; i < key_count && key_token != TEXT(""); i++) {
+			key_token = (*it)->first.Tokenize(TEXT("_"), cur_pos);
+			key[i] = key_token;
+		}
+
+		Out(L"Count = %u    KeyCount = %u    ", (ULONG)(*it)->second.second.size(), key_count);
+		for (int i = 0; i < key_count; i++) {
+			Out(L"Key%u = %s    ", i, key[i].GetString());
+		}
+		Out("\r\n");
+
+		m_Control->OutputStackTrace(DEBUG_OUTCTL_THIS_CLIENT, (*it)->second.first.data(), (ULONG)(*it)->second.first.size(), 0);
+		Out("\r\n");
 	}
 }
 

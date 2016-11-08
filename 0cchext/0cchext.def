@@ -32,6 +32,10 @@ EXPORTS
 	listmodule
 	listsymbol
 	memstat
+	tracecreate
+	traceclose
+	traceclear
+	tracedisplay
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
