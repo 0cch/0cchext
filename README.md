@@ -4,6 +4,8 @@ Author: nightxie
 site:   http://0cch.com
 
 [![Build status](https://ci.appveyor.com/api/projects/status/lum8m63fig6bk94x?svg=true)](https://ci.appveyor.com/project/0cch/0cchext)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://github.com/0cch/0cchext/blob/master/LICENSE)
+[![Language](https://img.shields.io/badge/language-C++-red.svg)]()
 
 ### Usage
 ```
