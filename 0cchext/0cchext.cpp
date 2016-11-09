@@ -2139,7 +2139,9 @@ EXT_COMMAND(tracecreate,
 
 	key_str.AppendFormat(TEXT("%I64X"), hashkey);
 
-	g_trace_object_list[key_str].first = stack_frames;
+	if (g_trace_object_list[key_str].first.empty()) {
+		g_trace_object_list[key_str].first = stack_frames;
+	}
 	g_trace_object_list[key_str].second.insert(obj_addr);
 }
 
