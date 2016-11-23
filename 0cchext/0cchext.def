@@ -36,6 +36,8 @@ EXPORTS
 	traceclose
 	traceclear
 	tracedisplay
+	setdlsympath
+	dlsym
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

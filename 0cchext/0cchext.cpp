@@ -40,6 +40,8 @@ public:
 	EXT_COMMAND_METHOD(traceclose);
 	EXT_COMMAND_METHOD(traceclear);
 	EXT_COMMAND_METHOD(tracedisplay);
+	EXT_COMMAND_METHOD(setdlsympath);
+	EXT_COMMAND_METHOD(dlsym);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -2381,6 +2383,135 @@ EXT_COMMAND(listmodule,
 			Dml("%u  %p  %u  %-12s  %s\r\n", i++, it->second.base_addr, it->second.module_size, it->second.module_name.c_str(), it->second.module_path.c_str());
 	}
 	Dml("\r\n");
+}
+
+CStringW g_download_path;
+
+EXT_COMMAND(setdlsympath,
+	"Set download symbol path.",
+	"{;x;Path;Symbol path.}") 
+{
+	g_download_path = GetUnnamedArgStr(0);
+}
+
+void __stdcall SymbolDownloadProc(ULONG read_length, ULONG content_length, PVOID context)
+{
+	*(ULONG *)context += read_length;
+	g_Ext->Out("%u/%u (%u%%)\r\n", *(ULONG *)context, content_length, (*(ULONG *)context) * 100 / content_length);
+}
+
+HANDLE CreateProcessEasy(LPCTSTR path, LPTSTR cmd)
+{
+	STARTUPINFO si = {0};
+	PROCESS_INFORMATION pi = {0};
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	if (CreateProcess(path, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+
+		CloseHandle(pi.hThread);
+		return pi.hProcess;
+	}
+
+	return NULL;
+}
+
+EXT_COMMAND(dlsym,
+	"Download symbol by path.",
+	"{t;ed,o;Timeout;Set connect timeout.}"
+	"{r;ed,o;Retries;Number of retries.}"
+	"{;x;Path;Module path.}")
+{
+	if (g_download_path.IsEmpty()) {
+		Err("Set download destination path first.\r\n");
+		return;
+	}
+
+	CStringW module_path = GetUnnamedArgStr(0);
+	ULONG timeout = 0;
+	ULONG retries = 1;
+	if (HasArg("t")) {
+		timeout = (ULONG)GetArgU64("t");
+	}
+
+	if (HasArg("r")) {
+		retries = (ULONG)GetArgU64("r");
+	}
+
+	SYMSRV_INDEX_INFO sym = {0};
+	sym.sizeofstruct = sizeof(sym);
+	if (!SymSrvGetFileIndexInfo(module_path, &sym, 0)) {
+		Err("Failed to get file pdb information.\r\n");
+		return;
+	}
+
+	WCHAR download_str[INTERNET_MAX_URL_LENGTH];
+	WCHAR pdb_name[MAX_PATH + 1];
+	wcscpy_s(pdb_name, sym.pdbfile);
+	pdb_name[wcslen(pdb_name) - 1] = L'_';
+
+	swprintf_s(download_str, L"http://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name);
+
+	Out(L"Download url  : %s\r\n", download_str);
+
+	HttpDownloader downloader;
+	if (!downloader.Create(L"Microsoft-Symbol-Server/10.0.10586.567")) {
+		Err("Failed to initialize downloader.\r\n");
+		return;
+	}
+	
+	CStringW sub_path;
+	sub_path.Format(L"%s\\%s%X", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age);
+	CPathW download_path = g_download_path;
+	download_path.Append(sub_path);
+	SHCreateDirectory(NULL, download_path.m_strPath.GetString());
+	download_path.Append(pdb_name);
+
+	Out(L"Download path : %s\r\n", download_path.m_strPath.GetString());
+
+	HRESULT hr = S_OK;
+	for (ULONG i = 0; i < retries; i++) {
+		if (i != 0) {
+			Out("Retry(%u):\r\n", i);
+		}
+		ULONG total_download = 0;
+		hr = downloader.UrlDownloadFile(download_str, download_path.m_strPath.GetString(), 0, SymbolDownloadProc, &total_download, timeout);
+
+		if (SUCCEEDED(hr)) {
+			break;
+		}
+		else {
+			Err("Failed to download pdb, ERROR = %u\r\n", HRESULT_CODE(hr));
+		}
+
+		if (m_Control->GetInterrupt() == S_OK) {
+			Out("User interrupt.\r\n");
+			break;
+		}
+	}
+
+	if (FAILED(hr)) {
+		return;
+	}
+
+	WCHAR expand_path[MAX_PATH] = {0};
+	ExpandEnvironmentStrings(L"%systemroot%\\system32\\expand.exe", expand_path, MAX_PATH);
+	
+	CStringW cmd = L"expand.exe -R " + download_path.m_strPath;
+	HANDLE exp_handle = CreateProcessEasy(expand_path, cmd.GetBuffer());
+	if (exp_handle == NULL) {
+		Err("Failed to expand pdb file.\r\n");
+		return;
+	}
+
+	WaitForSingleObject(exp_handle, INFINITE);
+	CloseHandle(exp_handle);
+
+	DeleteFile(download_path.m_strPath.GetString());
+	download_path.RemoveExtension();
+	download_path.AddExtension(L".pdb");
+	
+	Out(L"Download %s finish.\r\n", download_path.m_strPath.GetString());
 }
 
 HRESULT EXT_CLASS::Initialize( void )

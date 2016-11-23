@@ -4,6 +4,34 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <wininet.h>
+
+#pragma comment(lib, "Wininet.lib")
+
+typedef void (__stdcall *DOWNLOAD_CALLBACK)(ULONG read_length, ULONG content_length, PVOID context);
+
+class HttpDownloader {
+public:
+	HttpDownloader() : sesstion_(NULL) {}
+	~HttpDownloader() {Close();}
+
+	BOOL Create(LPCTSTR agent);
+	void Close();
+	HRESULT DownloadFile(LPCTSTR server_name, 
+		INTERNET_PORT server_port, 
+		LPCTSTR refer, 
+		LPCTSTR remote_file, 
+		LPCTSTR download_file,
+		ULONG pos,
+		DOWNLOAD_CALLBACK pfn,
+		PVOID context,
+		ULONG timeout = 0);
+	HRESULT UrlDownloadFile(LPCTSTR url_path, LPCTSTR download_file, ULONG pos, DOWNLOAD_CALLBACK pfn, PVOID context, ULONG timeout = 0);
+
+private:
+	HINTERNET sesstion_;
+};
+
 
 BOOL IsPrintAble(CHAR *str, ULONG len);
 BOOL IsPrintAbleW(WCHAR *str, ULONG len);
@@ -13,4 +41,5 @@ void ReadLines(PCSTR str, std::vector<std::string> &str_vec);
 BOOL GetTxtFileDataA(LPCSTR file, std::string &data);
 BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result);
 BOOL FindMessage(PVOID dll, ULONG id, CStringW &message);
+CStringW GUIDToWstring(GUID* guid);
 #endif

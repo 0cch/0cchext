@@ -2,6 +2,8 @@
 #include "util.h"
 #include <fstream>
 
+#include <WinError.h>
+
 BOOL IsPrintAble(CHAR *str, ULONG len)
 {
 	for (ULONG i = 0; i < len; i++) {
@@ -669,4 +671,194 @@ BOOL FindMessage(PVOID dll, ULONG id, CStringW &message)
 	}
 
 	return TRUE;
+}
+
+BOOL HttpDownloader::Create( LPCTSTR agent )
+{
+	sesstion_ = InternetOpen(agent, 
+		INTERNET_OPEN_TYPE_PRECONFIG,
+		NULL, 
+		NULL, 
+		0);
+
+	return sesstion_ != NULL;
+}
+
+void HttpDownloader::Close()
+{
+	if (sesstion_ != NULL) {
+		InternetCloseHandle(sesstion_);
+		sesstion_ = NULL;
+	}
+}
+
+HRESULT HttpDownloader::DownloadFile(LPCTSTR server_name, 
+	INTERNET_PORT server_port, 
+	LPCTSTR refer, 
+	LPCTSTR remote_file, 
+	LPCTSTR download_file,
+	ULONG pos,
+	DOWNLOAD_CALLBACK pfn,
+	PVOID context,
+	ULONG timeout)
+{
+	ULONG last_error = ERROR_SUCCESS;
+	HINTERNET connect_handle = InternetConnect(sesstion_, 
+		server_name,
+		server_port, 
+		NULL, 
+		NULL, 
+		INTERNET_SERVICE_HTTP, 
+		0, 
+		0);
+	if (NULL == connect_handle) {
+		return __HRESULT_FROM_WIN32(GetLastError());
+	}
+
+	PCTSTR accept[] = {TEXT("accept: */*"), NULL};
+	HINTERNET request_handle = HttpOpenRequest(
+		connect_handle, 
+		TEXT("GET"), 
+		remote_file, 
+		NULL, 
+		refer,
+		accept, 
+		0, 
+		0);
+	if (NULL == request_handle) {
+		last_error = GetLastError();
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(last_error);
+	}
+
+	if (timeout != 0) {
+		InternetSetOption(request_handle, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
+		InternetSetOption(request_handle, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
+	}
+	
+
+	TCHAR header_str[64] = { 0 };
+	_stprintf_s(header_str, TEXT("Range:bytes=%u-\r\n"), pos);
+	if (!HttpSendRequest(request_handle, header_str, (ULONG)_tcslen(header_str), NULL, 0)) {
+		last_error = GetLastError();
+		InternetCloseHandle(request_handle);
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(last_error);
+	}
+
+	ULONG status_code = 0;
+	ULONG bytes_returned = sizeof(status_code);
+
+	HttpQueryInfo(request_handle,
+		HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+		&status_code, 
+		&bytes_returned, 
+		NULL);
+
+	if (status_code == HTTP_STATUS_NOT_FOUND) {
+		InternetCloseHandle(request_handle);
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	}
+
+	ULONG content_length = 0;
+	bytes_returned = sizeof(content_length);
+	HttpQueryInfo(request_handle,
+		HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
+		&content_length, 
+		&bytes_returned, 
+		NULL);
+
+	if (content_length == 0) {
+		InternetCloseHandle(request_handle);
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	}
+
+
+	HANDLE download_file_handle = CreateFile(download_file, 
+		GENERIC_WRITE, 
+		0, 
+		NULL, 
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_ARCHIVE, 
+		NULL);
+	if (INVALID_HANDLE_VALUE == download_file_handle) {
+		last_error = GetLastError();
+		InternetCloseHandle(request_handle);
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(last_error);
+	}
+
+	SetFilePointer(download_file_handle, pos, NULL, FILE_BEGIN);
+
+	const ULONG download_unit_size = 0x1000;
+	PVOID cache_buffer = HeapAlloc(GetProcessHeap(), 0, download_unit_size);
+	if (cache_buffer == NULL) {
+		last_error = GetLastError();
+		CloseHandle(download_file_handle);
+		InternetCloseHandle(request_handle);
+		InternetCloseHandle(connect_handle);
+		return __HRESULT_FROM_WIN32(last_error);
+	}
+
+	ULONG bytes_left = content_length;
+	ULONG bytes_written = 0;
+
+	for (;;) {
+		if (!InternetReadFile(request_handle, cache_buffer, download_unit_size, &bytes_returned)) {
+			break;
+		}
+		
+		if (pfn != NULL) {
+			pfn(bytes_returned, content_length, context);
+		}
+
+		bytes_left -= bytes_returned;
+		if (bytes_returned > 0) {
+			WriteFile(download_file_handle, cache_buffer, bytes_returned, &bytes_written, NULL);
+		}
+
+		if (bytes_left == 0) {
+			break;
+		}
+	}
+
+	last_error = GetLastError();
+
+	CloseHandle(download_file_handle);
+	InternetCloseHandle(request_handle);
+	InternetCloseHandle(connect_handle);
+	HeapFree(GetProcessHeap(), 0, cache_buffer);
+	return __HRESULT_FROM_WIN32(last_error);
+}
+
+HRESULT HttpDownloader::UrlDownloadFile( LPCTSTR full_uri, LPCTSTR download_file, ULONG pos, DOWNLOAD_CALLBACK pfn, PVOID context, ULONG timeout )
+{
+	URL_COMPONENTS url_components = {0};
+	url_components.dwStructSize = sizeof(url_components);
+	TCHAR host_name[INTERNET_MAX_HOST_NAME_LENGTH];
+	url_components.lpszHostName = host_name;
+	url_components.dwHostNameLength = INTERNET_MAX_HOST_NAME_LENGTH;
+	TCHAR url_path[INTERNET_MAX_PATH_LENGTH];
+	url_components.lpszUrlPath = url_path;
+	url_components.dwUrlPathLength = INTERNET_MAX_PATH_LENGTH;
+	if (!InternetCrackUrl(full_uri, _tcslen(full_uri), 0, &url_components)) {
+		return __HRESULT_FROM_WIN32(GetLastError());
+	}
+	
+	return DownloadFile(host_name, url_components.nPort, NULL, url_path, download_file, pos, pfn, context, timeout);
+}
+
+CStringW GUIDToWstring(GUID* guid) 
+{
+	WCHAR guid_string[64];
+	swprintf_s(
+		guid_string, sizeof(guid_string) / sizeof(guid_string[0]),
+		L"%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X",
+		guid->Data1, guid->Data2, guid->Data3,
+		guid->Data4[0], guid->Data4[1], guid->Data4[2],
+		guid->Data4[3], guid->Data4[4], guid->Data4[5],
+		guid->Data4[6], guid->Data4[7]);
+	return guid_string;
 }
