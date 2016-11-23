@@ -4,6 +4,8 @@ Author: nightxie
 site:   http://0cch.com
 
 [![Build status](https://ci.appveyor.com/api/projects/status/lum8m63fig6bk94x?svg=true)](https://ci.appveyor.com/project/0cch/0cchext)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://github.com/0cch/0cchext/blob/master/LICENSE)
+[![Language](https://img.shields.io/badge/language-C++-red.svg)](https://github.com/0cch/0cchext/blob/master/README.md)
 
 ### Usage
 ```
@@ -34,6 +36,7 @@ Commands for 0cchext.dll:
   !listmodule      - List the synthetic modules.
   !listsymbol      - List the synthetic symbols.
   !logcmd          - Log command line to log file
+  !memstat         - Statistics virtual memory allocation.
   !pe_export       - Dump PE export functions
   !pe_import       - Dump PE import modules and functions
   !removemodule    - removes a synthetic module from the module list the
@@ -42,6 +45,10 @@ Commands for 0cchext.dll:
   !setvprot        - Set the protection on a region of committed pages in the
                      virtual address space of the debuggee process.
   !stackstat       - Statistics duplicate stack data.
+  !traceclear      - Clear trace event.
+  !traceclose      - Close a trace event.
+  !tracecreate     - Create a trace event.
+  !tracedisplay    - Display trace event.
   !url             - Open a URL in a default browser.
   !version         - Displays the version information for 0cchext.dll
   !wql             - Query system information with WMI.
@@ -345,5 +352,72 @@ Size              Count     State     Protect   Type
 0000000000007000        27  00001000  00000004  00020000
 0000000000001000        26  00001000  00000004  00020000
 0000000000008000        23  00001000  00000004  00020000
+...
+```
+#### !tracecreate !traceclose !tracedisplat !traceclear
+> !tracecreate     - Create a trace event.
+> !traceclose      - Close a trace event.
+> !tracecreate     - Create a trace event.
+> !tracedisplay    - Display trace event.
+
+This command can trace object with custom keys.
+
+```
+0:000> bp kernelbase!CreateFileW "gu; !tracecreate @eax; gc"
+0:000> bp kernelbase!CloseHandle "!traceclose poi(@esp+4); gc"
+0:000> g
+...
+0:023> !tracedisplay
+Count = 10    KeyCount = 0    
+00 kernel32!CreateFileWImplementation+0x69
+01 thumbcache!QueryStreamForUnderlyingMapping+0xcc
+02 thumbcache!CThumbnailCacheDataFile::_OpenFileAndMapping+0x21
+03 thumbcache!CThumbnailCache::_OpenCacheFiles+0x73
+04 thumbcache!CThumbnailCache::_Initialize+0x9d
+05 thumbcache!CThumbnailCache::GetThumbnail+0xfd
+06 SHELL32!CThumbnailCacheLookupTask::_Lookup+0xd0
+07 SHELL32!CThumbnailCacheLookupTask::InternalResumeRT+0x57
+08 SHELL32!CRunnableTask::Run+0xce
+09 SHELL32!CShellTask::TT_Run+0x167
+...
+
+Count = 6    KeyCount = 0    
+00 kernel32!CreateFileWImplementation+0x69
+WARNING: Stack unwind information not available. Following frames may be wrong.
+01 TortoiseSVN32+0x229f4
+02 TortoiseSVN32+0x22ae5
+03 TortoiseSVN32+0x22d67
+04 TortoiseSVN32+0x2216d
+05 TortoiseSVN32+0x21c59
+06 TortoiseOverlays+0x1723
+07 SHELL32!CFSIconOverlayManager::_GetFileOverlayInfo+0x11a
+08 SHELL32!CFSIconOverlayManager::GetFileOverlayInfo+0x1b
+09 SHELL32!CFSFolder::_GetOverlayInfo+0x10f
+0a SHELL32!CFSFolder::GetOverlayIndex+0x28
+0b SearchFolder!CDBFolder::GetOverlayIndex+0x47
+...
+
+Count = 5    KeyCount = 0    
+00 kernel32!CreateFileWImplementation+0x69
+01 thumbcache!QueryStreamForUnderlyingMapping+0xcc
+02 thumbcache!CThumbnailCacheDataFile::_OpenFileAndMapping+0x21
+03 thumbcache!CThumbnailCache::_OpenCacheFiles+0x73
+04 thumbcache!CThumbnailCache::_Initialize+0x9d
+05 thumbcache!CThumbnailCache::PageInThumbnail+0x50
+06 SHELL32!CImageManager::PageInThumbnail+0x7e
+07 explorerframe!CFirstPageResults::_EnumerateCollection+0x526
+08 explorerframe!CFirstPageResults::RunBackgroundEnumeration+0x87
+09 explorerframe!CFirstPageTask::InternalResumeRT+0x10
+0a explorerframe!CRunnableTask::Run+0xce
+0b SHELL32!CShellTask::TT_Run+0x167
+0c SHELL32!CShellTaskThread::ThreadProc+0xa3
+0d SHELL32!CShellTaskThread::s_ThreadProc+0x1b
+0e SHLWAPI!ExecuteWorkItemThreadProc+0xe
+0f ntdll!RtlpTpWorkCallback+0x11d
+10 ntdll!TppWorkerThread+0x562
+11 kernel32!BaseThreadInitThunk+0xe
+12 ntdll!__RtlUserThreadStart+0x70
+13 ntdll!_RtlUserThreadStart+0x1b
+...
 ...
 ```
