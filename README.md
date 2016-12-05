@@ -19,6 +19,7 @@ Commands for 0cchext.dll:
   !autocmd         - Execute the debugger commands.(The config file is
                      autocmd.ini)
   !bing            - Use bing to search.
+  !dlsym           - Download symbol by path.
   !dpx             - Display the contents of memory in the given range.
   !dtx             - Displays information about structures. (The config file is
                      struct.ini)
@@ -42,9 +43,11 @@ Commands for 0cchext.dll:
   !removemodule    - removes a synthetic module from the module list the
                      debugger maintains for the current process.
   !removesymbol    - Specifies the synthetic symbol to remove.
+  !setdlsympath    - Set download symbol path.
   !setvprot        - Set the protection on a region of committed pages in the
                      virtual address space of the debuggee process.
   !stackstat       - Statistics duplicate stack data.
+  !threadname      - List thread name.
   !traceclear      - Clear trace event.
   !traceclose      - Close a trace event.
   !tracecreate     - Create a trace event.
@@ -420,4 +423,88 @@ Count = 5    KeyCount = 0
 13 ntdll!_RtlUserThreadStart+0x1b
 ...
 ...
+```
+
+#### !setdlsympath
+> !setdlsympath    - Set download symbol path.
+
+Set download symbol path and use !dlsym to download symbol.
+
+```
+
+0:000> !setdlsympath D:\newsym
+
+```
+
+
+#### !setdlsympath
+> !dlsym           - Download symbol by path.
+
+Download symbol by EXE or DLL file path. We can set timeout timer and number of retries. Since microsoft public symbol server is not stable, windbg download symbol always fails. So I just write a downloader command, and we can set a long timeout timer to make the download symbol more stable.
+
+```
+
+0:000> !dlsym /t 10000 /r 10 C:\Windows\syswow64\kernel32.dll
+Download url  : http://msdl.microsoft.com/download/symbols/wkernel32.pdb/AB6B617AB7E1496AB63555DEBF8A91B12/wkernel32.pd_
+Download path : D:\newsym\wkernel32.pdb\AB6B617AB7E1496AB63555DEBF8A91B12\wkernel32.pd_
+4096/670972 (0%)
+8192/670972 (1%)
+12288/670972 (1%)
+16384/670972 (2%)
+...
+...
+655360/670972 (97%)
+659456/670972 (98%)
+663552/670972 (98%)
+667648/670972 (99%)
+670972/670972 (100%)
+Download D:\newsym\wkernel32.pdb\AB6B617AB7E1496AB63555DEBF8A91B12\wkernel32.pdb finish.
+
+```
+
+#### !threadname
+> !threadname      - List thread name.
+
+When you are debugging an application with multiple threads it can be handy to have a better name than just the thread id. In VS Debugger we can get the thread name, but I cannot find a command to list thread name in Windbg.
+
+```cpp
+
+//  
+// Usage: SetThreadName ((DWORD)-1, "MainThread");  
+//  
+#include <windows.h>  
+const DWORD MS_VC_EXCEPTION = 0x406D1388;  
+#pragma pack(push,8)  
+typedef struct tagTHREADNAME_INFO  
+{  
+    DWORD dwType; // Must be 0x1000.  
+    LPCSTR szName; // Pointer to name (in user addr space).  
+    DWORD dwThreadID; // Thread ID (-1=caller thread).  
+    DWORD dwFlags; // Reserved for future use, must be zero.  
+ } THREADNAME_INFO;  
+#pragma pack(pop)  
+void SetThreadName(DWORD dwThreadID, const char* threadName) {  
+    THREADNAME_INFO info;  
+    info.dwType = 0x1000;  
+    info.szName = threadName;  
+    info.dwThreadID = dwThreadID;  
+    info.dwFlags = 0;  
+#pragma warning(push)  
+#pragma warning(disable: 6320 6322)  
+    __try{  
+        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);  
+    }  
+    __except (EXCEPTION_EXECUTE_HANDLER){  
+    }  
+#pragma warning(pop)  
+}  
+
+```
+
+```
+
+0:000> !threadname
+Thread id   Name
+000014D8    MainThread
+
 ```
