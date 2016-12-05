@@ -42,15 +42,19 @@ public:
 	EXT_COMMAND_METHOD(tracedisplay);
 	EXT_COMMAND_METHOD(setdlsympath);
 	EXT_COMMAND_METHOD(dlsym);
+	EXT_COMMAND_METHOD(threadname);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
+
+	CComPtr<IDebugDataSpaces4> log_data4_;
 
 private:
 	void PrintStruct(std::vector<StructInfo> &struct_array, const char * name, ULONG64 &addr, int level, int display_sublevel);
 	ULONG GetAddressPtrSize();
 
 	CComPtr<IDebugClient> log_client_;
+	
 };
 
 EXT_DECLARE_GLOBALS();
@@ -2514,11 +2518,61 @@ EXT_COMMAND(dlsym,
 	Out(L"Download %s finish.\r\n", download_path.m_strPath.GetString());
 }
 
+std::map<ULONG64, CStringA> g_thread_names;
+
+EXT_COMMAND(threadname,
+	"List thread name.",
+	"")
+{
+	Out("Thread id   Name\r\n");
+	for (std::map<ULONG64, CStringA>::iterator it = g_thread_names.begin(); it != g_thread_names.end(); ++it) {
+		Out("%08X    %s\r\n", (ULONG)it->first, it->second.GetString());
+	}
+	OUT("\r\n");
+}
+
+class DebugEventCallbacks : public DebugBaseEventCallbacks
+{
+public:
+	STDMETHOD_(ULONG, AddRef)() { return 1;}
+	STDMETHOD_(ULONG, Release)() { return 0;}
+	STDMETHOD(Exception)(PEXCEPTION_RECORD64 Exception, ULONG FirstChance)
+	{
+		const ULONG MS_VC_EXCEPTION = 0x406D1388;
+		if (Exception->ExceptionCode == MS_VC_EXCEPTION && Exception->NumberParameters == 4
+			&& Exception->ExceptionInformation[0] == 0x1000) {
+
+				char name_buffer[1024] = {0};
+				if (SUCCEEDED(g_ExtInstance.log_data4_->ReadMultiByteStringVirtual(
+					Exception->ExceptionInformation[1], 1023, name_buffer, 1023, NULL)) && name_buffer[0] != 0) {
+					g_thread_names[Exception->ExceptionInformation[2]] = name_buffer;
+				}
+		}
+		
+		return DEBUG_STATUS_NO_CHANGE;
+	}
+
+	STDMETHOD(GetInterestMask)(PULONG Mask)
+	{
+		*Mask = DEBUG_EVENT_EXCEPTION;
+		return S_OK;
+	}
+};
+
+DebugEventCallbacks g_event_callback;
+PDEBUG_EVENT_CALLBACKS g_original_event_callback = NULL;;
+
 HRESULT EXT_CLASS::Initialize( void )
 {
 	if (SUCCEEDED(DebugCreate(__uuidof(IDebugClient), (VOID **)&log_client_.p))) {
 		if (SUCCEEDED(log_client_->GetOutputCallbacks(&g_original_output_callback))) {
 			log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)&g_log_callback);
+		}
+
+		if (SUCCEEDED(log_client_->QueryInterface(__uuidof(IDebugDataSpaces4), (VOID **)&log_data4_.p))) {
+			if (SUCCEEDED(log_client_->GetEventCallbacks(&g_original_event_callback))) {
+				log_client_->SetEventCallbacks((PDEBUG_EVENT_CALLBACKS)&g_event_callback);
+			}
 		}
 	}
 
@@ -2527,10 +2581,18 @@ HRESULT EXT_CLASS::Initialize( void )
 
 void EXT_CLASS::Uninitialize( void )
 {
-	log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)g_original_output_callback);
-	g_original_output_callback = NULL;
+	if (g_original_output_callback != NULL) {
+		log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)g_original_output_callback);
+		g_original_output_callback = NULL;
+	}
+	
 	g_log_callback.CloseCmdLogFile();
 
+	if (g_original_event_callback != NULL) {
+		log_client_->SetEventCallbacks((PDEBUG_EVENT_CALLBACKS)g_original_event_callback);
+		g_original_event_callback = NULL;
+	}
+	
 	__super::Uninitialize();
 }
 

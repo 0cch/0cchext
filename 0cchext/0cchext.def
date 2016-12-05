@@ -38,6 +38,7 @@ EXPORTS
 	tracedisplay
 	setdlsympath
 	dlsym
+	threadname
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
