@@ -19,6 +19,7 @@ Commands for 0cchext.dll:
   !autocmd         - Execute the debugger commands.(The config file is
                      autocmd.ini)
   !bing            - Use bing to search.
+  !carray          - Show data in C array style.
   !dlsym           - Download symbol by path.
   !dpx             - Display the contents of memory in the given range.
   !dtx             - Displays information about structures. (The config file is
@@ -506,5 +507,22 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 0:000> !threadname
 Thread id   Name
 000014D8    MainThread
+
+```
+
+
+#### !carray
+> !carray          - Show data in C array style.
+
+Output data as C array. For some reason, I need read some data in the memory (e.g. some encrypted data) and translate to C array.
+
+```
+
+0:000> !carray 0029f694 38
+const unsigned char buffer[0x38] = {
+	0x94, 0xfe, 0x11, 0x76, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xfd, 0xff, 
+	0x7c, 0xf8, 0x29, 0x00, 0x94, 0xf6, 0x29, 0x00, 0x14, 0xc8, 0xb7, 0x01, 0x7c, 0xf8, 0x29, 0x00, 
+	0xc5, 0x58, 0x94, 0x77, 0xcc, 0xb6, 0xb7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x3c, 0xf8, 0x29, 0x00, 
+	0xc7, 0x0f, 0x95, 0x77, 0x00, 0xd0, 0xfd, 0xff };
 
 ```
