@@ -43,6 +43,7 @@ public:
 	EXT_COMMAND_METHOD(setdlsympath);
 	EXT_COMMAND_METHOD(dlsym);
 	EXT_COMMAND_METHOD(threadname);
+	EXT_COMMAND_METHOD(carray);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -2558,6 +2559,40 @@ public:
 		return S_OK;
 	}
 };
+
+
+EXT_COMMAND(carray,
+	"Show data in C array style.",
+	"{;ed,r;Address;Start address.}"
+	"{;ed,r;Length;Data length.}")
+{
+	ULONG64 addr = GetUnnamedArgU64(0);
+	ULONG length = (ULONG)GetUnnamedArgU64(1);
+
+	if (length > 0x10000) {
+		Err("Data length is too big.\r\n");
+		return;
+	}
+
+	std::vector<UCHAR> buffer;
+	buffer.resize(length);
+
+	ULONG readlength = 0;
+	if (FAILED(m_Data->ReadVirtual(addr, buffer.data(), length, &readlength))) {
+		Err("Failed to read data.\r\n");
+		return;
+	}
+	
+	Out("const unsigned char buffer[0x%x] = {", readlength);
+	for (ULONG i = 0; i < readlength; i++) {
+		if (i % 16 == 0) {
+			Out("\r\n\t");
+		}
+
+		Out("0x%02x, ", buffer[i]);
+	}
+	Out("\b\b };\r\n");
+}
 
 DebugEventCallbacks g_event_callback;
 PDEBUG_EVENT_CALLBACKS g_original_event_callback = NULL;;

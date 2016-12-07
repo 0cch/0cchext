@@ -39,6 +39,7 @@ EXPORTS
 	setdlsympath
 	dlsym
 	threadname
+	carray
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
