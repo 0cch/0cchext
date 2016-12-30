@@ -41,6 +41,9 @@ Commands for 0cchext.dll:
   !memstat         - Statistics virtual memory allocation.
   !pe_export       - Dump PE export functions
   !pe_import       - Dump PE import modules and functions
+  !rawpcap_start   - Start to capture IP packet. (requires administrative
+                     privileges)
+  !rawpcap_stop    - Stop capturing. (requires administrative privileges)
   !removemodule    - removes a synthetic module from the module list the
                      debugger maintains for the current process.
   !removesymbol    - Specifies the synthetic symbol to remove.
@@ -526,3 +529,11 @@ const unsigned char buffer[0x38] = {
 	0xc7, 0x0f, 0x95, 0x77, 0x00, 0xd0, 0xfd, 0xff };
 
 ```
+
+#### !rawpcap_start
+> !rawpcap_start   - Start to capture IP packet. (requires administrative privileges)
+
+Capture IP packet and write the data to a pcap file format.
+
+#### !rawpcap_stop
+> !rawpcap_stop    - Stop capturing. (requires administrative privileges)
