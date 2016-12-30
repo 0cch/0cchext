@@ -535,5 +535,11 @@ const unsigned char buffer[0x38] = {
 
 Capture IP packet and write the data to a pcap file format.
 
+```
+
+!rawpcap_start 192.168.34.186 d:\test.pcap
+
+```
+
 #### !rawpcap_stop
 > !rawpcap_stop    - Stop capturing. (requires administrative privileges)
