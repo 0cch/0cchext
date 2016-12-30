@@ -44,6 +44,8 @@ public:
 	EXT_COMMAND_METHOD(dlsym);
 	EXT_COMMAND_METHOD(threadname);
 	EXT_COMMAND_METHOD(carray);
+	EXT_COMMAND_METHOD(rawpcap_start);
+	EXT_COMMAND_METHOD(rawpcap_stop);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -2592,6 +2594,176 @@ EXT_COMMAND(carray,
 		Out("0x%02x, ", buffer[i]);
 	}
 	Out("\b\b };\r\n");
+}
+
+HANDLE g_raw_socket_thread = NULL;
+BOOL g_exit_sniff = TRUE;
+CStringA g_ip_address;
+CStringA g_pcap_file;
+
+#define PACP_MAGIC_TAG  0xa1b2c3d4
+#define MAX_PACKET_SIZE 0x10000
+UCHAR packet[MAX_PACKET_SIZE];
+
+#pragma pack(push, 1)
+
+typedef struct pcap_hdr_s {
+	ULONG magic_number;   /* magic number */
+	USHORT version_major;  /* major version number */
+	USHORT version_minor;  /* minor version number */
+	LONG  thiszone;       /* GMT to local correction */
+	ULONG sigfigs;        /* accuracy of timestamps */
+	ULONG snaplen;        /* max length of captured packets, in octets */
+	ULONG network;        /* data link type */
+} pcap_hdr_t;
+
+typedef struct pcaprec_hdr_s {
+	ULONG ts_sec;         /* timestamp seconds */
+	ULONG ts_usec;        /* timestamp microseconds */
+	ULONG incl_len;       /* number of octets of packet saved in file */
+	ULONG orig_len;       /* actual length of packet */
+} pcaprec_hdr_t;
+
+#pragma pack(pop)
+
+BOOL Sniff(const char *ip_addr, const char* file)
+{
+	SOCKET sniff_socket = socket(AF_INET, SOCK_RAW, IPPROTO_IP);
+	if (sniff_socket == SOCKET_ERROR) {
+		g_Ext->Err("Error: socket = %u\n", WSAGetLastError());
+		return FALSE;
+	}
+
+	struct sockaddr_in bind_addr;
+
+	bind_addr.sin_family = AF_INET;
+	bind_addr.sin_port = htons(0);
+	bind_addr.sin_addr.s_addr = inet_addr(ip_addr);
+
+	if (bind(sniff_socket, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) == SOCKET_ERROR) {
+		closesocket(sniff_socket);
+		g_Ext->Err("Error: bind = %u\n", WSAGetLastError());
+		return FALSE;
+	}
+
+	ULONG ret_length = 0;
+	int optval = 1;
+	if (WSAIoctl(sniff_socket,
+		SIO_RCVALL,
+		&optval,
+		sizeof(optval),
+		NULL,
+		0,
+		&ret_length,
+		NULL,
+		NULL) == SOCKET_ERROR) {
+			closesocket(sniff_socket);
+			g_Ext->Err("Error: WSAIoctl  = %u\n", WSAGetLastError());
+			return 1;
+	}
+
+	HANDLE pcap = CreateFileA(file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (pcap == INVALID_HANDLE_VALUE) {
+		closesocket(sniff_socket);
+		g_Ext->Err("Error: Create pcap  = %u\n", GetLastError());
+		return FALSE;
+	}
+
+	pcap_hdr_t header;
+	header.magic_number = PACP_MAGIC_TAG;
+	header.version_major = 2;
+	header.version_minor = 4;
+	header.thiszone = 0;
+	header.sigfigs = 0;
+	header.snaplen = 0x40000000;
+	header.network = 101;
+
+	WriteFile(pcap, &header, sizeof(header), &ret_length, NULL);
+
+	pcaprec_hdr_t packet_header;
+	ULONG retval = 0;
+	while (!g_exit_sniff)
+	{
+		retval = recv(sniff_socket, (char *)packet, MAX_PACKET_SIZE, 0);
+		if (retval <= 0) {
+			continue;
+		}
+
+		timeval tv = {0};
+		gettimeofday(&tv, NULL);
+
+		packet_header.ts_sec = tv.tv_sec;
+		packet_header.ts_usec = tv.tv_usec;
+		packet_header.incl_len = retval;
+		packet_header.orig_len = retval;
+
+		WriteFile(pcap, &packet_header, sizeof(packet_header), &ret_length, NULL);
+		WriteFile(pcap, packet, retval, &ret_length, NULL);
+	}
+
+	CloseHandle(pcap);
+	closesocket(sniff_socket);
+	return TRUE;
+}
+
+UINT __stdcall RawSocketThreadProc(PVOID context)
+{
+	WSAData wsa_data;
+	WSAStartup(MAKEWORD(2,2), &wsa_data);
+
+	Sniff(g_ip_address.GetString(), g_pcap_file.GetString());
+
+	WSACleanup();
+
+	return 0;
+}
+
+EXT_COMMAND(rawpcap_start,
+	"Start to capture IP packet. (requires administrative privileges)",
+	"{;s,r;Address;Bind interface IP address.}"
+	"{;x,r;Path;.pcap file path.}")
+{
+	if (!IsElevated()) {
+		Err("Requires administrative privileges.\r\n");
+		return;
+	}
+
+	if (!g_exit_sniff || g_raw_socket_thread != NULL) {
+		Err("Please call rawpcap_stop first.\r\n");
+		return;
+	}
+	g_ip_address = GetUnnamedArgStr(0);
+	g_pcap_file = GetUnnamedArgStr(1);
+
+	g_exit_sniff = FALSE;
+	g_raw_socket_thread = (HANDLE)_beginthreadex(NULL, 0, RawSocketThreadProc, NULL, 0, NULL);
+	if (g_raw_socket_thread == NULL) {
+		Err("Create sniffer thread failed.\r\n");
+		return;
+	}
+	Out("Start to capture IP packet.\r\n");
+}
+
+EXT_COMMAND(rawpcap_stop,
+	"Stop capturing. (requires administrative privileges)",
+	"")
+{
+	if (!IsElevated()) {
+		Err("Requires administrative privileges.\r\n");
+		return;
+	}
+
+	if (g_raw_socket_thread == NULL) {
+		Err("Please call rawpcap_start first.\r\n");
+		return;
+	}
+	g_exit_sniff = TRUE;
+	if (WaitForSingleObject(g_raw_socket_thread, 3000) == WAIT_TIMEOUT) {
+		TerminateThread(g_raw_socket_thread, 0);
+	}
+	CloseHandle(g_raw_socket_thread);
+	g_raw_socket_thread = NULL;
+	Out("Capture stopped.\r\n");
 }
 
 DebugEventCallbacks g_event_callback;

@@ -19,6 +19,10 @@
 #include <comdef.h>
 #include <wbemidl.h>
 #include <comutil.h>
+#include <mstcpip.h>
+#include <time.h>
+#include <stdlib.h>
+#pragma comment( lib, "ws2_32.lib")
 #pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Version.lib")

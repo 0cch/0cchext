@@ -862,3 +862,55 @@ CStringW GUIDToWstring(GUID* guid)
 		guid->Data4[6], guid->Data4[7]);
 	return guid_string;
 }
+
+int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+	FILETIME ft;
+	unsigned __int64 tmpres = 0;
+	static int tzflag;
+
+	if (NULL != tv)
+	{
+		GetSystemTimeAsFileTime(&ft);
+
+		tmpres |= ft.dwHighDateTime;
+		tmpres <<= 32;
+		tmpres |= ft.dwLowDateTime;
+
+		tmpres /= 10;
+		tmpres -= DELTA_EPOCH_IN_MICROSECS;
+		tv->tv_sec = (long)(tmpres / 1000000UL);
+		tv->tv_usec = (long)(tmpres % 1000000UL);
+	}
+
+	if (NULL != tz)
+	{
+		if (!tzflag)
+		{
+			_tzset();
+			tzflag++;
+		}
+		_get_timezone((long *)&tz->tz_minuteswest);
+		tz->tz_minuteswest /= 60;
+		_get_daylight(&tz->tz_dsttime);
+	}
+
+	return 0;
+}
+
+BOOL IsElevated() 
+{
+	BOOL retval = FALSE;
+	HANDLE token = NULL;
+	if (OpenProcessToken(GetCurrentProcess( ), TOKEN_QUERY, &token)) {
+		TOKEN_ELEVATION token_elevation;
+		DWORD ret_size = sizeof(TOKEN_ELEVATION);
+		if( GetTokenInformation( token, TokenElevation, &token_elevation, sizeof(token_elevation), &ret_size ) ) {
+			retval = token_elevation.TokenIsElevated;
+		}
+	}
+	if(token != NULL) {
+		CloseHandle(token);
+	}
+	return retval;
+}

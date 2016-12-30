@@ -40,6 +40,8 @@ EXPORTS
 	dlsym
 	threadname
 	carray
+	rawpcap_start
+	rawpcap_stop
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
