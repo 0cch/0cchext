@@ -1995,7 +1995,7 @@ EXT_COMMAND(stackstat,
 		}
 
 		CString stack_id_info;
-		stack_id_info.Format(TEXT("%u(%x)"), dtids[i], tids[i]);
+		stack_id_info.Format(TEXT("<link cmd=\"~%u kb\">%u(%x)</link>"), dtids[i], dtids[i], tids[i]);
 		stat_info[stack_key].push_back(stack_id_info);
 	}
 
