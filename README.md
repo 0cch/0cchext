@@ -23,6 +23,20 @@ Commands for 0cchext.dll:
   !dlsym           - Download symbol by path.
   !dpx             - Display the contents of memory in the given range.
   !dtx             - Displays information about structures. (The config file is
+  !a               - Assembles instruction mnemonics and puts the resulting
+                     instruction codes into memory.
+  !addmodule       - Adds a synthetic module to the module list the debugger
+                     maintains for the current process.
+  !addsymbol       - Adds a synthetic symbol to a module in the current
+                     process.
+  !autocmd         - Execute the debugger commands.(The config file is
+                     autocmd.ini)
+  !bing            - Use bing to search.
+  !carray          - Show data in C array style.
+  !dlsym           - Download symbol by path.
+  !dpx             - Display the contents of memory in the given range.
+  !dttoc           - Translate 'dt' command output text to C struct.
+  !dtx             - Displays information about structures. (The config file is
                      struct.ini)
   !err             - Decodes and displays information about an error value.
   !favcmd          - Display the favorite debugger commands.(The config file is
@@ -60,6 +74,7 @@ Commands for 0cchext.dll:
   !version         - Displays the version information for 0cchext.dll
   !wql             - Query system information with WMI.
 !help <cmd> will give more information for a particular command
+
 
 ```
 
@@ -543,3 +558,124 @@ Capture IP packet and write the data to a pcap file format.
 
 #### !rawpcap_stop
 > !rawpcap_stop    - Stop capturing. (requires administrative privileges)
+
+
+#### !dttoc
+> !dttoc           - Translate 'dt' command output text to C struct.  
+```
+0:000> !0cchext.dttoc nt!_peb
+struct _PEB {
+	BYTE InheritedAddressSpace;
+	BYTE ReadImageFileExecOptions;
+	BYTE BeingDebugged;
+	union {
+		BYTE BitField;
+		struct {
+			BYTE ImageUsesLargePages:1;
+			BYTE IsProtectedProcess:1;
+			BYTE IsImageDynamicallyRelocated:1;
+			BYTE SkipPatchingUser32Forwarders:1;
+			BYTE IsPackagedProcess:1;
+			BYTE IsAppContainer:1;
+			BYTE IsProtectedProcessLight:1;
+			BYTE IsLongPathAwareProcess:1;
+		};
+	};
+	VOID* Mutant;
+	VOID* ImageBaseAddress;
+	_PEB_LDR_DATA* Ldr;
+	_RTL_USER_PROCESS_PARAMETERS* ProcessParameters;
+	VOID* SubSystemData;
+	VOID* ProcessHeap;
+	_RTL_CRITICAL_SECTION* FastPebLock;
+	_SLIST_HEADER* AtlThunkSListPtr;
+	VOID* IFEOKey;
+	union {
+		DWORD CrossProcessFlags;
+		struct {
+			DWORD ProcessInJob:1;
+			DWORD ProcessInitializing:1;
+			DWORD ProcessUsingVEH:1;
+			DWORD ProcessUsingVCH:1;
+			DWORD ProcessUsingFTH:1;
+			DWORD ReservedBits0:27;
+		};
+	};
+	union {
+		VOID* KernelCallbackTable;
+		VOID* UserSharedInfoPtr;
+	};
+	DWORD SystemReserved[1];
+	_SLIST_HEADER* AtlThunkSListPtr32;
+	VOID* ApiSetMap;
+	DWORD TlsExpansionCounter;
+	VOID* TlsBitmap;
+	DWORD TlsBitmapBits[2];
+	VOID* ReadOnlySharedMemoryBase;
+	VOID* SparePvoid0;
+	VOID** ReadOnlyStaticServerData;
+	VOID* AnsiCodePageData;
+	VOID* OemCodePageData;
+	VOID* UnicodeCaseTableData;
+	DWORD NumberOfProcessors;
+	DWORD NtGlobalFlag;
+	_LARGE_INTEGER CriticalSectionTimeout;
+	DWORD HeapSegmentReserve;
+	DWORD HeapSegmentCommit;
+	DWORD HeapDeCommitTotalFreeThreshold;
+	DWORD HeapDeCommitFreeBlockThreshold;
+	DWORD NumberOfHeaps;
+	DWORD MaximumNumberOfHeaps;
+	VOID** ProcessHeaps;
+	VOID* GdiSharedHandleTable;
+	VOID* ProcessStarterHelper;
+	DWORD GdiDCAttributeList;
+	_RTL_CRITICAL_SECTION* LoaderLock;
+	DWORD OSMajorVersion;
+	DWORD OSMinorVersion;
+	WORD OSBuildNumber;
+	WORD OSCSDVersion;
+	DWORD OSPlatformId;
+	DWORD ImageSubsystem;
+	DWORD ImageSubsystemMajorVersion;
+	DWORD ImageSubsystemMinorVersion;
+	DWORD ActiveProcessAffinityMask;
+	DWORD GdiHandleBuffer[34];
+	void* PostProcessInitRoutine;
+	VOID* TlsExpansionBitmap;
+	DWORD TlsExpansionBitmapBits[32];
+	DWORD SessionId;
+	_ULARGE_INTEGER AppCompatFlags;
+	_ULARGE_INTEGER AppCompatFlagsUser;
+	VOID* pShimData;
+	VOID* AppCompatInfo;
+	_UNICODE_STRING CSDVersion;
+	_ACTIVATION_CONTEXT_DATA* ActivationContextData;
+	_ASSEMBLY_STORAGE_MAP* ProcessAssemblyStorageMap;
+	_ACTIVATION_CONTEXT_DATA* SystemDefaultActivationContextData;
+	_ASSEMBLY_STORAGE_MAP* SystemAssemblyStorageMap;
+	DWORD MinimumStackCommit;
+	_FLS_CALLBACK_INFO* FlsCallback;
+	_LIST_ENTRY FlsListHead;
+	VOID* FlsBitmap;
+	DWORD FlsBitmapBits[4];
+	DWORD FlsHighIndex;
+	VOID* WerRegistrationData;
+	VOID* WerShipAssertPtr;
+	VOID* pUnused;
+	VOID* pImageHeaderHash;
+	union {
+		DWORD TracingFlags;
+		struct {
+			QWORD HeapTracingEnabled:1;
+			QWORD CritSecTracingEnabled:1;
+			QWORD LibLoaderTracingEnabled:1;
+			QWORD SpareTracingBits:29;
+		};
+	};
+	QWORD CsrServerReadOnlySharedMemoryBase;
+	DWORD TppWorkerpListLock;
+	_LIST_ENTRY TppWorkerpList;
+	VOID* WaitOnAddressHashTable[128];
+};
+```
