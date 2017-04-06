@@ -77,4 +77,29 @@ private:
 };
 const char * GetErrorPosString();
 BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array);
+
+
+
+class dtLexItem {
+public:
+	dtLexItem() : is_array_(FALSE), 
+		array_count_(0), ptr_count_(0), 
+		bit_offset_(0), bit_length_(0), 
+		offset_(0), is_bitfield_(FALSE) {}
+
+	BOOL is_array_;
+	ULONG array_count_;
+	CStringA type_name_;
+	ULONG ptr_count_;
+	CStringA name_;
+	BOOL is_bitfield_;
+	ULONG bit_offset_;
+	ULONG bit_length_;
+	ULONG offset_;
+};
+
+
+void DbgStructToken(LPCSTR struct_str, std::vector<std::pair<ULONG, std::vector<CStringA>>> &struct_out);
+void DbgStructParse(std::vector<std::pair<ULONG, std::vector<CStringA>>> &struct_out, std::map<ULONG, std::vector<dtLexItem>> &items);
+void DbgStructPrint(std::map<ULONG, std::vector<dtLexItem>> &items, CStringA &out_str);
 #endif

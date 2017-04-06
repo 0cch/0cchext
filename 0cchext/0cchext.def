@@ -42,6 +42,7 @@ EXPORTS
 	carray
 	rawpcap_start
 	rawpcap_stop
+	dttoc
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

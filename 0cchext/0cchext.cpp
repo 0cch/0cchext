@@ -46,6 +46,7 @@ public:
 	EXT_COMMAND_METHOD(carray);
 	EXT_COMMAND_METHOD(rawpcap_start);
 	EXT_COMMAND_METHOD(rawpcap_stop);
+	EXT_COMMAND_METHOD(dttoc);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -2764,6 +2765,58 @@ EXT_COMMAND(rawpcap_stop,
 	CloseHandle(g_raw_socket_thread);
 	g_raw_socket_thread = NULL;
 	Out("Capture stopped.\r\n");
+}
+
+EXT_COMMAND(dttoc,
+	"Translate 'dt' command output text to C struct.",
+	"{;s,r;name;Name of the struct.}")
+{
+	ExtCaptureOutputA capture_exec;
+	CStringA exe_cmd;
+	exe_cmd.Format("dt %s", GetUnnamedArgStr(0));
+	capture_exec.Execute(exe_cmd.GetString());
+	LPCSTR out_text = capture_exec.GetTextNonNull();
+
+	LPCSTR struct_name = strchr(out_text, '!');
+	if (struct_name == NULL) {
+		Err("Failed to get struct name.\r\n");
+		return;
+	}
+
+	struct_name++;
+	LPCSTR struct_name_end = strchr(struct_name, '\n');
+	if (struct_name_end == NULL) {
+		Err("Failed to get struct name.\r\n");
+		return;
+	}
+
+	if (struct_name_end <= struct_name) {
+		Err("Failed to get struct name.\r\n");
+		return;
+	}
+
+	CStringA name;
+	name.SetString(struct_name, struct_name_end - struct_name);
+
+	LPCSTR begin_pos = strstr(out_text, "   +0x000 ");
+	if (begin_pos == NULL) {
+		Err("Failed to translate the struct to C.\r\n");
+		return;
+	}
+
+	std::vector<std::pair<ULONG, std::vector<CStringA>>> struct_out;
+	DbgStructToken(begin_pos, struct_out);
+
+	std::map<ULONG, std::vector<dtLexItem>> items;
+	DbgStructParse(struct_out, items);
+
+	CStringA out_str;
+	DbgStructPrint(items, out_str);
+
+	
+
+	Out("struct %s {\r\n%s};", name.GetString(), out_str.GetString());
+	
 }
 
 DebugEventCallbacks g_event_callback;
