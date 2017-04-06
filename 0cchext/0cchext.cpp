@@ -2815,7 +2815,7 @@ EXT_COMMAND(dttoc,
 
 	
 
-	Out("struct %s {\r\n%s};", name.GetString(), out_str.GetString());
+	Out("struct %s {\r\n%s};\r\n", name.GetString(), out_str.GetString());
 	
 }
 
