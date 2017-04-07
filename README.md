@@ -22,19 +22,6 @@ Commands for 0cchext.dll:
   !carray          - Show data in C array style.
   !dlsym           - Download symbol by path.
   !dpx             - Display the contents of memory in the given range.
-  !dtx             - Displays information about structures. (The config file is
-  !a               - Assembles instruction mnemonics and puts the resulting
-                     instruction codes into memory.
-  !addmodule       - Adds a synthetic module to the module list the debugger
-                     maintains for the current process.
-  !addsymbol       - Adds a synthetic symbol to a module in the current
-                     process.
-  !autocmd         - Execute the debugger commands.(The config file is
-                     autocmd.ini)
-  !bing            - Use bing to search.
-  !carray          - Show data in C array style.
-  !dlsym           - Download symbol by path.
-  !dpx             - Display the contents of memory in the given range.
   !dttoc           - Translate 'dt' command output text to C struct.
   !dtx             - Displays information about structures. (The config file is
                      struct.ini)
@@ -61,6 +48,7 @@ Commands for 0cchext.dll:
   !removemodule    - removes a synthetic module from the module list the
                      debugger maintains for the current process.
   !removesymbol    - Specifies the synthetic symbol to remove.
+  !rr              - Read registers and show the information.
   !setdlsympath    - Set download symbol path.
   !setvprot        - Set the protection on a region of committed pages in the
                      virtual address space of the debuggee process.
@@ -678,4 +666,28 @@ struct _PEB {
 	_LIST_ENTRY TppWorkerpList;
 	VOID* WaitOnAddressHashTable[128];
 };
+```
+
+#### !rr
+> !rr              - Read registers and show the information.  
+
+```
+0:000> !0cchext.rr
+rax  0000000000000001  [D] ........
+rbx  000000000018ef28  [D] (.......
+rcx  000000000000020f  [D] ........
+rdx  0000000000000000  [D] ........
+rsi  0000000000000fff  [D] ........
+rdi  000007fef8401e50  [D] P.@.....  [S] mscoreei!XMLParserShimFileStream::Read (000007fe`f8401e50)
+rip  000007fef8401e80  [D] ..@.....  [S] mscoreei!XMLParserShimFileStream::Read+0x34 (000007fe`f8401e80)
+rsp  000000000018ee50  [D] P.......
+rbp  000000000018eed0  [D] ........  [U] ")"
+ r8  000000000018ed88  [D] ........
+ r9  000000000018eed0  [D] ........  [U] "yi)"
+r10  0000000000000000  [D] ........
+r11  0000000000000246  [D] F.......
+r12  0000000000000000  [D] ........
+r13  000000000018ef58  [D] X.......
+r14  0000000000299890  [D] ..).....
+r15  0000000000000fff  [D] ........
 ```

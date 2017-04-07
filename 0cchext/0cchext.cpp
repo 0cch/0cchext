@@ -47,6 +47,7 @@ public:
 	EXT_COMMAND_METHOD(rawpcap_start);
 	EXT_COMMAND_METHOD(rawpcap_stop);
 	EXT_COMMAND_METHOD(dttoc);
+	EXT_COMMAND_METHOD(rr);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -361,7 +362,7 @@ EXT_COMMAND(dpx,
 			if (!ignore_flag) {
 				Dml("%p  %p  [D] ", base_address + i * GetAddressPtrSize(), query_data);
 				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
-					Dml("%c", iscntrl(((UCHAR *)&query_data)[j]) ? '.' : ((UCHAR *)&query_data)[j]);
+					Dml("%c", isgraph(((UCHAR *)&query_data)[j]) ? ((UCHAR *)&query_data)[j] : '.');
 				}
 
 				Dml("\n");
@@ -2796,7 +2797,7 @@ EXT_COMMAND(dttoc,
 	}
 
 	CStringA name;
-	name.SetString(struct_name, struct_name_end - struct_name);
+	name.SetString(struct_name, (int)(struct_name_end - struct_name));
 
 	LPCSTR begin_pos = strstr(out_text, "   +0x000 ");
 	if (begin_pos == NULL) {
@@ -2817,6 +2818,113 @@ EXT_COMMAND(dttoc,
 
 	Out("struct %s {\r\n%s};\r\n", name.GetString(), out_str.GetString());
 	
+}
+
+EXT_COMMAND(rr,
+	"Read registers and show the information.",
+	"")
+{
+	CHAR *reg32[] = { "eax", "ebx", "ecx", "edx", 
+		"esi", "edi", "eip", "esp", "ebp"
+	};
+
+	CHAR *reg64[] = { "rax", "rbx", "rcx",
+		"rdx", "rsi", "rdi",
+		"rip", "rsp", "rbp",
+		"r8", "r9", "r10",
+		"r11", "r12", "r13",
+		"r14", "r15",
+	};
+
+	ULONG64 query_data;
+	CHAR sym_buffer[128];
+	CHAR buffer[128];
+	WCHAR unicode_buffer[128];
+	ULONG ret_size = 0;
+	ULONG64 displacement = 0;
+	ULONG print_flag = 0;
+	ULONG index = 0;
+	CHAR **reg;
+	int count = 0;
+	if (GetAddressPtrSize() == 4) {
+		reg = reg32;
+		count = _countof(reg32);
+	}
+	else {
+		reg = reg64;
+		count = _countof(reg64);
+	}
+
+	for (int i = 0; i < count; i++) {
+		DEBUG_VALUE v = {0};
+		if (SUCCEEDED(m_Registers->GetIndexByName(reg[i], &index)) && SUCCEEDED(m_Registers->GetValue(index, &v))) {
+			query_data = v.I64;
+			ret_size = 0;
+			ZeroMemory(buffer, sizeof(buffer));
+			print_flag = 0;
+
+			if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data, 
+				sym_buffer, 
+				sizeof(sym_buffer), 
+				&ret_size, 
+				&displacement))) {
+					print_flag |= 1;
+			}
+
+			ZeroMemory(unicode_buffer, sizeof(unicode_buffer));
+			if (m_Data4->ReadUnicodeStringVirtualWide(query_data, 
+				_countof(unicode_buffer) - 1, 
+				unicode_buffer, 
+				_countof(unicode_buffer) - 1, 
+				&ret_size) != E_INVALIDARG && 
+				wcslen(unicode_buffer) != 0 &&
+				IsPrintAbleW(unicode_buffer, (ULONG)wcslen(unicode_buffer))) {
+					print_flag |= 2;
+			}
+
+			ZeroMemory(buffer, sizeof(buffer));
+			if (m_Data4->ReadMultiByteStringVirtual(query_data, 
+				0x1000, 
+				buffer, 
+				sizeof(buffer) - 1, 
+				&ret_size) != E_INVALIDARG && 
+				strlen(buffer) != 0 &&
+				IsPrintAble(buffer, (ULONG)strlen(buffer))) {
+					print_flag |= 4;
+			}
+
+			if (print_flag == 0) {
+				Dml("% 3s  %p  [D] ", reg[i], query_data);
+				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
+					Dml("%c", isgraph(((UCHAR *)&query_data)[j]) ? ((UCHAR *)&query_data)[j] : '.');
+				}
+
+				Dml("\n");
+			}
+			else {
+				Dml("% 3s  %p  [D] ", reg[i], query_data);
+				for (int j = 0; j < (int)GetAddressPtrSize(); j++) {
+					Dml("%c", isgraph(((UCHAR *)&query_data)[j]) ? ((UCHAR *)&query_data)[j] : '.');
+				}
+				if (print_flag & 1) {
+					Dml("  [S] %ly", query_data);
+				}
+
+				if (print_flag & 2) {
+					Dml(L"  [U] \"%s\"", unicode_buffer);
+				}
+
+				if (print_flag & 4) {
+					Dml("  [A] \"%s\"", buffer);
+				}
+
+				Dml("\n");
+			}
+		}
+		else {
+
+		}
+	}
 }
 
 DebugEventCallbacks g_event_callback;
