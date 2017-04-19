@@ -2919,27 +2919,37 @@ EXT_COMMAND(dttoc,
 	exe_cmd.Format("dt %s", GetUnnamedArgStr(0));
 	capture_exec.Execute(exe_cmd.GetString());
 	LPCSTR out_text = capture_exec.GetTextNonNull();
-
+	CStringA name;
 	LPCSTR struct_name = strchr(out_text, '!');
+	BOOL get_struct_from_cmd = FALSE;
+	if (struct_name == NULL) {
+		struct_name = strchr(GetUnnamedArgStr(0), '!');
+		get_struct_from_cmd = TRUE;
+	}
+
 	if (struct_name == NULL) {
 		Err("Failed to get struct name.\r\n");
 		return;
 	}
-
+	
 	struct_name++;
-	LPCSTR struct_name_end = strchr(struct_name, '\n');
-	if (struct_name_end == NULL) {
-		Err("Failed to get struct name.\r\n");
-		return;
+	if (get_struct_from_cmd) {
+		name = struct_name;
 	}
+	else {
+		LPCSTR struct_name_end = strchr(struct_name, '\n');
+		if (struct_name_end == NULL) {
+			Err("Failed to get struct name.\r\n");
+			return;
+		}
 
-	if (struct_name_end <= struct_name) {
-		Err("Failed to get struct name.\r\n");
-		return;
+		if (struct_name_end <= struct_name) {
+			Err("Failed to get struct name.\r\n");
+			return;
+		}
+
+		name.SetString(struct_name, (int)(struct_name_end - struct_name));
 	}
-
-	CStringA name;
-	name.SetString(struct_name, (int)(struct_name_end - struct_name));
 
 	LPCSTR begin_pos = strstr(out_text, "   +0x000 ");
 	if (begin_pos == NULL) {
