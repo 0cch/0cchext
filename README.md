@@ -25,6 +25,7 @@ Commands for 0cchext.dll:
   !dttoc           - Translate 'dt' command output text to C struct.
   !dtx             - Displays information about structures. (The config file is
                      struct.ini)
+  !du8             - Display UTF-8 string.
   !err             - Decodes and displays information about an error value.
   !favcmd          - Display the favorite debugger commands.(The config file is
                      favcmd.ini)
@@ -62,7 +63,6 @@ Commands for 0cchext.dll:
   !version         - Displays the version information for 0cchext.dll
   !wql             - Query system information with WMI.
 !help <cmd> will give more information for a particular command
-
 
 ```
 
@@ -690,4 +690,16 @@ r12  0000000000000000  [D] ........
 r13  000000000018ef58  [D] X.......
 r14  0000000000299890  [D] ..).....
 r15  0000000000000fff  [D] ........
+```
+
+#### !du8
+>  !du8            - Display UTF-8 string.
+
+```
+0:000> da 0x61ed08 
+0061ed08  "............"
+0:000> du 0x61ed08 
+0061ed08  "뷤.붥룤.貕"
+0:000> !du8 0x61ed08 
+0061ed08  你好世界
 ```
