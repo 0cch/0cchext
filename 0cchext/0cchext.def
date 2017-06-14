@@ -44,6 +44,7 @@ EXPORTS
 	rawpcap_stop
 	dttoc
 	rr
+	du8
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

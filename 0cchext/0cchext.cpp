@@ -48,6 +48,7 @@ public:
 	EXT_COMMAND_METHOD(rawpcap_stop);
 	EXT_COMMAND_METHOD(dttoc);
 	EXT_COMMAND_METHOD(rr);
+	EXT_COMMAND_METHOD(du8);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -3077,6 +3078,20 @@ EXT_COMMAND(rr,
 
 		}
 	}
+}
+
+EXT_COMMAND(du8,
+	"Display UTF-8 string.",
+	"{;ed,r;addr;Address of the string.}")
+{
+	ULONG64 addr = GetUnnamedArgU64(0);
+	ExtBuffer<char> buffer;
+	ExtRemoteData data;
+	data.Set(addr, 1024);
+	data.GetString(&buffer);
+
+	CStringW str = CA2W(buffer.GetBuffer(), CP_UTF8);
+	Out(L"%p  %s\r\n", addr, str.GetString());
 }
 
 DebugEventCallbacks g_event_callback;
