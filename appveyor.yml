@@ -23,7 +23,7 @@ artifacts:
 deploy:
   provider: GitHub
   auth_token:
-    secure: 62qRhyIW9eMwBUsPTwBlfStCTCj2Mj6KsVddBysmKjTiXgXY83v6NTcXljrVwYZx
+    secure: joiNNJe1EegeE9zcyLWRXU2XjaIG27B66Lq6IOkMNS+h+W7PEU2bNW+ByAe31RBv
   artifact: 0cchext.zip
   draft: false
   prerelease: true
