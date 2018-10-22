@@ -1,7 +1,7 @@
-version: 1.0.18.2.{build}
+version: 1.0.18.3.{build}
 pull_requests:
   do_not_increment_build_number: true
-#skip_tags: true
+skip_tags: true
 configuration: Release
 # platform:
 # - Win32
@@ -21,14 +21,9 @@ artifacts:
 - path: 0cchext.zip
   name: 0cchext.zip
 deploy:
-  provider: GitHub
+- provider: GitHub
   auth_token:
     secure: joiNNJe1EegeE9zcyLWRXU2XjaIG27B66Lq6IOkMNS+h+W7PEU2bNW+ByAe31RBv
   artifact: 0cchext.zip
-  draft: false
-  prerelease: true
-  force_update: true
-  tag: $(APPVEYOR_REPO_TAG_NAME)
-  on:
-    branch: master                 # release from master branch only
-    appveyor_repo_tag: true
+  draft: true
+
