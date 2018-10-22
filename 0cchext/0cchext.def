@@ -45,6 +45,7 @@ EXPORTS
 	dttoc
 	rr
 	du8
+	accessmask
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
