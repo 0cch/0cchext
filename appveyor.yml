@@ -20,7 +20,8 @@ artifacts:
 - path: 0cchext.zip
   name: 0cchext.zip
 deploy:
-- provider: GitHub
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  provider: GitHub
   auth_token:
     secure: 2W0KT4W461lO6PciBBogcYosS1IIIfPomLZ5eBDuMGdeQbTH+KXYTGioiS/M53MJ
   artifact: 0cchext.zip
