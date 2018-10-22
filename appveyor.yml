@@ -25,4 +25,6 @@ deploy:
   auth_token:
     secure: 2W0KT4W461lO6PciBBogcYosS1IIIfPomLZ5eBDuMGdeQbTH+KXYTGioiS/M53MJ
   artifact: 0cchext.zip
-  draft: true
+  draft: false
+  prerelease: true
+  force_update: true
