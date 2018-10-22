@@ -1,4 +1,4 @@
-version: 1.0.18.1.{build}
+version: 1.0.18.2.{build}
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
@@ -23,6 +23,6 @@ artifacts:
 deploy:
 - provider: GitHub
   auth_token:
-    secure: On0Jnl8PQJ1Hte1ady5k67nXkpHs1jWlygKY0gPs+fumKiZp2xBuqyoxr/fIokd3
+    secure: 1sXKpB0l4/P/H+FlASGl/SQcanqu22z80IByM2C1GC3VlXXkYbdIkOK3n4arqrqg
   artifact: 0cchext.zip
   draft: true
