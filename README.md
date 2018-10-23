@@ -12,6 +12,7 @@ site:   http://0cch.com
 Commands for 0cchext.dll:
   !a               - Assembles instruction mnemonics and puts the resulting
                      instruction codes into memory.
+  !accessmask      - Interpret ACCESS MASK value
   !addmodule       - Adds a synthetic module to the module list the debugger
                      maintains for the current process.
   !addsymbol       - Adds a synthetic symbol to a module in the current
@@ -702,4 +703,40 @@ r15  0000000000000fff  [D] ........
 0061ed08  "뷤.붥룤.貕"
 0:000> !du8 0x61ed08 
 0061ed08  你好世界
+```
+
+#### !accessmask
+>  !accessmask      - Interpret ACCESS MASK value
+
+```
+0:000> !accessmask process 0x1fffff
+Access mask: 0x1fffff
+
+Generic rights:
+STANDARD_RIGHTS_READ          	(0x20000)
+STANDARD_RIGHTS_WRITE         	(0x20000)
+STANDARD_RIGHTS_EXECUTE       	(0x20000)
+STANDARD_RIGHTS_REQUIRED      	(0xf0000)
+STANDARD_RIGHTS_ALL           	(0x1f0000)
+READ_CONTROL                  	(0x20000)
+DELETE                        	(0x10000)
+SYNCHRONIZE                   	(0x100000)
+WRITE_DAC                     	(0x40000)
+WRITE_OWNER                   	(0x80000)
+
+Specific rights:
+PROCESS_QUERY_LIMITED_INFORMATION	(0x1000)
+PROCESS_SUSPEND_RESUME        	(0x800)
+PROCESS_QUERY_INFORMATION     	(0x400)
+PROCESS_SET_INFORMATION       	(0x200)
+PROCESS_SET_QUOTA             	(0x100)
+PROCESS_CREATE_PROCESS        	(0x80)
+PROCESS_DUP_HANDLE            	(0x40)
+PROCESS_VM_WRITE              	(0x20)
+PROCESS_VM_READ               	(0x10)
+PROCESS_VM_OPERATION          	(0x8)
+PROCESS_CREATE_THREAD         	(0x2)
+PROCESS_TERMINATE             	(0x1)
+PROCESS_ALL_ACCESS            	(0x1fffff)
+
 ```
