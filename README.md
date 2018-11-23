@@ -42,6 +42,7 @@ Commands for 0cchext.dll:
   !listsymbol      - List the synthetic symbols.
   !logcmd          - Log command line to log file
   !memstat         - Statistics virtual memory allocation.
+  !oledata         - Print tagSOleTlsData.
   !pe_export       - Dump PE export functions
   !pe_import       - Dump PE import modules and functions
   !rawpcap_start   - Start to capture IP packet. (requires administrative
@@ -719,7 +720,7 @@ r15  0000000000000fff  [D] ........
 ```
 
 #### !accessmask
->  !accessmask      - Interpret ACCESS MASK value
+>  !accessmask     - Interpret ACCESS MASK value
 
 ```
 0:000> !accessmask process 0x1fffff
@@ -752,4 +753,24 @@ PROCESS_CREATE_THREAD         	(0x2)
 PROCESS_TERMINATE             	(0x1)
 PROCESS_ALL_ACCESS            	(0x1fffff)
 
+```
+
+#### !oledata
+>  !oledata        - Print tagSOleTlsData.
+
+```
+0:000> !oledata
+dt combase!tagSOleTlsData 0x0000019370ad0360
+dx (combase!tagSOleTlsData *)0x0000019370ad0360
+0:000> dt combase!tagSOleTlsData 0x0000019370ad0360
+   +0x000 pvThreadBase     : (null) 
+   +0x008 pSmAllocator     : (null) 
+   +0x010 dwApartmentID    : 0x1e3d4
+   +0x014 dwFlags          : 0x81
+   +0x018 TlsMapIndex      : 0n0
+   +0x020 ppTlsSlot        : 0x00000018`66fc9758  -> 0x00000193`70ad0360 Void
+   +0x028 cComInits        : 3
+   +0x02c cOleInits        : 0
+   +0x030 cCalls           : 0
+   ...
 ```

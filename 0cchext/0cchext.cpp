@@ -50,6 +50,7 @@ public:
 	EXT_COMMAND_METHOD(rr);
 	EXT_COMMAND_METHOD(du8);
 	EXT_COMMAND_METHOD(accessmask);
+	EXT_COMMAND_METHOD(oledata);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -3325,6 +3326,28 @@ EXT_COMMAND(accessmask,
 			break;
 		}
 	}
+}
+
+EXT_COMMAND(oledata,
+	"Print tagSOleTlsData.",
+	"")
+{
+	DEBUG_VALUE dbg_value = {0};
+	HRESULT hr = m_Control->Evaluate("@$teb", DEBUG_VALUE_INT64, &dbg_value, NULL);
+	if (FAILED(hr)) {
+		Err("Failed to get TEB\n");
+		return;
+	}
+
+	ExtRemoteTyped teb_info("(ntdll!_TEB *)@$extin", dbg_value.I64);
+	ULONG64 ole_data = teb_info.Field("ReservedForOle").GetUlongPtr();
+	if (ole_data == 0) {
+		Err("tagSOleTlsData is 0\n");
+		return;
+	}
+
+	Dml("<link cmd=\"dt combase!tagSOleTlsData 0x%p\">dt combase!tagSOleTlsData 0x%p</link>\n", ole_data, ole_data);
+	Dml("<link cmd=\"dx (combase!tagSOleTlsData *)0x%p\">dx (combase!tagSOleTlsData *)0x%p</link>\n", ole_data, ole_data);
 }
 
 DebugEventCallbacks g_event_callback;

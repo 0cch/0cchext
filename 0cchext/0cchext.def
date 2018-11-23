@@ -46,6 +46,7 @@ EXPORTS
 	rr
 	du8
 	accessmask
+	oledata
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
