@@ -109,6 +109,15 @@ r @eip=@$t0
 This command execute other commands automatically. Sometimes I want to attach the debugger to process or run a program with debugger, then execute a series of commands. Although this may be performed by the script, but still too complex for me. So I can use this command. create autocmd.ini file at 0cchext.dll directory, , and then enter the following text:
 
 ```
+[all]
+? 88 * 66
+
+[kernel]
+!process 0 0 explorer.exe
+
+[kernel dump]
+!analyze -v
+
 [notepad.exe]
 .sympath+ c:\notepad_pdb
 ~*k
@@ -116,6 +125,10 @@ This command execute other commands automatically. Sometimes I want to attach th
 [calc.exe]
 .sympath+ c:\calc_pdb
 ~*k
+
+[calc.exe dump]
+.excr
+
 ```
 
 So, '!autocmd' can execute commands for different process. 

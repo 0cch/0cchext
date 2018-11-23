@@ -1054,6 +1054,13 @@ EXT_COMMAND(autocmd,
 	"Execute the debugger commands.(The config file is autocmd.ini)",
 	"{v;b;Verbose mode;Show commands to client.}")
 {
+	ULONG class_type = 0, qualifier_type = 0;
+	HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+	if (FAILED(hr)) {
+		Err("Failed to get debuggee type\n");
+		return;
+	}
+
 	bool verbose = HasArg("v");
 
 	CHAR filename[MAX_PATH];
@@ -1112,8 +1119,39 @@ EXT_COMMAND(autocmd,
 		execute_flags |= DEBUG_EXECUTE_ECHO;
 	}
 
-	for (std::vector<std::string>::iterator it = cmd_map[execute_name].begin(); it != cmd_map[execute_name].end(); ++it) {
+	for (std::vector<std::string>::iterator it = cmd_map["all"].begin(); it != cmd_map["all"].end(); ++it) {
 		m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+	}
+
+	if (class_type == DEBUG_CLASS_KERNEL) {
+		if (qualifier_type == DEBUG_KERNEL_SMALL_DUMP || 
+			qualifier_type == DEBUG_KERNEL_DUMP || 
+			qualifier_type == DEBUG_KERNEL_FULL_DUMP) {
+				for (std::vector<std::string>::iterator it = cmd_map["kernel dump"].begin(); it != cmd_map["kernel dump"].end(); ++it) {
+					m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+				}
+		}
+		else {
+			for (std::vector<std::string>::iterator it = cmd_map["kernel"].begin(); it != cmd_map["kernel"].end(); ++it) {
+				m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+			}
+		}
+	}
+	else if (class_type == DEBUG_CLASS_USER_WINDOWS) {
+		if (qualifier_type == DEBUG_USER_WINDOWS_SMALL_DUMP || 
+			qualifier_type == DEBUG_USER_WINDOWS_DUMP) {
+				std::string dump_name = execute_name;
+				dump_name += " dump";
+
+				for (std::vector<std::string>::iterator it = cmd_map[dump_name].begin(); it != cmd_map[dump_name].end(); ++it) {
+					m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+				}
+		}
+		else {
+			for (std::vector<std::string>::iterator it = cmd_map[execute_name].begin(); it != cmd_map[execute_name].end(); ++it) {
+				m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
+			}
+		}
 	}
 }
 
