@@ -47,6 +47,7 @@ EXPORTS
 	du8
 	accessmask
 	oledata
+	cppexcrname
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger

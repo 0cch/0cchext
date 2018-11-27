@@ -51,6 +51,7 @@ public:
 	EXT_COMMAND_METHOD(du8);
 	EXT_COMMAND_METHOD(accessmask);
 	EXT_COMMAND_METHOD(oledata);
+	EXT_COMMAND_METHOD(cppexcrname);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -3348,6 +3349,116 @@ EXT_COMMAND(oledata,
 
 	Dml("<link cmd=\"dt combase!tagSOleTlsData 0x%p\">dt combase!tagSOleTlsData 0x%p</link>\n", ole_data, ole_data);
 	Dml("<link cmd=\"dx (combase!tagSOleTlsData *)0x%p\">dx (combase!tagSOleTlsData *)0x%p</link>\n", ole_data, ole_data);
+}
+
+EXT_COMMAND(cppexcrname,
+	"Print cpp exception name.",
+	"")
+{
+	if (GetAddressPtrSize() == 4) {
+		DEBUG_VALUE dbg_value = {0};
+		HRESULT hr = m_Control->Evaluate("@$exr_code", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception record code\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 0xe06d7363) {
+			Err("Cannot find C++ exception code\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_numparams", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter number\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 3) {
+			Err("Exception parameter number is not 3\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_param0", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter 0\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 0x19930520) {
+			Err("Exception magic number is not 0x19930520\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_param2", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter 2\n");
+			return;
+		}
+
+		ExtRemoteData cache_type_array(dbg_value.I64 + 0xc, sizeof(ULONG));
+		ExtRemoteData cache_type((ULONG64)cache_type_array.GetUlong() + 4, sizeof(ULONG));
+		ExtRemoteData descriptor((ULONG64)cache_type.GetUlong() + 4, sizeof(ULONG));
+		
+		ULONG64 except_name = descriptor.GetUlong() + 8;
+		Out("Exception name: %ma\n", except_name);
+	}
+	else {
+		DEBUG_VALUE dbg_value = {0};
+		DEBUG_VALUE base_value = {0};
+		HRESULT hr = m_Control->Evaluate("@$exr_code", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception record code\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 0xe06d7363) {
+			Err("Cannot find C++ exception code\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_numparams", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter number\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 4) {
+			Err("Exception parameter number is not 3\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_param0", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter 0\n");
+			return;
+		}
+
+		if (dbg_value.I64 != 0x19930520) {
+			Err("Exception magic number is not 0x19930520\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_param2", DEBUG_VALUE_INT64, &dbg_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter 2\n");
+			return;
+		}
+
+		hr = m_Control->Evaluate("@$exr_param3", DEBUG_VALUE_INT64, &base_value, NULL);
+		if (FAILED(hr)) {
+			Err("Failed to get exception parameter 3\n");
+			return;
+		}
+
+		ExtRemoteData cache_type_array(dbg_value.I64 + 0xc, sizeof(ULONG));
+		ExtRemoteData cache_type((ULONG64)cache_type_array.GetUlong() + base_value.I64 + 4, sizeof(ULONG));
+		ExtRemoteData descriptor((ULONG64)cache_type.GetUlong() + base_value.I64 + 4, sizeof(ULONG));
+
+		ULONG64 except_name =  base_value.I64 + descriptor.GetUlong() + 0x10;
+		Out("Exception name: %ma\n", except_name);
+	}
+
 }
 
 DebugEventCallbacks g_event_callback;

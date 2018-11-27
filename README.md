@@ -21,6 +21,7 @@ Commands for 0cchext.dll:
                      autocmd.ini)
   !bing            - Use bing to search.
   !carray          - Show data in C array style.
+  !cppexcrname     - Print cpp exception name.
   !dlsym           - Download symbol by path.
   !dpx             - Display the contents of memory in the given range.
   !dttoc           - Translate 'dt' command output text to C struct.
@@ -773,4 +774,20 @@ dx (combase!tagSOleTlsData *)0x0000019370ad0360
    +0x02c cOleInits        : 0
    +0x030 cCalls           : 0
    ...
+```
+
+#### !cppexcrname
+>  !cppexcrname    - Print cpp exception name.
+
+```
+0:000> .exr -1
+ExceptionAddress: 74e61812 (KERNELBASE!RaiseException+0x00000062)
+   ExceptionCode: e06d7363 (C++ EH exception)
+  ExceptionFlags: 00000001
+NumberParameters: 3
+   Parameter[0]: 19930520
+   Parameter[1]: 006ff46c
+   Parameter[2]: 00372294
+0:000> !cppexcrname
+Exception name: .?AVexception@std@@
 ```
