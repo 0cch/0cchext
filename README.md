@@ -460,14 +460,14 @@ Set download symbol path and use !dlsym to download symbol.
 ```
 
 
-#### !setdlsympath
+#### !dlsym
 > !dlsym           - Download symbol by path.
 
 Download symbol by EXE or DLL file path. We can set timeout timer and number of retries. Since microsoft public symbol server is not stable, windbg download symbol always fails. So I just write a downloader command, and we can set a long timeout timer to make the download symbol more stable.
 
 ```
 
-0:000> !dlsym /t 10000 /r 10 C:\Windows\syswow64\kernel32.dll
+0:000> !dlsym /t 10000 /r 10 /p 123.123.123.12:8888 C:\Windows\syswow64\kernel32.dll
 Download url  : http://msdl.microsoft.com/download/symbols/wkernel32.pdb/AB6B617AB7E1496AB63555DEBF8A91B12/wkernel32.pd_
 Download path : D:\newsym\wkernel32.pdb\AB6B617AB7E1496AB63555DEBF8A91B12\wkernel32.pd_
 4096/670972 (0%)

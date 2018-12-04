@@ -2609,10 +2609,106 @@ HANDLE CreateProcessEasy(LPCTSTR path, LPTSTR cmd)
 	return NULL;
 }
 
+class AutoSetProxy {
+public:
+	AutoSetProxy()
+	{
+		enable_ = FALSE;
+	}
+	AutoSetProxy(LPWSTR proxy_addr)
+	{
+		enable_ = FALSE;
+		Enable(proxy_addr);
+	}
+
+	void Enable(LPWSTR proxy_addr)
+	{
+		if (!enable_) {
+			enable_ = TRUE;
+			opt_[0].dwOption = INTERNET_PER_CONN_FLAGS;
+			opt_[1].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+			opt_[2].dwOption = INTERNET_PER_CONN_PROXY_BYPASS;
+
+			opt_[0].Value.pszValue = 0;
+			opt_[1].Value.pszValue = 0;
+			opt_[2].Value.pszValue = 0;
+
+			list_.dwSize = sizeof(INTERNET_PER_CONN_OPTION_LIST);
+			list_.pszConnection = 0;
+			list_.dwOptionCount = sizeof(opt_)/sizeof(opt_[0]);
+			list_.dwOptionError = 0;
+
+			list_.pOptions = opt_;
+
+			ULONG list_size = sizeof(INTERNET_PER_CONN_OPTION_LIST);
+
+			InternetQueryOption(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list_, &list_size);
+			SetConnectionOptions(NULL, proxy_addr);
+		}
+	}
+
+	~AutoSetProxy()
+	{
+		if (enable_) {
+			enable_ = FALSE;
+
+			ULONG list_size = sizeof(INTERNET_PER_CONN_OPTION_LIST);
+			InternetSetOption(NULL,
+				INTERNET_OPTION_PER_CONNECTION_OPTION, &list_, list_size);
+
+			InternetSetOption(NULL, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
+			InternetSetOption(NULL, INTERNET_OPTION_REFRESH , NULL, 0);
+
+			if (opt_[1].Value.pszValue) {
+				GlobalFree(opt_[1].Value.pszValue);
+			}
+
+			if (opt_[2].Value.pszValue) {
+				GlobalFree(opt_[2].Value.pszValue);
+			}
+		}
+		
+	}
+
+	BOOL SetConnectionOptions(LPWSTR conn_name,LPWSTR proxy_full_addr)
+	{
+		INTERNET_PER_CONN_OPTION_LIST list;
+		BOOL retval;
+		ULONG buf_size = sizeof(list);
+		list.dwSize = sizeof(list);
+		list.pszConnection = conn_name;
+		list.dwOptionCount = 3;
+		list.pOptions = new INTERNET_PER_CONN_OPTION[3];
+		if (list.pOptions == NULL) {
+			return FALSE;
+		}
+
+		list.pOptions[0].dwOption = INTERNET_PER_CONN_FLAGS;
+		list.pOptions[0].Value.dwValue = PROXY_TYPE_DIRECT | PROXY_TYPE_PROXY;
+		list.pOptions[1].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+		list.pOptions[1].Value.pszValue = proxy_full_addr;
+		list.pOptions[2].dwOption = INTERNET_PER_CONN_PROXY_BYPASS;
+		list.pOptions[2].Value.pszValue = L"";
+
+		retval = InternetSetOption(NULL,
+			INTERNET_OPTION_PER_CONNECTION_OPTION, &list, buf_size);
+
+		delete [] list.pOptions;
+		InternetSetOption(NULL, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
+		InternetSetOption(NULL, INTERNET_OPTION_REFRESH , NULL, 0);
+		return retval;
+	}
+
+	INTERNET_PER_CONN_OPTION_LIST list_;
+	INTERNET_PER_CONN_OPTION opt_[3];
+	BOOL enable_;
+};
+
 EXT_COMMAND(dlsym,
 	"Download symbol by path.",
 	"{t;ed,o;Timeout;Set connect timeout.}"
 	"{r;ed,o;Retries;Number of retries.}"
+	"{p;s,o;Proxy;Proxy address.}"
 	"{;x;Path;Module path.}")
 {
 	if (g_download_path.IsEmpty()) {
@@ -2623,12 +2719,21 @@ EXT_COMMAND(dlsym,
 	CStringW module_path = GetUnnamedArgStr(0);
 	ULONG timeout = 0;
 	ULONG retries = 1;
+	BOOL use_proxy = FALSE;
+	CString proxy_addr;
+	AutoSetProxy auto_proxy;
 	if (HasArg("t")) {
 		timeout = (ULONG)GetArgU64("t");
 	}
 
 	if (HasArg("r")) {
 		retries = (ULONG)GetArgU64("r");
+	}
+
+	if (HasArg("p")) {
+		use_proxy = TRUE;
+		proxy_addr = GetArgStr("p");
+		auto_proxy.Enable(proxy_addr.GetBuffer());
 	}
 
 	SYMSRV_INDEX_INFO sym = {0};
@@ -2639,13 +2744,17 @@ EXT_COMMAND(dlsym,
 	}
 
 	WCHAR download_str[INTERNET_MAX_URL_LENGTH];
+	WCHAR download_str2[INTERNET_MAX_URL_LENGTH];
 	WCHAR pdb_name[MAX_PATH + 1];
+	WCHAR pdb_name2[MAX_PATH + 1];
 	wcscpy_s(pdb_name, sym.pdbfile);
+	wcscpy_s(pdb_name2, sym.pdbfile);
 	pdb_name[wcslen(pdb_name) - 1] = L'_';
-
 	swprintf_s(download_str, L"http://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name);
+	swprintf_s(download_str2, L"http://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name2);
 
 	Out(L"Download url  : %s\r\n", download_str);
+	Out(L"Download url  : %s\r\n", download_str2);
 
 	HttpDownloader downloader;
 	if (!downloader.Create(L"Microsoft-Symbol-Server/10.0.10586.567")) {
@@ -2658,11 +2767,14 @@ EXT_COMMAND(dlsym,
 	CPathW download_path = g_download_path;
 	download_path.Append(sub_path);
 	SHCreateDirectory(NULL, download_path.m_strPath.GetString());
+	CPathW download_path2 = download_path;
 	download_path.Append(pdb_name);
-
-	Out(L"Download path : %s\r\n", download_path.m_strPath.GetString());
-
+	download_path2.Append(pdb_name2);
+	Out(L"Download path : %s\r\n", download_path2.m_strPath.GetString());
+	int pdb_type = 0;
 	HRESULT hr = S_OK;
+
+	ULONG download_tick = GetTickCount();
 	for (ULONG i = 0; i < retries; i++) {
 		if (i != 0) {
 			Out("Retry(%u):\r\n", i);
@@ -2671,10 +2783,17 @@ EXT_COMMAND(dlsym,
 		hr = downloader.UrlDownloadFile(download_str, download_path.m_strPath.GetString(), 0, SymbolDownloadProc, &total_download, timeout);
 
 		if (SUCCEEDED(hr)) {
+			pdb_type = 1;
 			break;
 		}
 		else {
-			Err("Failed to download pdb, ERROR = %u\r\n", HRESULT_CODE(hr));
+			hr = downloader.UrlDownloadFile(download_str2, download_path2.m_strPath.GetString(), 0, SymbolDownloadProc, &total_download, timeout);
+			if (SUCCEEDED(hr)) {
+				break;
+			}
+			else {
+				Err("Failed to download pdb, ERROR = %u\r\n", HRESULT_CODE(hr));
+			}
 		}
 
 		if (m_Control->GetInterrupt() == S_OK) {
@@ -2682,29 +2801,33 @@ EXT_COMMAND(dlsym,
 			break;
 		}
 	}
-
+	Out("Download time: %u ms \r\n", GetTickCount() - download_tick);
 	if (FAILED(hr)) {
 		return;
 	}
 
-	WCHAR expand_path[MAX_PATH] = {0};
-	ExpandEnvironmentStrings(L"%systemroot%\\system32\\expand.exe", expand_path, MAX_PATH);
-	
-	CStringW cmd = L"expand.exe -R " + download_path.m_strPath;
-	HANDLE exp_handle = CreateProcessEasy(expand_path, cmd.GetBuffer());
-	if (exp_handle == NULL) {
-		Err("Failed to expand pdb file.\r\n");
-		return;
+	if (pdb_type) {
+		WCHAR expand_path[MAX_PATH] = {0};
+		ExpandEnvironmentStrings(L"%systemroot%\\system32\\expand.exe", expand_path, MAX_PATH);
+
+		CStringW cmd = L"expand.exe -R " + download_path.m_strPath;
+		HANDLE exp_handle = CreateProcessEasy(expand_path, cmd.GetBuffer());
+		if (exp_handle == NULL) {
+			Err("Failed to expand pdb file.\r\n");
+			return;
+		}
+
+		WaitForSingleObject(exp_handle, INFINITE);
+		CloseHandle(exp_handle);
+
+		DeleteFile(download_path.m_strPath.GetString());
+		download_path.RemoveExtension();
+		download_path.AddExtension(L".pdb");
+		Out(L"Download %s finish.\r\n", download_path.m_strPath.GetString());
 	}
-
-	WaitForSingleObject(exp_handle, INFINITE);
-	CloseHandle(exp_handle);
-
-	DeleteFile(download_path.m_strPath.GetString());
-	download_path.RemoveExtension();
-	download_path.AddExtension(L".pdb");
-	
-	Out(L"Download %s finish.\r\n", download_path.m_strPath.GetString());
+	else {
+		Out(L"Download %s finish.\r\n", download_path2.m_strPath.GetString());
+	}
 }
 
 std::map<ULONG64, CStringA> g_thread_names;
