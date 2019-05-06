@@ -673,14 +673,25 @@ BOOL FindMessage(PVOID dll, ULONG id, CStringW &message)
 	return TRUE;
 }
 
-BOOL HttpDownloader::Create( LPCTSTR agent )
+BOOL HttpDownloader::Create(LPCTSTR agent, LPCTSTR proxy /*= NULL*/)
 {
-	sesstion_ = InternetOpen(agent, 
-		INTERNET_OPEN_TYPE_PRECONFIG,
-		NULL, 
-		NULL, 
-		0);
-
+	if (proxy == NULL) {
+		sesstion_ = InternetOpen(agent, 
+			INTERNET_OPEN_TYPE_PRECONFIG,
+			NULL, 
+			NULL, 
+			0);
+	}
+	else {
+		CString proxy_str(TEXT("http="));
+		proxy_str.Append(proxy);
+		sesstion_ = InternetOpen(agent, 
+			INTERNET_OPEN_TYPE_PROXY,
+			proxy_str, 
+			NULL, 
+			0);
+	}
+	
 	return sesstion_ != NULL;
 }
 

@@ -15,7 +15,7 @@ public:
 	HttpDownloader() : sesstion_(NULL) {}
 	~HttpDownloader() {Close();}
 
-	BOOL Create(LPCTSTR agent);
+	BOOL Create(LPCTSTR agent, LPCTSTR proxy = NULL);
 	void Close();
 	HRESULT DownloadFile(LPCTSTR server_name, 
 		INTERNET_PORT server_port, 

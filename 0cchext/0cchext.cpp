@@ -2721,7 +2721,7 @@ EXT_COMMAND(dlsym,
 	ULONG retries = 1;
 	BOOL use_proxy = FALSE;
 	CString proxy_addr;
-	AutoSetProxy auto_proxy;
+	// AutoSetProxy auto_proxy;
 	if (HasArg("t")) {
 		timeout = (ULONG)GetArgU64("t");
 	}
@@ -2733,7 +2733,7 @@ EXT_COMMAND(dlsym,
 	if (HasArg("p")) {
 		use_proxy = TRUE;
 		proxy_addr = GetArgStr("p");
-		auto_proxy.Enable(proxy_addr.GetBuffer());
+		// auto_proxy.Enable(proxy_addr.GetBuffer());
 	}
 
 	SYMSRV_INDEX_INFO sym = {0};
@@ -2757,10 +2757,19 @@ EXT_COMMAND(dlsym,
 	Out(L"Download url  : %s\r\n", download_str2);
 
 	HttpDownloader downloader;
-	if (!downloader.Create(L"Microsoft-Symbol-Server/10.0.10586.567")) {
-		Err("Failed to initialize downloader.\r\n");
-		return;
+	if (use_proxy) {
+		if (!downloader.Create(L"Microsoft-Symbol-Server/10.0.10586.567", proxy_addr)) {
+			Err("Failed to initialize downloader.\r\n");
+			return;
+		}
 	}
+	else {
+		if (!downloader.Create(L"Microsoft-Symbol-Server/10.0.10586.567")) {
+			Err("Failed to initialize downloader.\r\n");
+			return;
+		}
+	}
+	
 	
 	CStringW sub_path;
 	sub_path.Format(L"%s\\%s%X", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age);
