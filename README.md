@@ -809,4 +809,7 @@ System Uptime: 20 days 2:53:32.735
 Process Uptime: 0 days 0:10:24.155
   Kernel time: 0 days 0:00:00.015
   User time: 0 days 0:00:00.000
+
+* Capture a dump every second for 10 seconds
+.for(r $t0 = 0; $t0 < 0n10; r $t0 = $t0 + 1) {!0cchext.gt 0n1000 -c .dump /u f:\test.dump;}
 ```

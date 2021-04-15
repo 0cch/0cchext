@@ -3486,14 +3486,22 @@ EXT_COMMAND(oledata,
 
 EXT_COMMAND(gt,
 	"Go and interrupted after a period of time (ms).",
-	"{;ed,r;ms;a period of time(milliseconds)}")
+	"{;ed,r;ms;a period of time(milliseconds)}"
+	"{c;x,o;Cmd;Debug commands}")
 {
 	ULONG64 wait_ms = GetUnnamedArgU64(0);
 	m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "g", 0);
 	HRESULT hr = m_Control->WaitForEvent(0, (ULONG)wait_ms);
 	if (hr == S_FALSE) {
-		m_Control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE | DEBUG_INTERRUPT_PASSIVE);
-		m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+		if (HasArg("c")) {
+			PCSTR cmd = GetArgStr("c");
+			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, cmd, DEBUG_EXECUTE_NO_REPEAT);
+		}
+		else {
+			m_Control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE);
+			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+		}
 	}
 }
 
