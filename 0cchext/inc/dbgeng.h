@@ -9,6 +9,11 @@
 #ifndef __DBGENG_H__
 #define __DBGENG_H__
 
+#include <winapifamily.h>
+
+#pragma region Desktop Family or WER Package
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP | WINAPI_PARTITION_PKG_WER)
+
 #include <stdarg.h>
 #include <objbase.h>
 
@@ -21,29 +26,17 @@ typedef struct _WINDBG_EXTENSION_APIS64* PWINDBG_EXTENSION_APIS64;
 typedef struct _MEMORY_BASIC_INFORMATION64* PMEMORY_BASIC_INFORMATION64;
 #endif
 
-#ifndef __specstrings
-// Should include SpecStrings.h to get proper definitions.
-#define __in
-#define __in_opt
-#define __in_bcount(x)
-#define __in_bcount_opt(x)
-#define __in_ecount(x)
-#define __in_ecount_opt(x)
-#define __out
-#define __out_opt
-#define __out_bcount(x)
-#define __out_bcount_opt(x)
-#define __out_ecount(x)
-#define __out_ecount_opt(x)
-#define __out_xcount(x)
-#define __inout
-#define __inout_opt
-#define __reserved
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//----------------------------------------------------------------------------
+//
+// Special exception code extensions could throw
+//
+//----------------------------------------------------------------------------
+#define ERROR_DBG_CANCELLED 0xC00004C7 // 0xC0000000 + ERROR_CANCELLED
+#define ERROR_DBG_TIMEOUT   0xC00005B4 // 0xC0000000 + ERROR_TIMEOUT
 
 //----------------------------------------------------------------------------
 //
@@ -60,12 +53,18 @@ DEFINE_GUID(IID_IDebugAdvanced2, 0x716d14c9, 0x119b, 0x4ba5,
 /* cba4abb4-84c4-444d-87ca-a04e13286739 */
 DEFINE_GUID(IID_IDebugAdvanced3, 0xcba4abb4, 0x84c4, 0x444d,
             0x87, 0xca, 0xa0, 0x4e, 0x13, 0x28, 0x67, 0x39);
+/* d1069067-2a65-4bf0-ae97-76184b67856b */
+DEFINE_GUID(IID_IDebugAdvanced4, 0xd1069067, 0x2a65, 0x4bf0,
+            0xae, 0x97, 0x76, 0x18, 0x4b, 0x67, 0x85, 0x6b);
 /* 5bd9d474-5975-423a-b88b-65a8e7110e65 */
 DEFINE_GUID(IID_IDebugBreakpoint, 0x5bd9d474, 0x5975, 0x423a,
             0xb8, 0x8b, 0x65, 0xa8, 0xe7, 0x11, 0x0e, 0x65);
 /* 1b278d20-79f2-426e-a3f9-c1ddf375d48e */
 DEFINE_GUID(IID_IDebugBreakpoint2, 0x1b278d20, 0x79f2, 0x426e,
             0xa3, 0xf9, 0xc1, 0xdd, 0xf3, 0x75, 0xd4, 0x8e);
+/* 38f5c249-b448-43bb-9835-579d4ec02249 */
+DEFINE_GUID(IID_IDebugBreakpoint3, 0x38f5c249, 0xb448, 0x43bb, 
+            0x98, 0x35, 0x57, 0x9d, 0x4e, 0xc0, 0x22, 0x49);
 /* 27fe5639-8407-4f47-8364-ee118fb08ac8 */
 DEFINE_GUID(IID_IDebugClient, 0x27fe5639, 0x8407, 0x4f47,
             0x83, 0x64, 0xee, 0x11, 0x8f, 0xb0, 0x8a, 0xc8);
@@ -81,6 +80,24 @@ DEFINE_GUID(IID_IDebugClient4, 0xca83c3de, 0x5089, 0x4cf8,
 /* e3acb9d7-7ec2-4f0c-a0da-e81e0cbbe628 */
 DEFINE_GUID(IID_IDebugClient5, 0xe3acb9d7, 0x7ec2, 0x4f0c,
             0xa0, 0xda, 0xe8, 0x1e, 0x0c, 0xbb, 0xe6, 0x28);
+/* fd28b4c5-c498-4686-a28e-62cad2154eb3 */
+DEFINE_GUID(IID_IDebugClient6, 0xfd28b4c5, 0xc498, 0x4686,
+            0xa2, 0x8e, 0x62, 0xca, 0xd2, 0x15, 0x4e, 0xb3);
+/* 13586be3-542e-481e-b1f2-8497ba74f9a9 */
+DEFINE_GUID(IID_IDebugClient7, 0x13586be3, 0x542e, 0x481e,
+            0xb1, 0xf2, 0x84, 0x97, 0xba, 0x74, 0xf9, 0xa9);
+/* a02b66c4-aea3-4234-a9f7-fe4c383d4e29 */
+DEFINE_GUID(IID_IDebugPlmClient, 0xa02b66c4, 0xaea3, 0x4234,
+            0xa9, 0xf7, 0xfe, 0x4c, 0x38, 0x3d, 0x4e, 0x29);
+/* 597c980d-e7bd-4309-962c-9d9b69a7372c */
+DEFINE_GUID(IID_IDebugPlmClient2, 0x597c980d, 0xe7bd, 0x4309,
+            0x96, 0x2c, 0x9d, 0x9b, 0x69, 0xa7, 0x37, 0x2c);
+/* cdf48669-901f-4791-b868-7d2cb3a2d7fc */
+DEFINE_GUID(IID_IDebugPlmClient3, 0xcdf48669, 0x901f, 0x4791,
+            0xb8, 0x68, 0x7d, 0x2c, 0xb3, 0xa2, 0xd7, 0xfc);
+/* 7782d8f2-2b85-4059-ab88-28ceddca1c80 */
+DEFINE_GUID(IID_IDebugOutputStream, 0x7782d8f2, 0x2b85, 0x4059,
+            0xab, 0x88, 0x28, 0xce, 0xdd, 0xca, 0x1c, 0x80);
 /* 5182e668-105e-416e-ad92-24ef800424ba */
 DEFINE_GUID(IID_IDebugControl, 0x5182e668, 0x105e, 0x416e,
             0xad, 0x92, 0x24, 0xef, 0x80, 0x04, 0x24, 0xba);
@@ -93,6 +110,15 @@ DEFINE_GUID(IID_IDebugControl3, 0x7df74a86, 0xb03f, 0x407f,
 /* 94e60ce9-9b41-4b19-9fc0-6d9eb35272b3 */
 DEFINE_GUID(IID_IDebugControl4, 0x94e60ce9, 0x9b41, 0x4b19,
             0x9f, 0xc0, 0x6d, 0x9e, 0xb3, 0x52, 0x72, 0xb3);
+/* b2ffe162-2412-429f-8d1d-5bf6dd824696 */
+DEFINE_GUID(IID_IDebugControl5, 0xb2ffe162, 0x2412, 0x429f,
+            0x8d, 0x1d, 0x5b, 0xf6, 0xdd, 0x82, 0x46, 0x96);
+/* bc0d583f-126d-43a1-9cc4-a860ab1d537b */
+DEFINE_GUID(IID_IDebugControl6, 0xbc0d583f, 0x126d, 0x43a1,
+            0x9c, 0xc4, 0xa8, 0x60, 0xab, 0x1d, 0x53, 0x7b);
+/* b86fb3b1-80d4-475b-aea3-cf06539cf63a */
+DEFINE_GUID(IID_IDebugControl7, 0xb86fb3b1, 0x80d4, 0x475b,
+            0xae, 0xa3, 0xcf, 0x06, 0x53, 0x9c, 0xf6, 0x3a);
 /* 88f7dfab-3ea7-4c3a-aefb-c4e8106173aa */
 DEFINE_GUID(IID_IDebugDataSpaces, 0x88f7dfab, 0x3ea7, 0x4c3a,
             0xae, 0xfb, 0xc4, 0xe8, 0x10, 0x61, 0x73, 0xaa);
@@ -111,6 +137,9 @@ DEFINE_GUID(IID_IDebugEventCallbacks, 0x337be28b, 0x5036, 0x4d72,
 /* 0690e046-9c23-45ac-a04f-987ac29ad0d3 */
 DEFINE_GUID(IID_IDebugEventCallbacksWide, 0x0690e046, 0x9c23, 0x45ac,
             0xa0, 0x4f, 0x98, 0x7a, 0xc2, 0x9a, 0xd0, 0xd3);
+/* 61a4905b-23f9-4247-b3c5-53d087529ab7 */
+DEFINE_GUID(IID_IDebugEventContextCallbacks, 0x61a4905b, 0x23f9, 0x4247,
+            0xb3, 0xc5, 0x53, 0xd0, 0x87, 0x52, 0x9a, 0xb7);
 /* 9f50e42c-f136-499e-9a97-73036c94ed2d */
 DEFINE_GUID(IID_IDebugInputCallbacks, 0x9f50e42c, 0xf136, 0x499e,
             0x9a, 0x97, 0x73, 0x03, 0x6c, 0x94, 0xed, 0x2d);
@@ -144,6 +173,12 @@ DEFINE_GUID(IID_IDebugSymbols2, 0x3a707211, 0xafdd, 0x4495,
 /* f02fbecc-50ac-4f36-9ad9-c975e8f32ff8 */
 DEFINE_GUID(IID_IDebugSymbols3, 0xf02fbecc, 0x50ac, 0x4f36,
             0x9a, 0xd9, 0xc9, 0x75, 0xe8, 0xf3, 0x2f, 0xf8);
+/* e391bbd8-9d8c-4418-840b-c006592a1752 */
+DEFINE_GUID(IID_IDebugSymbols4, 0xe391bbd8, 0x9d8c, 0x4418,
+            0x84, 0x0b, 0xc0, 0x06, 0x59, 0x2a, 0x17, 0x52);
+/* c65fa83e-1e69-475e-8e0e-b5d79e9cc17e */
+DEFINE_GUID(IID_IDebugSymbols5, 0xc65fa83e, 0x1e69, 0x475e,
+            0x8e, 0x0e, 0xb5, 0xd7, 0x9e, 0x9c, 0xc1, 0x7e);
 /* 6b86fe2c-2c4f-4f0c-9da2-174311acc327 */
 DEFINE_GUID(IID_IDebugSystemObjects, 0x6b86fe2c, 0x2c4f, 0x4f0c,
             0x9d, 0xa2, 0x17, 0x43, 0x11, 0xac, 0xc3, 0x27);
@@ -163,10 +198,14 @@ typedef interface DECLSPEC_UUID("716d14c9-119b-4ba5-af1f-0890e672416a")
     IDebugAdvanced2* PDEBUG_ADVANCED2;
 typedef interface DECLSPEC_UUID("cba4abb4-84c4-444d-87ca-a04e13286739")
     IDebugAdvanced3* PDEBUG_ADVANCED3;
+typedef interface DECLSPEC_UUID("d1069067-2a65-4bf0-ae97-76184b67856b")
+    IDebugAdvanced4* PDEBUG_ADVANCED4;
 typedef interface DECLSPEC_UUID("5bd9d474-5975-423a-b88b-65a8e7110e65")
     IDebugBreakpoint* PDEBUG_BREAKPOINT;
 typedef interface DECLSPEC_UUID("1b278d20-79f2-426e-a3f9-c1ddf375d48e")
     IDebugBreakpoint2* PDEBUG_BREAKPOINT2;
+typedef interface DECLSPEC_UUID("38f5c249-b448-43bb-9835-579d4ec02249")
+    IDebugBreakpoint3* PDEBUG_BREAKPOINT3;
 typedef interface DECLSPEC_UUID("27fe5639-8407-4f47-8364-ee118fb08ac8")
     IDebugClient* PDEBUG_CLIENT;
 typedef interface DECLSPEC_UUID("edbed635-372e-4dab-bbfe-ed0d2f63be81")
@@ -177,6 +216,18 @@ typedef interface DECLSPEC_UUID("ca83c3de-5089-4cf8-93c8-d892387f2a5e")
     IDebugClient4* PDEBUG_CLIENT4;
 typedef interface DECLSPEC_UUID("e3acb9d7-7ec2-4f0c-a0da-e81e0cbbe628")
     IDebugClient5* PDEBUG_CLIENT5;
+typedef interface DECLSPEC_UUID("fd28b4c5-c498-4686-a28e-62cad2154eb3")
+    IDebugClient6* PDEBUG_CLIENT6;
+typedef interface DECLSPEC_UUID("13586be3-542e-481e-b1f2-8497ba74f9a9")
+    IDebugClient7* PDEBUG_CLIENT7;
+typedef interface DECLSPEC_UUID("a02b66c4-aea3-4234-a9f7-fe4c383d4e29")
+    IDebugPlmClient* PIDEBUG_PLMCLIENT;
+typedef interface DECLSPEC_UUID("597c980d-e7bd-4309-962c-9d9b69a7372c")
+    IDebugPlmClient2* PIDEBUG_PLMCLIENT2;
+typedef interface DECLSPEC_UUID("d4a5dbd1-ca02-4d90-856a-2a92bfd0f20f")
+    IDebugPlmClient3* PIDEBUG_PLMCLIENT3;
+typedef interface DECLSPEC_UUID("7782d8f2-2b85-4059-ab88-28ceddca1c80")
+    IDebugOutputStream* PDEBUG_OUTPUT_STREAM;
 typedef interface DECLSPEC_UUID("5182e668-105e-416e-ad92-24ef800424ba")
     IDebugControl* PDEBUG_CONTROL;
 typedef interface DECLSPEC_UUID("d4366723-44df-4bed-8c7e-4c05424f4588")
@@ -185,6 +236,13 @@ typedef interface DECLSPEC_UUID("7df74a86-b03f-407f-90ab-a20dadcead08")
     IDebugControl3* PDEBUG_CONTROL3;
 typedef interface DECLSPEC_UUID("94e60ce9-9b41-4b19-9fc0-6d9eb35272b3")
     IDebugControl4* PDEBUG_CONTROL4;
+typedef interface DECLSPEC_UUID("b2ffe162-2412-429f-8d1d-5bf6dd824696")
+    IDebugControl5* PDEBUG_CONTROL5;
+typedef interface DECLSPEC_UUID("bc0d583f-126d-43a1-9cc4-a860ab1d537b")
+    IDebugControl6* PDEBUG_CONTROL6;
+typedef interface DECLSPEC_UUID("b86fb3b1-80d4-475b-aea3-cf06539cf63a")
+    IDebugControl7* PDEBUG_CONTROL7;
+
 typedef interface DECLSPEC_UUID("88f7dfab-3ea7-4c3a-aefb-c4e8106173aa")
     IDebugDataSpaces* PDEBUG_DATA_SPACES;
 typedef interface DECLSPEC_UUID("7a5e852f-96e9-468f-ac1b-0b3addc4a049")
@@ -197,6 +255,8 @@ typedef interface DECLSPEC_UUID("337be28b-5036-4d72-b6bf-c45fbb9f2eaa")
     IDebugEventCallbacks* PDEBUG_EVENT_CALLBACKS;
 typedef interface DECLSPEC_UUID("0690e046-9c23-45ac-a04f-987ac29ad0d3")
     IDebugEventCallbacksWide* PDEBUG_EVENT_CALLBACKS_WIDE;
+typedef interface DECLSPEC_UUID("61a4905b-23f9-4247-b3c5-53d087529ab7")
+    IDebugEventContextCallbacks* PDEBUG_EVENT_CONTEXT_CALLBACKS;
 typedef interface DECLSPEC_UUID("9f50e42c-f136-499e-9a97-73036c94ed2d")
     IDebugInputCallbacks* PDEBUG_INPUT_CALLBACKS;
 typedef interface DECLSPEC_UUID("4bf58045-d654-4c40-b0af-683090f356dc")
@@ -219,6 +279,10 @@ typedef interface DECLSPEC_UUID("3a707211-afdd-4495-ad4f-56fecdf8163f")
     IDebugSymbols2* PDEBUG_SYMBOLS2;
 typedef interface DECLSPEC_UUID("f02fbecc-50ac-4f36-9ad9-c975e8f32ff8")
     IDebugSymbols3* PDEBUG_SYMBOLS3;
+typedef interface DECLSPEC_UUID("e391bbd8-9d8c-4418-840b-c006592a1752")
+    IDebugSymbols4* PDEBUG_SYMBOLS4;
+typedef interface DECLSPEC_UUID("c65fa83e-1e69-475e-8e0e-b5d79e9cc17e")
+    IDebugSymbols5* PDEBUG_SYMBOLS5;
 typedef interface DECLSPEC_UUID("6b86fe2c-2c4f-4f0c-9da2-174311acc327")
     IDebugSystemObjects* PDEBUG_SYSTEM_OBJECTS;
 typedef interface DECLSPEC_UUID("0ae9f5ff-1852-4679-b055-494bee6407ee")
@@ -249,22 +313,29 @@ typedef interface DECLSPEC_UUID("489468e6-7d0f-4af5-87ab-25207454d553")
 //    tcp:Server=<Machine>,Port=<IP port>
 STDAPI
 DebugConnect(
-    __in PCSTR RemoteOptions,
-    __in REFIID InterfaceId,
-    __out PVOID* Interface
+    _In_ PCSTR RemoteOptions,
+    _In_ REFIID InterfaceId,
+    _Out_ PVOID* Interface
     );
 
 STDAPI
 DebugConnectWide(
-    __in PCWSTR RemoteOptions,
-    __in REFIID InterfaceId,
-    __out PVOID* Interface
+    _In_ PCWSTR RemoteOptions,
+    _In_ REFIID InterfaceId,
+    _Out_ PVOID* Interface
     );
 
 STDAPI
 DebugCreate(
-    __in REFIID InterfaceId,
-    __out PVOID* Interface
+    _In_ REFIID InterfaceId,
+    _Out_ PVOID* Interface
+    );
+
+STDAPI
+DebugCreateEx(
+    _In_ REFIID InterfaceId,
+    _In_ DWORD  DbgEngOptions,
+    _Out_ PVOID* Interface
     );
 
 //----------------------------------------------------------------------------
@@ -286,8 +357,8 @@ DECLARE_INTERFACE_(IDebugAdvanced, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -309,13 +380,13 @@ DECLARE_INTERFACE_(IDebugAdvanced, IUnknown)
     // is not a problem.
     STDMETHOD(GetThreadContext)(
         THIS_
-        __out_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _Out_writes_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
     STDMETHOD(SetThreadContext)(
         THIS_
-        __in_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _In_reads_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
 };
 
@@ -495,7 +566,43 @@ typedef struct _DEBUG_CACHED_SYMBOL_INFO
 // OutBuffer - Unused
 #define DEBUG_REQUEST_CLOSE_TOKEN 30
 
+// InBuffer - ULONG64 for process server identification and ULONG as PID
+// OutBuffer - Unused
+#define DEBUG_REQUEST_WOW_PROCESS 31
 
+// InBuffer - ULONG64 for process server identification and PWSTR as module path
+// OutBuffer - Unused
+#define DEBUG_REQUEST_WOW_MODULE 32
+
+// InBuffer - Unused
+// OutBuffer - Unused
+// return - S_OK if non-invasive user-mode attach, S_FALSE if not (but still live user-mode), E_FAIL otherwise.
+#define DEBUG_LIVE_USER_NON_INVASIVE 33
+
+// InBuffer - TID
+// OutBuffer - Unused
+// return - ResumeThreads() return.
+#define DEBUG_REQUEST_RESUME_THREAD 34
+
+// InBuffer - LONG32 - 0:query current state; >0:enable inline queries; <0: disable inline queries
+// OutBuffer - Unused
+// return - S_OK: inline queries are enabled; S_FALSE: inline queries are disabled; others: errors.
+#define DEBUG_REQUEST_INLINE_QUERY 35
+
+// InBuffer - Unused
+// OutBuffer - Unused
+// return - S_OK.
+#define DEBUG_REQUEST_TL_INSTRUMENTATION_AWARE 36
+
+// InBuffer - Unused
+// OutBuffer - ULONG for version number supported
+// return - S_OK.
+#define DEBUG_REQUEST_GET_INSTRUMENTATION_VERSION 37
+
+// InBuffer - ULONG for module index
+// OutBuffer - ULONG for architecture
+// return - S_OK
+#define DEBUG_REQUEST_GET_MODULE_ARCHITECTURE 38
 
 //
 // GetSourceFileInformation requests.
@@ -508,6 +615,10 @@ typedef struct _DEBUG_CACHED_SYMBOL_INFO
 // Arg64 - Module base.
 // Arg32 - Unused.
 #define DEBUG_SRCFILE_SYMBOL_TOKEN_SOURCE_COMMAND_WIDE 1
+
+// Arg64 - Module base.
+// Arg32 - Unused
+#define DEBUG_SRCFILE_SYMBOL_CHECKSUMINFO 2
 
 //
 // GetSymbolInformation requests.
@@ -589,8 +700,8 @@ DECLARE_INTERFACE_(IDebugAdvanced2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -612,13 +723,13 @@ DECLARE_INTERFACE_(IDebugAdvanced2, IUnknown)
     // is not a problem.
     STDMETHOD(GetThreadContext)(
         THIS_
-        __out_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _Out_writes_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
     STDMETHOD(SetThreadContext)(
         THIS_
-        __in_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _In_reads_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
 
     // IDebugAdvanced2.
@@ -634,59 +745,59 @@ DECLARE_INTERFACE_(IDebugAdvanced2, IUnknown)
 
     STDMETHOD(Request)(
         THIS_
-        __in ULONG Request,
-        __in_bcount_opt(InBufferSize) PVOID InBuffer,
-        __in ULONG InBufferSize,
-        __out_bcount_opt(OutBufferSize) PVOID OutBuffer,
-        __in ULONG OutBufferSize,
-        __out_opt PULONG OutSize
+        _In_ ULONG Request,
+        _In_reads_bytes_opt_(InBufferSize) PVOID InBuffer,
+        _In_ ULONG InBufferSize,
+        _Out_writes_bytes_opt_(OutBufferSize) PVOID OutBuffer,
+        _In_ ULONG OutBufferSize,
+        _Out_opt_ PULONG OutSize
         ) PURE;
 
     STDMETHOD(GetSourceFileInformation)(
         THIS_
-        __in ULONG Which,
-        __in PSTR SourceFile,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Which,
+        _In_ PSTR SourceFile,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
     STDMETHOD(FindSourceFileAndToken)(
         THIS_
-        __in ULONG StartElement,
-        __in ULONG64 ModAddr,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __in_bcount_opt(FileTokenSize) PVOID FileToken,
-        __in ULONG FileTokenSize,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ ULONG64 ModAddr,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _In_reads_bytes_opt_(FileTokenSize) PVOID FileToken,
+        _In_ ULONG FileTokenSize,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
 
     STDMETHOD(GetSymbolInformation)(
         THIS_
-        __in ULONG Which,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize,
-        __out_ecount_opt(StringBufferSize) PSTR StringBuffer,
-        __in ULONG StringBufferSize,
-        __out_opt PULONG StringSize
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
 
     STDMETHOD(GetSystemObjectInformation)(
         THIS_
-        __in ULONG Which,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
 };
 
@@ -697,8 +808,8 @@ DECLARE_INTERFACE_(IDebugAdvanced3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -720,13 +831,13 @@ DECLARE_INTERFACE_(IDebugAdvanced3, IUnknown)
     // is not a problem.
     STDMETHOD(GetThreadContext)(
         THIS_
-        __out_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _Out_writes_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
     STDMETHOD(SetThreadContext)(
         THIS_
-        __in_bcount(ContextSize) /* align_is(16) */ PVOID Context,
-        __in ULONG ContextSize
+        _In_reads_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
         ) PURE;
 
     // IDebugAdvanced2.
@@ -742,99 +853,276 @@ DECLARE_INTERFACE_(IDebugAdvanced3, IUnknown)
 
     STDMETHOD(Request)(
         THIS_
-        __in ULONG Request,
-        __in_bcount_opt(InBufferSize) PVOID InBuffer,
-        __in ULONG InBufferSize,
-        __out_bcount_opt(OutBufferSize) PVOID OutBuffer,
-        __in ULONG OutBufferSize,
-        __out_opt PULONG OutSize
+        _In_ ULONG Request,
+        _In_reads_bytes_opt_(InBufferSize) PVOID InBuffer,
+        _In_ ULONG InBufferSize,
+        _Out_writes_bytes_opt_(OutBufferSize) PVOID OutBuffer,
+        _In_ ULONG OutBufferSize,
+        _Out_opt_ PULONG OutSize
         ) PURE;
 
     STDMETHOD(GetSourceFileInformation)(
         THIS_
-        __in ULONG Which,
-        __in PSTR SourceFile,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Which,
+        _In_ PSTR SourceFile,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
     STDMETHOD(FindSourceFileAndToken)(
         THIS_
-        __in ULONG StartElement,
-        __in ULONG64 ModAddr,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __in_bcount_opt(FileTokenSize) PVOID FileToken,
-        __in ULONG FileTokenSize,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ ULONG64 ModAddr,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _In_reads_bytes_opt_(FileTokenSize) PVOID FileToken,
+        _In_ ULONG FileTokenSize,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
 
     STDMETHOD(GetSymbolInformation)(
         THIS_
-        __in ULONG Which,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize,
-        __out_ecount_opt(StringBufferSize) PSTR StringBuffer,
-        __in ULONG StringBufferSize,
-        __out_opt PULONG StringSize
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
 
     STDMETHOD(GetSystemObjectInformation)(
         THIS_
-        __in ULONG Which,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
 
     // IDebugAdvanced3.
 
     STDMETHOD(GetSourceFileInformationWide)(
         THIS_
-        __in ULONG Which,
-        __in PWSTR SourceFile,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Which,
+        _In_ PWSTR SourceFile,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
     STDMETHOD(FindSourceFileAndTokenWide)(
         THIS_
-        __in ULONG StartElement,
-        __in ULONG64 ModAddr,
-        __in PCWSTR File,
-        __in ULONG Flags,
-        __in_bcount_opt(FileTokenSize) PVOID FileToken,
-        __in ULONG FileTokenSize,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ ULONG64 ModAddr,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _In_reads_bytes_opt_(FileTokenSize) PVOID FileToken,
+        _In_ ULONG FileTokenSize,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
 
     STDMETHOD(GetSymbolInformationWide)(
         THIS_
-        __in ULONG Which,
-        __in ULONG64 Arg64,
-        __in ULONG Arg32,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize,
-        __out_ecount_opt(StringBufferSize) PWSTR StringBuffer,
-        __in ULONG StringBufferSize,
-        __out_opt PULONG StringSize
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PWSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
+};
+
+//
+//  Extended line symbol information.
+//
+typedef struct _SYMBOL_INFO_EX
+{
+    ULONG   SizeOfStruct;       // Set to sizeof(SYMBOL_INFO_EX).
+    ULONG   TypeOfInfo;         // Type of the symbol information stored (Ex. DEBUG_SYMINFO_BREAKPOINT_SOURCE_LINE)
+    ULONG64 Offset;             // Address of the line.
+    ULONG   Line;               // First line number that does not correspond to a compiler added glue lines.
+    ULONG   Displacement;       // Line displacement: Offset between given address and the first instruction of the line.
+    ULONG   Reserved[4];
+} SYMBOL_INFO_EX, *PSYMBOL_INFO_EX;
+
+#undef INTERFACE
+#define INTERFACE IDebugAdvanced4
+DECLARE_INTERFACE_(IDebugAdvanced4, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugAdvanced.
+
+    // Get/SetThreadContext offer control over
+    // the full processor context for a thread.
+    // Higher-level functions, such as the
+    // IDebugRegisters interface, allow similar
+    // access in simpler and more generic ways.
+    // Get/SetThreadContext are useful when
+    // large amounts of thread context must
+    // be changed and processor-specific code
+    // is not a problem.
+    STDMETHOD(GetThreadContext)(
+        THIS_
+        _Out_writes_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    STDMETHOD(SetThreadContext)(
+        THIS_
+        _In_reads_bytes_(ContextSize) /* align_is(16) */ PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // IDebugAdvanced2.
+
+    //
+    // Generalized open-ended methods for querying
+    // and manipulation.  The open-ended nature of
+    // these methods makes it easy to add new requests,
+    // although at a cost in convenience of calling.
+    // Sufficiently common requests may have more specific,
+    // simpler methods elsewhere.
+    //
+
+    STDMETHOD(Request)(
+        THIS_
+        _In_ ULONG Request,
+        _In_reads_bytes_opt_(InBufferSize) PVOID InBuffer,
+        _In_ ULONG InBufferSize,
+        _Out_writes_bytes_opt_(OutBufferSize) PVOID OutBuffer,
+        _In_ ULONG OutBufferSize,
+        _Out_opt_ PULONG OutSize
+        ) PURE;
+
+    STDMETHOD(GetSourceFileInformation)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ PSTR SourceFile,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
+        ) PURE;
+    STDMETHOD(FindSourceFileAndToken)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ ULONG64 ModAddr,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _In_reads_bytes_opt_(FileTokenSize) PVOID FileToken,
+        _In_ ULONG FileTokenSize,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+
+    STDMETHOD(GetSymbolInformation)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+
+    STDMETHOD(GetSystemObjectInformation)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
+        ) PURE;
+
+    // IDebugAdvanced3.
+
+    STDMETHOD(GetSourceFileInformationWide)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ PWSTR SourceFile,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
+        ) PURE;
+    STDMETHOD(FindSourceFileAndTokenWide)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ ULONG64 ModAddr,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _In_reads_bytes_opt_(FileTokenSize) PVOID FileToken,
+        _In_ ULONG FileTokenSize,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+
+    STDMETHOD(GetSymbolInformationWide)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PWSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+
+    // IDebugAdvanced4.
+
+    STDMETHOD(GetSymbolInformationWideEx)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG64 Arg64,
+        _In_ ULONG Arg32,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize,
+        _Out_writes_opt_(StringBufferSize) PWSTR StringBuffer,
+        _In_ ULONG StringBufferSize,
+        _Out_opt_ PULONG StringSize,
+        _Out_opt_ PSYMBOL_INFO_EX pInfoEx
+        ) PURE;
+
 };
 
 //----------------------------------------------------------------------------
@@ -847,6 +1135,7 @@ DECLARE_INTERFACE_(IDebugAdvanced3, IUnknown)
 #define DEBUG_BREAKPOINT_CODE 0
 #define DEBUG_BREAKPOINT_DATA 1
 #define DEBUG_BREAKPOINT_TIME 2
+#define DEBUG_BREAKPOINT_INLINE 3
 
 // Breakpoint flags.
 // Go-only breakpoints are only active when
@@ -904,8 +1193,8 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -922,41 +1211,41 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // but after that may be reused.
     STDMETHOD(GetId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Retrieves the type of break and
     // processor type for the breakpoint.
     STDMETHOD(GetType)(
         THIS_
-        __out PULONG BreakType,
-        __out PULONG ProcType
+        _Out_ PULONG BreakType,
+        _Out_ PULONG ProcType
         ) PURE;
     // Returns the client that called AddBreakpoint.
     STDMETHOD(GetAdder)(
         THIS_
-        __out PDEBUG_CLIENT* Adder
+        _Out_ PDEBUG_CLIENT* Adder
         ) PURE;
 
     STDMETHOD(GetFlags)(
         THIS_
-        __out PULONG Flags
+        _Out_ PULONG Flags
         ) PURE;
     // Only certain flags can be changed.  Flags
     // are: GO_ONLY, ENABLE.
     // Sets the given flags.
     STDMETHOD(AddFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Clears the given flags.
     STDMETHOD(RemoveFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Sets the flags.
     STDMETHOD(SetFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
 
     // Controls the offset of the breakpoint.  The
@@ -966,11 +1255,11 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // I/O port, etc.
     STDMETHOD(GetOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
 
     // Data breakpoint methods will fail if the
@@ -980,30 +1269,30 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // created as data breakpoints.
     STDMETHOD(GetDataParameters)(
         THIS_
-        __out PULONG Size,
-        __out PULONG AccessType
+        _Out_ PULONG Size,
+        _Out_ PULONG AccessType
         ) PURE;
     STDMETHOD(SetDataParameters)(
         THIS_
-        __in ULONG Size,
-        __in ULONG AccessType
+        _In_ ULONG Size,
+        _In_ ULONG AccessType
         ) PURE;
 
     // Pass count defaults to one.
     STDMETHOD(GetPassCount)(
         THIS_
-        __out PULONG Count
+        _Out_ PULONG Count
         ) PURE;
     STDMETHOD(SetPassCount)(
         THIS_
-        __in ULONG Count
+        _In_ ULONG Count
         ) PURE;
     // Gets the current number of times
     // the breakpoint has been hit since
     // it was last triggered.
     STDMETHOD(GetCurrentPassCount)(
         THIS_
-        __out PULONG Count
+        _Out_ PULONG Count
         ) PURE;
 
     // If a match thread is set this breakpoint will
@@ -1013,11 +1302,11 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // in kernel mode.
     STDMETHOD(GetMatchThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetMatchThreadId)(
         THIS_
-        __in ULONG Thread
+        _In_ ULONG Thread
         ) PURE;
 
     // The command for a breakpoint is automatically
@@ -1033,13 +1322,13 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // status, such as g, p and t.
     STDMETHOD(GetCommand)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetCommand)(
         THIS_
-        __in PCSTR Command
+        _In_ PCSTR Command
         ) PURE;
 
     // Offset expressions are evaluated immediately
@@ -1053,18 +1342,18 @@ DECLARE_INTERFACE_(IDebugBreakpoint, IUnknown)
     // of the form <Module>!<Symbol>.
     STDMETHOD(GetOffsetExpression)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExpressionSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExpressionSize
         ) PURE;
     STDMETHOD(SetOffsetExpression)(
         THIS_
-        __in PCSTR Expression
+        _In_ PCSTR Expression
         ) PURE;
 
     STDMETHOD(GetParameters)(
         THIS_
-        __out PDEBUG_BREAKPOINT_PARAMETERS Params
+        _Out_ PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
 };
 
@@ -1075,8 +1364,8 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -1093,41 +1382,41 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // but after that may be reused.
     STDMETHOD(GetId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Retrieves the type of break and
     // processor type for the breakpoint.
     STDMETHOD(GetType)(
         THIS_
-        __out PULONG BreakType,
-        __out PULONG ProcType
+        _Out_ PULONG BreakType,
+        _Out_ PULONG ProcType
         ) PURE;
     // Returns the client that called AddBreakpoint.
     STDMETHOD(GetAdder)(
         THIS_
-        __out PDEBUG_CLIENT* Adder
+        _Out_ PDEBUG_CLIENT* Adder
         ) PURE;
 
     STDMETHOD(GetFlags)(
         THIS_
-        __out PULONG Flags
+        _Out_ PULONG Flags
         ) PURE;
     // Only certain flags can be changed.  Flags
     // are: GO_ONLY, ENABLE.
     // Sets the given flags.
     STDMETHOD(AddFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Clears the given flags.
     STDMETHOD(RemoveFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Sets the flags.
     STDMETHOD(SetFlags)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
 
     // Controls the offset of the breakpoint.  The
@@ -1137,11 +1426,11 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // I/O port, etc.
     STDMETHOD(GetOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
 
     // Data breakpoint methods will fail if the
@@ -1151,30 +1440,30 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // created as data breakpoints.
     STDMETHOD(GetDataParameters)(
         THIS_
-        __out PULONG Size,
-        __out PULONG AccessType
+        _Out_ PULONG Size,
+        _Out_ PULONG AccessType
         ) PURE;
     STDMETHOD(SetDataParameters)(
         THIS_
-        __in ULONG Size,
-        __in ULONG AccessType
+        _In_ ULONG Size,
+        _In_ ULONG AccessType
         ) PURE;
 
     // Pass count defaults to one.
     STDMETHOD(GetPassCount)(
         THIS_
-        __out PULONG Count
+        _Out_ PULONG Count
         ) PURE;
     STDMETHOD(SetPassCount)(
         THIS_
-        __in ULONG Count
+        _In_ ULONG Count
         ) PURE;
     // Gets the current number of times
     // the breakpoint has been hit since
     // it was last triggered.
     STDMETHOD(GetCurrentPassCount)(
         THIS_
-        __out PULONG Count
+        _Out_ PULONG Count
         ) PURE;
 
     // If a match thread is set this breakpoint will
@@ -1184,11 +1473,11 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // in kernel mode.
     STDMETHOD(GetMatchThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetMatchThreadId)(
         THIS_
-        __in ULONG Thread
+        _In_ ULONG Thread
         ) PURE;
 
     // The command for a breakpoint is automatically
@@ -1204,13 +1493,13 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // status, such as g, p and t.
     STDMETHOD(GetCommand)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetCommand)(
         THIS_
-        __in PCSTR Command
+        _In_ PCSTR Command
         ) PURE;
 
     // Offset expressions are evaluated immediately
@@ -1224,42 +1513,244 @@ DECLARE_INTERFACE_(IDebugBreakpoint2, IUnknown)
     // of the form <Module>!<Symbol>.
     STDMETHOD(GetOffsetExpression)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExpressionSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExpressionSize
         ) PURE;
     STDMETHOD(SetOffsetExpression)(
         THIS_
-        __in PCSTR Expression
+        _In_ PCSTR Expression
         ) PURE;
 
     STDMETHOD(GetParameters)(
         THIS_
-        __out PDEBUG_BREAKPOINT_PARAMETERS Params
+        _Out_ PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
 
     // IDebugBreakpoint2.
 
     STDMETHOD(GetCommandWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetCommandWide)(
         THIS_
-        __in PCWSTR Command
+        _In_ PCWSTR Command
         ) PURE;
 
     STDMETHOD(GetOffsetExpressionWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExpressionSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExpressionSize
         ) PURE;
     STDMETHOD(SetOffsetExpressionWide)(
         THIS_
-        __in PCWSTR Expression
+        _In_ PCWSTR Expression
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugBreakpoint3
+DECLARE_INTERFACE_(IDebugBreakpoint3, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugBreakpoint.
+
+    // Retrieves debugger engine unique ID
+    // for the breakpoint.  This ID is
+    // fixed as long as the breakpoint exists
+    // but after that may be reused.
+    STDMETHOD(GetId)(
+        THIS_
+        _Out_ PULONG Id
+        ) PURE;
+    // Retrieves the type of break and
+    // processor type for the breakpoint.
+    STDMETHOD(GetType)(
+        THIS_
+        _Out_ PULONG BreakType,
+        _Out_ PULONG ProcType
+        ) PURE;
+    // Returns the client that called AddBreakpoint.
+    STDMETHOD(GetAdder)(
+        THIS_
+        _Out_ PDEBUG_CLIENT* Adder
+        ) PURE;
+
+    STDMETHOD(GetFlags)(
+        THIS_
+        _Out_ PULONG Flags
+        ) PURE;
+    // Only certain flags can be changed.  Flags
+    // are: GO_ONLY, ENABLE.
+    // Sets the given flags.
+    STDMETHOD(AddFlags)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Clears the given flags.
+    STDMETHOD(RemoveFlags)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Sets the flags.
+    STDMETHOD(SetFlags)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Controls the offset of the breakpoint.  The
+    // interpretation of the offset value depends on
+    // the type of breakpoint and its settings.  It
+    // may be a code address, a data address, an
+    // I/O port, etc.
+    STDMETHOD(GetOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    STDMETHOD(SetOffset)(
+        THIS_
+        _In_ ULONG64 Offset
+        ) PURE;
+
+    // Data breakpoint methods will fail if the
+    // target platform does not support the
+    // parameters used.
+    // These methods only function for breakpoints
+    // created as data breakpoints.
+    STDMETHOD(GetDataParameters)(
+        THIS_
+        _Out_ PULONG Size,
+        _Out_ PULONG AccessType
+        ) PURE;
+    STDMETHOD(SetDataParameters)(
+        THIS_
+        _In_ ULONG Size,
+        _In_ ULONG AccessType
+        ) PURE;
+
+    // Pass count defaults to one.
+    STDMETHOD(GetPassCount)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(SetPassCount)(
+        THIS_
+        _In_ ULONG Count
+        ) PURE;
+    // Gets the current number of times
+    // the breakpoint has been hit since
+    // it was last triggered.
+    STDMETHOD(GetCurrentPassCount)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+
+    // If a match thread is set this breakpoint will
+    // only trigger if it occurs on the match thread.
+    // Otherwise it triggers for all threads.
+    // Thread restrictions are not currently supported
+    // in kernel mode.
+    STDMETHOD(GetMatchThreadId)(
+        THIS_
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(SetMatchThreadId)(
+        THIS_
+        _In_ ULONG Thread
+        ) PURE;
+
+    // The command for a breakpoint is automatically
+    // executed by the engine before the event
+    // is propagated.  If the breakpoint continues
+    // execution the event will begin with a continue
+    // status.  If the breakpoint does not continue
+    // the event will begin with a break status.
+    // This allows breakpoint commands to participate
+    // in the normal event status voting.
+    // Breakpoint commands are only executed until
+    // the first command that alters the execution
+    // status, such as g, p and t.
+    STDMETHOD(GetCommand)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetCommand)(
+        THIS_
+        _In_ PCSTR Command
+        ) PURE;
+
+    // Offset expressions are evaluated immediately
+    // and at module load and unload events.  If the
+    // evaluation is successful the breakpoints
+    // offset is updated and the breakpoint is
+    // handled normally.  If the expression cannot
+    // be evaluated the breakpoint is deferred.
+    // Currently the only offset expression
+    // supported is a module-relative symbol
+    // of the form <Module>!<Symbol>.
+    STDMETHOD(GetOffsetExpression)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExpressionSize
+        ) PURE;
+    STDMETHOD(SetOffsetExpression)(
+        THIS_
+        _In_ PCSTR Expression
+        ) PURE;
+
+    STDMETHOD(GetParameters)(
+        THIS_
+        _Out_ PDEBUG_BREAKPOINT_PARAMETERS Params
+        ) PURE;
+
+    // IDebugBreakpoint2.
+
+    STDMETHOD(GetCommandWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetCommandWide)(
+        THIS_
+        _In_ PCWSTR Command
+        ) PURE;
+
+    STDMETHOD(GetOffsetExpressionWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExpressionSize
+        ) PURE;
+    STDMETHOD(SetOffsetExpressionWide)(
+        THIS_
+        _In_ PCWSTR Expression
+        ) PURE;
+        
+    // IDebugBreakpoint3.
+
+    STDMETHOD(GetGuid)(
+        THIS_
+        _Out_ LPGUID Guid
         ) PURE;
 };
 
@@ -1469,6 +1960,10 @@ typedef struct _DEBUG_CREATE_PROCESS_OPTIONS
 #define DEBUG_OUTPUT_DEBUGGEE_PROMPT   0x00000100
 // Symbol messages, such as for !sym noisy.
 #define DEBUG_OUTPUT_SYMBOLS           0x00000200
+// Output which modifies the status bar
+#define DEBUG_OUTPUT_STATUS            0x00000400
+// Structured XML status messages
+#define DEBUG_OUTPUT_XML               0x00000800
 
 // Internal debugger output, used mainly
 // for debugging the debugger.  Output
@@ -1487,6 +1982,22 @@ typedef struct _DEBUG_CREATE_PROCESS_OPTIONS
 // OutputIdentity flags.
 #define DEBUG_OUTPUT_IDENTITY_DEFAULT 0x00000000
 
+// Client identification constants
+#define DEBUG_CLIENT_UNKNOWN            0x0
+#define DEBUG_CLIENT_VSINT              0x1
+#define DEBUG_CLIENT_NTSD               0x2
+#define DEBUG_CLIENT_NTKD               0x3
+#define DEBUG_CLIENT_CDB                0x4
+#define DEBUG_CLIENT_KD                 0x5
+#define DEBUG_CLIENT_WINDBG             0x6
+#define DEBUG_CLIENT_WINIDE             0x7
+
+typedef struct _DEBUG_CLIENT_CONTEXT 
+{
+    UINT cbSize;
+    UINT eClient;
+} DEBUG_CLIENT_CONTEXT, *PDEBUG_CLIENT_CONTEXT;
+
 #undef INTERFACE
 #define INTERFACE IDebugClient
 DECLARE_INTERFACE_(IDebugClient, IUnknown)
@@ -1494,8 +2005,8 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -1516,14 +2027,14 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // itself.
     STDMETHOD(AttachKernel)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PCSTR ConnectOptions
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
         ) PURE;
     STDMETHOD(GetKernelConnectionOptions)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
         ) PURE;
     // Updates the connection options for a live
     // kernel connection.  This can only be used
@@ -1533,7 +2044,7 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetKernelConnectionOptions)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
 
     // Starts a process server for remote
@@ -1541,55 +2052,55 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // The local process server is server zero.
     STDMETHOD(StartProcessServer)(
         THIS_
-        __in ULONG Flags,
-        __in PCSTR Options,
-        __in_opt __reserved PVOID Reserved
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
         ) PURE;
     STDMETHOD(ConnectProcessServer)(
         THIS_
-        __in PCSTR RemoteOptions,
-        __out PULONG64 Server
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(DisconnectProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
 
     // Enumerates and describes processes
     // accessible through the given process server.
     STDMETHOD(GetRunningProcessSystemIds)(
         THIS_
-        __in ULONG64 Server,
-        __out_ecount_opt(Count) PULONG Ids,
-        __in ULONG Count,
-        __out_opt PULONG ActualCount
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
         ) PURE;
     STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
         THIS_
-        __in ULONG64 Server,
-        __in PCSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescription)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     // Attaches to a running user-mode process.
     STDMETHOD(AttachProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Creates a new user-mode process for debugging.
     // CreateFlags are as given to Win32s CreateProcess.
@@ -1597,9 +2108,9 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // must be specified.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     // Creates or attaches to a user-mode process, or both.
     // If CommandLine is NULL this method operates as
@@ -1614,28 +2125,28 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // attachment.
     STDMETHOD(CreateProcessAndAttach)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Gets and sets process control flags.
     STDMETHOD(GetProcessOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Opens any kind of user- or kernel-mode dump file
@@ -1643,7 +2154,7 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // contained within it.
     STDMETHOD(OpenDumpFile)(
         THIS_
-        __in PCSTR DumpFile
+        _In_ PCSTR DumpFile
         ) PURE;
     // Writes a dump file from the current session information.
     // The kind of dump file written is determined by the
@@ -1653,8 +2164,8 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // is DEBUG_DUMP_SMALL a small kernel dump will be written.
     STDMETHOD(WriteDumpFile)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
         ) PURE;
 
     // Indicates that a remote client is ready to
@@ -1663,8 +2174,8 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // the amount of output history to be sent.
     STDMETHOD(ConnectSession)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG HistoryLimit
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
         ) PURE;
     // Indicates that the engine should start accepting
     // remote connections. Options specifies connection types
@@ -1673,15 +2184,15 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     //    tcp:Port=<IP port>
     STDMETHOD(StartServer)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
     // List the servers running on the given machine.
     // Uses the line prefix.
     STDMETHOD(OutputServers)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Machine,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
         ) PURE;
 
     // Attempts to terminate all processes in the debuggers list.
@@ -1700,13 +2211,13 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // target machine is otherwise unaffected.
     STDMETHOD(EndSession)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // If a process was started and ran to completion
     // this method can be used to retrieve its exit code.
     STDMETHOD(GetExitCode)(
         THIS_
-        __out PULONG Code
+        _Out_ PULONG Code
         ) PURE;
 
     // Client event callbacks are called on the thread
@@ -1728,7 +2239,7 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // timeout expires.
     STDMETHOD(DispatchCallbacks)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
     // ExitDispatch can be used to interrupt callback
     // dispatch when a client thread is needed by the
@@ -1736,7 +2247,7 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // be called from any thread.
     STDMETHOD(ExitDispatch)(
         THIS_
-        __in PDEBUG_CLIENT Client
+        _In_ PDEBUG_CLIENT Client
         ) PURE;
 
     // Clients are specific to the thread that
@@ -1746,26 +2257,26 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // of a new client for a new thread.
     STDMETHOD(CreateClient)(
         THIS_
-        __out PDEBUG_CLIENT* Client
+        _Out_ PDEBUG_CLIENT* Client
         ) PURE;
 
     STDMETHOD(GetInputCallbacks)(
         THIS_
-        __out PDEBUG_INPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetInputCallbacks)(
         THIS_
-        __in_opt PDEBUG_INPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
         ) PURE;
 
     // Output callback interfaces are described separately.
     STDMETHOD(GetOutputCallbacks)(
         THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetOutputCallbacks)(
         THIS_
-        __in_opt PDEBUG_OUTPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
         ) PURE;
     // Output flags provide control over
     // the distribution of output among clients.
@@ -1779,11 +2290,11 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // disruptions in output may occur.
     STDMETHOD(GetOutputMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOutputMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
     // These methods allow access to another clients
     // output mask.  They are necessary for changing
@@ -1792,24 +2303,24 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // and can be called from any thread.
     STDMETHOD(GetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __out PULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __in ULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
         ) PURE;
     // Control the width of an output line for
     // commands which produce formatted output.
     // This setting is just a suggestion.
     STDMETHOD(GetOutputWidth)(
         THIS_
-        __out PULONG Columns
+        _Out_ PULONG Columns
         ) PURE;
     STDMETHOD(SetOutputWidth)(
         THIS_
-        __in ULONG Columns
+        _In_ ULONG Columns
         ) PURE;
     // Some of the engines output commands produce
     // multiple lines of output.  A prefix can be
@@ -1821,13 +2332,13 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // the line prefix are marked in their documentation.
     STDMETHOD(GetOutputLinePrefix)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
         ) PURE;
     STDMETHOD(SetOutputLinePrefix)(
         THIS_
-        __in_opt PCSTR Prefix
+        _In_opt_ PCSTR Prefix
         ) PURE;
 
     // Returns a string describing the machine
@@ -1838,17 +2349,17 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // may also be present.
     STDMETHOD(GetIdentity)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
         ) PURE;
     // Format is a printf-like format string
     // with one %s where the identity string should go.
     STDMETHOD(OutputIdentity)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCSTR Format
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
         ) PURE;
 
     // Event callbacks allow a client to
@@ -1856,11 +2367,11 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
     // during the debug session.
     STDMETHOD(GetEventCallbacks)(
         THIS_
-        __out PDEBUG_EVENT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetEventCallbacks)(
         THIS_
-        __in_opt PDEBUG_EVENT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
         ) PURE;
 
     // The engine sometimes merges compatible callback
@@ -1905,7 +2416,13 @@ DECLARE_INTERFACE_(IDebugClient, IUnknown)
 #define DEBUG_FORMAT_USER_SMALL_CODE_SEGMENTS             0x00001000
 #define DEBUG_FORMAT_USER_SMALL_NO_AUXILIARY_STATE        0x00002000
 #define DEBUG_FORMAT_USER_SMALL_FULL_AUXILIARY_STATE      0x00004000
+#define DEBUG_FORMAT_USER_SMALL_MODULE_HEADERS            0x00008000
+#define DEBUG_FORMAT_USER_SMALL_FILTER_TRIAGE             0x00010000
+#define DEBUG_FORMAT_USER_SMALL_ADD_AVX_XSTATE_CONTEXT    0x00020000
+#define DEBUG_FORMAT_USER_SMALL_IPT_TRACE                 0x00040000
 #define DEBUG_FORMAT_USER_SMALL_IGNORE_INACCESSIBLE_MEM   0x08000000
+#define DEBUG_FORMAT_USER_SMALL_SCAN_PARTIAL_PAGES        0x10000000
+
 
 //
 // Dump information file types.
@@ -1923,8 +2440,8 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -1945,14 +2462,14 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // itself.
     STDMETHOD(AttachKernel)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PCSTR ConnectOptions
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
         ) PURE;
     STDMETHOD(GetKernelConnectionOptions)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
         ) PURE;
     // Updates the connection options for a live
     // kernel connection.  This can only be used
@@ -1962,7 +2479,7 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetKernelConnectionOptions)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
 
     // Starts a process server for remote
@@ -1970,55 +2487,55 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // The local process server is server zero.
     STDMETHOD(StartProcessServer)(
         THIS_
-        __in ULONG Flags,
-        __in PCSTR Options,
-        __in_opt __reserved PVOID Reserved
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
         ) PURE;
     STDMETHOD(ConnectProcessServer)(
         THIS_
-        __in PCSTR RemoteOptions,
-        __out PULONG64 Server
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(DisconnectProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
 
     // Enumerates and describes processes
     // accessible through the given process server.
     STDMETHOD(GetRunningProcessSystemIds)(
         THIS_
-        __in ULONG64 Server,
-        __out_ecount_opt(Count) PULONG Ids,
-        __in ULONG Count,
-        __out_opt PULONG ActualCount
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
         ) PURE;
     STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
         THIS_
-        __in ULONG64 Server,
-        __in PCSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescription)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     // Attaches to a running user-mode process.
     STDMETHOD(AttachProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Creates a new user-mode process for debugging.
     // CreateFlags are as given to Win32s CreateProcess.
@@ -2026,9 +2543,9 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // must be specified.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     // Creates or attaches to a user-mode process, or both.
     // If CommandLine is NULL this method operates as
@@ -2043,28 +2560,28 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // attachment.
     STDMETHOD(CreateProcessAndAttach)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Gets and sets process control flags.
     STDMETHOD(GetProcessOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Opens any kind of user- or kernel-mode dump file
@@ -2072,7 +2589,7 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // contained within it.
     STDMETHOD(OpenDumpFile)(
         THIS_
-        __in PCSTR DumpFile
+        _In_ PCSTR DumpFile
         ) PURE;
     // Writes a dump file from the current session information.
     // The kind of dump file written is determined by the
@@ -2082,8 +2599,8 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // is DEBUG_DUMP_SMALL a small kernel dump will be written.
     STDMETHOD(WriteDumpFile)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
         ) PURE;
 
     // Indicates that a remote client is ready to
@@ -2092,8 +2609,8 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // the amount of output history to be sent.
     STDMETHOD(ConnectSession)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG HistoryLimit
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
         ) PURE;
     // Indicates that the engine should start accepting
     // remote connections. Options specifies connection types
@@ -2102,15 +2619,15 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     //    tcp:Port=<IP port>
     STDMETHOD(StartServer)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
     // List the servers running on the given machine.
     // Uses the line prefix.
     STDMETHOD(OutputServers)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Machine,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
         ) PURE;
 
     // Attempts to terminate all processes in the debuggers list.
@@ -2129,13 +2646,13 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // target machine is otherwise unaffected.
     STDMETHOD(EndSession)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // If a process was started and ran to completion
     // this method can be used to retrieve its exit code.
     STDMETHOD(GetExitCode)(
         THIS_
-        __out PULONG Code
+        _Out_ PULONG Code
         ) PURE;
 
     // Client event callbacks are called on the thread
@@ -2157,7 +2674,7 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // timeout expires.
     STDMETHOD(DispatchCallbacks)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
     // ExitDispatch can be used to interrupt callback
     // dispatch when a client thread is needed by the
@@ -2165,7 +2682,7 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // be called from any thread.
     STDMETHOD(ExitDispatch)(
         THIS_
-        __in PDEBUG_CLIENT Client
+        _In_ PDEBUG_CLIENT Client
         ) PURE;
 
     // Clients are specific to the thread that
@@ -2175,26 +2692,26 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // of a new client for a new thread.
     STDMETHOD(CreateClient)(
         THIS_
-        __out PDEBUG_CLIENT* Client
+        _Out_ PDEBUG_CLIENT* Client
         ) PURE;
 
     STDMETHOD(GetInputCallbacks)(
         THIS_
-        __out PDEBUG_INPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetInputCallbacks)(
         THIS_
-        __in_opt PDEBUG_INPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
         ) PURE;
 
     // Output callback interfaces are described separately.
     STDMETHOD(GetOutputCallbacks)(
         THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetOutputCallbacks)(
         THIS_
-        __in_opt PDEBUG_OUTPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
         ) PURE;
     // Output flags provide control over
     // the distribution of output among clients.
@@ -2208,11 +2725,11 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // disruptions in output may occur.
     STDMETHOD(GetOutputMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOutputMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
     // These methods allow access to another clients
     // output mask.  They are necessary for changing
@@ -2221,24 +2738,24 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // and can be called from any thread.
     STDMETHOD(GetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __out PULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __in ULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
         ) PURE;
     // Control the width of an output line for
     // commands which produce formatted output.
     // This setting is just a suggestion.
     STDMETHOD(GetOutputWidth)(
         THIS_
-        __out PULONG Columns
+        _Out_ PULONG Columns
         ) PURE;
     STDMETHOD(SetOutputWidth)(
         THIS_
-        __in ULONG Columns
+        _In_ ULONG Columns
         ) PURE;
     // Some of the engines output commands produce
     // multiple lines of output.  A prefix can be
@@ -2250,13 +2767,13 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // the line prefix are marked in their documentation.
     STDMETHOD(GetOutputLinePrefix)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
         ) PURE;
     STDMETHOD(SetOutputLinePrefix)(
         THIS_
-        __in_opt PCSTR Prefix
+        _In_opt_ PCSTR Prefix
         ) PURE;
 
     // Returns a string describing the machine
@@ -2267,17 +2784,17 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // may also be present.
     STDMETHOD(GetIdentity)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
         ) PURE;
     // Format is a printf-like format string
     // with one %s where the identity string should go.
     STDMETHOD(OutputIdentity)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCSTR Format
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
         ) PURE;
 
     // Event callbacks allow a client to
@@ -2285,11 +2802,11 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // during the debug session.
     STDMETHOD(GetEventCallbacks)(
         THIS_
-        __out PDEBUG_EVENT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetEventCallbacks)(
         THIS_
-        __in_opt PDEBUG_EVENT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
         ) PURE;
 
     // The engine sometimes merges compatible callback
@@ -2311,10 +2828,10 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // Comment is not supported in all formats.
     STDMETHOD(WriteDumpFile2)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCSTR Comment
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
         ) PURE;
     // Registers additional files of supporting information
     // for a dump file open.  This method must be called
@@ -2324,14 +2841,14 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // be used until OpenDumpFile is called.
     STDMETHOD(AddDumpInformationFile)(
         THIS_
-        __in PCSTR InfoFile,
-        __in ULONG Type
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
         ) PURE;
 
     // Requests that the remote process server shut down.
     STDMETHOD(EndProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
     // Waits for a started process server to
     // exit.  Allows an application running a
@@ -2342,7 +2859,7 @@ DECLARE_INTERFACE_(IDebugClient2, IUnknown)
     // shut down and S_FALSE for a timeout.
     STDMETHOD(WaitForProcessServerEnd)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
 
     // Returns S_OK if the system is configured
@@ -2380,8 +2897,8 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -2402,14 +2919,14 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // itself.
     STDMETHOD(AttachKernel)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PCSTR ConnectOptions
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
         ) PURE;
     STDMETHOD(GetKernelConnectionOptions)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
         ) PURE;
     // Updates the connection options for a live
     // kernel connection.  This can only be used
@@ -2419,7 +2936,7 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetKernelConnectionOptions)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
 
     // Starts a process server for remote
@@ -2427,55 +2944,55 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // The local process server is server zero.
     STDMETHOD(StartProcessServer)(
         THIS_
-        __in ULONG Flags,
-        __in PCSTR Options,
-        __in_opt __reserved PVOID Reserved
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
         ) PURE;
     STDMETHOD(ConnectProcessServer)(
         THIS_
-        __in PCSTR RemoteOptions,
-        __out PULONG64 Server
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(DisconnectProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
 
     // Enumerates and describes processes
     // accessible through the given process server.
     STDMETHOD(GetRunningProcessSystemIds)(
         THIS_
-        __in ULONG64 Server,
-        __out_ecount_opt(Count) PULONG Ids,
-        __in ULONG Count,
-        __out_opt PULONG ActualCount
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
         ) PURE;
     STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
         THIS_
-        __in ULONG64 Server,
-        __in PCSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescription)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     // Attaches to a running user-mode process.
     STDMETHOD(AttachProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Creates a new user-mode process for debugging.
     // CreateFlags are as given to Win32s CreateProcess.
@@ -2483,9 +3000,9 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // must be specified.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     // Creates or attaches to a user-mode process, or both.
     // If CommandLine is NULL this method operates as
@@ -2500,28 +3017,28 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // attachment.
     STDMETHOD(CreateProcessAndAttach)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Gets and sets process control flags.
     STDMETHOD(GetProcessOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Opens any kind of user- or kernel-mode dump file
@@ -2529,7 +3046,7 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // contained within it.
     STDMETHOD(OpenDumpFile)(
         THIS_
-        __in PCSTR DumpFile
+        _In_ PCSTR DumpFile
         ) PURE;
     // Writes a dump file from the current session information.
     // The kind of dump file written is determined by the
@@ -2539,8 +3056,8 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // is DEBUG_DUMP_SMALL a small kernel dump will be written.
     STDMETHOD(WriteDumpFile)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
         ) PURE;
 
     // Indicates that a remote client is ready to
@@ -2549,8 +3066,8 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // the amount of output history to be sent.
     STDMETHOD(ConnectSession)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG HistoryLimit
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
         ) PURE;
     // Indicates that the engine should start accepting
     // remote connections. Options specifies connection types
@@ -2559,15 +3076,15 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     //    tcp:Port=<IP port>
     STDMETHOD(StartServer)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
     // List the servers running on the given machine.
     // Uses the line prefix.
     STDMETHOD(OutputServers)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Machine,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
         ) PURE;
 
     // Attempts to terminate all processes in the debuggers list.
@@ -2586,13 +3103,13 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // target machine is otherwise unaffected.
     STDMETHOD(EndSession)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // If a process was started and ran to completion
     // this method can be used to retrieve its exit code.
     STDMETHOD(GetExitCode)(
         THIS_
-        __out PULONG Code
+        _Out_ PULONG Code
         ) PURE;
 
     // Client event callbacks are called on the thread
@@ -2614,7 +3131,7 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // timeout expires.
     STDMETHOD(DispatchCallbacks)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
     // ExitDispatch can be used to interrupt callback
     // dispatch when a client thread is needed by the
@@ -2622,7 +3139,7 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // be called from any thread.
     STDMETHOD(ExitDispatch)(
         THIS_
-        __in PDEBUG_CLIENT Client
+        _In_ PDEBUG_CLIENT Client
         ) PURE;
 
     // Clients are specific to the thread that
@@ -2632,26 +3149,26 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // of a new client for a new thread.
     STDMETHOD(CreateClient)(
         THIS_
-        __out PDEBUG_CLIENT* Client
+        _Out_ PDEBUG_CLIENT* Client
         ) PURE;
 
     STDMETHOD(GetInputCallbacks)(
         THIS_
-        __out PDEBUG_INPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetInputCallbacks)(
         THIS_
-        __in_opt PDEBUG_INPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
         ) PURE;
 
     // Output callback interfaces are described separately.
     STDMETHOD(GetOutputCallbacks)(
         THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetOutputCallbacks)(
         THIS_
-        __in_opt PDEBUG_OUTPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
         ) PURE;
     // Output flags provide control over
     // the distribution of output among clients.
@@ -2665,11 +3182,11 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // disruptions in output may occur.
     STDMETHOD(GetOutputMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOutputMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
     // These methods allow access to another clients
     // output mask.  They are necessary for changing
@@ -2678,24 +3195,24 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // and can be called from any thread.
     STDMETHOD(GetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __out PULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __in ULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
         ) PURE;
     // Control the width of an output line for
     // commands which produce formatted output.
     // This setting is just a suggestion.
     STDMETHOD(GetOutputWidth)(
         THIS_
-        __out PULONG Columns
+        _Out_ PULONG Columns
         ) PURE;
     STDMETHOD(SetOutputWidth)(
         THIS_
-        __in ULONG Columns
+        _In_ ULONG Columns
         ) PURE;
     // Some of the engines output commands produce
     // multiple lines of output.  A prefix can be
@@ -2707,13 +3224,13 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // the line prefix are marked in their documentation.
     STDMETHOD(GetOutputLinePrefix)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
         ) PURE;
     STDMETHOD(SetOutputLinePrefix)(
         THIS_
-        __in_opt PCSTR Prefix
+        _In_opt_ PCSTR Prefix
         ) PURE;
 
     // Returns a string describing the machine
@@ -2724,17 +3241,17 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // may also be present.
     STDMETHOD(GetIdentity)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
         ) PURE;
     // Format is a printf-like format string
     // with one %s where the identity string should go.
     STDMETHOD(OutputIdentity)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCSTR Format
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
         ) PURE;
 
     // Event callbacks allow a client to
@@ -2742,11 +3259,11 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // during the debug session.
     STDMETHOD(GetEventCallbacks)(
         THIS_
-        __out PDEBUG_EVENT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetEventCallbacks)(
         THIS_
-        __in_opt PDEBUG_EVENT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
         ) PURE;
 
     // The engine sometimes merges compatible callback
@@ -2768,10 +3285,10 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // Comment is not supported in all formats.
     STDMETHOD(WriteDumpFile2)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCSTR Comment
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
         ) PURE;
     // Registers additional files of supporting information
     // for a dump file open.  This method must be called
@@ -2781,14 +3298,14 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // be used until OpenDumpFile is called.
     STDMETHOD(AddDumpInformationFile)(
         THIS_
-        __in PCSTR InfoFile,
-        __in ULONG Type
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
         ) PURE;
 
     // Requests that the remote process server shut down.
     STDMETHOD(EndProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
     // Waits for a started process server to
     // exit.  Allows an application running a
@@ -2799,7 +3316,7 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
     // shut down and S_FALSE for a timeout.
     STDMETHOD(WaitForProcessServerEnd)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
 
     // Returns S_OK if the system is configured
@@ -2833,37 +3350,37 @@ DECLARE_INTERFACE_(IDebugClient3, IUnknown)
 
     STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
         THIS_
-        __in ULONG64 Server,
-        __in PCWSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCWSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescriptionWide)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PWSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PWSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PWSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     STDMETHOD(CreateProcessWide)(
         THIS_
-        __in ULONG64 Server,
-        __in PWSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     STDMETHOD(CreateProcessAndAttachWide)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PWSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
 };
 
@@ -2888,8 +3405,8 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -2910,14 +3427,14 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // itself.
     STDMETHOD(AttachKernel)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PCSTR ConnectOptions
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
         ) PURE;
     STDMETHOD(GetKernelConnectionOptions)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
         ) PURE;
     // Updates the connection options for a live
     // kernel connection.  This can only be used
@@ -2927,7 +3444,7 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetKernelConnectionOptions)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
 
     // Starts a process server for remote
@@ -2935,55 +3452,55 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // The local process server is server zero.
     STDMETHOD(StartProcessServer)(
         THIS_
-        __in ULONG Flags,
-        __in PCSTR Options,
-        __in_opt __reserved PVOID Reserved
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
         ) PURE;
     STDMETHOD(ConnectProcessServer)(
         THIS_
-        __in PCSTR RemoteOptions,
-        __out PULONG64 Server
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(DisconnectProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
 
     // Enumerates and describes processes
     // accessible through the given process server.
     STDMETHOD(GetRunningProcessSystemIds)(
         THIS_
-        __in ULONG64 Server,
-        __out_ecount_opt(Count) PULONG Ids,
-        __in ULONG Count,
-        __out_opt PULONG ActualCount
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
         ) PURE;
     STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
         THIS_
-        __in ULONG64 Server,
-        __in PCSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescription)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     // Attaches to a running user-mode process.
     STDMETHOD(AttachProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Creates a new user-mode process for debugging.
     // CreateFlags are as given to Win32s CreateProcess.
@@ -2991,9 +3508,9 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // must be specified.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     // Creates or attaches to a user-mode process, or both.
     // If CommandLine is NULL this method operates as
@@ -3008,28 +3525,28 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // attachment.
     STDMETHOD(CreateProcessAndAttach)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
     // Gets and sets process control flags.
     STDMETHOD(GetProcessOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetProcessOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Opens any kind of user- or kernel-mode dump file
@@ -3037,7 +3554,7 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // contained within it.
     STDMETHOD(OpenDumpFile)(
         THIS_
-        __in PCSTR DumpFile
+        _In_ PCSTR DumpFile
         ) PURE;
     // Writes a dump file from the current session information.
     // The kind of dump file written is determined by the
@@ -3047,8 +3564,8 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // is DEBUG_DUMP_SMALL a small kernel dump will be written.
     STDMETHOD(WriteDumpFile)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
         ) PURE;
 
     // Indicates that a remote client is ready to
@@ -3057,8 +3574,8 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // the amount of output history to be sent.
     STDMETHOD(ConnectSession)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG HistoryLimit
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
         ) PURE;
     // Indicates that the engine should start accepting
     // remote connections. Options specifies connection types
@@ -3067,15 +3584,15 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     //    tcp:Port=<IP port>
     STDMETHOD(StartServer)(
         THIS_
-        __in PCSTR Options
+        _In_ PCSTR Options
         ) PURE;
     // List the servers running on the given machine.
     // Uses the line prefix.
     STDMETHOD(OutputServers)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Machine,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
         ) PURE;
 
     // Attempts to terminate all processes in the debuggers list.
@@ -3094,13 +3611,13 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // target machine is otherwise unaffected.
     STDMETHOD(EndSession)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // If a process was started and ran to completion
     // this method can be used to retrieve its exit code.
     STDMETHOD(GetExitCode)(
         THIS_
-        __out PULONG Code
+        _Out_ PULONG Code
         ) PURE;
 
     // Client event callbacks are called on the thread
@@ -3122,7 +3639,7 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // timeout expires.
     STDMETHOD(DispatchCallbacks)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
     // ExitDispatch can be used to interrupt callback
     // dispatch when a client thread is needed by the
@@ -3130,7 +3647,7 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // be called from any thread.
     STDMETHOD(ExitDispatch)(
         THIS_
-        __in PDEBUG_CLIENT Client
+        _In_ PDEBUG_CLIENT Client
         ) PURE;
 
     // Clients are specific to the thread that
@@ -3140,26 +3657,26 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // of a new client for a new thread.
     STDMETHOD(CreateClient)(
         THIS_
-        __out PDEBUG_CLIENT* Client
+        _Out_ PDEBUG_CLIENT* Client
         ) PURE;
 
     STDMETHOD(GetInputCallbacks)(
         THIS_
-        __out PDEBUG_INPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetInputCallbacks)(
         THIS_
-        __in_opt PDEBUG_INPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
         ) PURE;
 
     // Output callback interfaces are described separately.
     STDMETHOD(GetOutputCallbacks)(
         THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetOutputCallbacks)(
         THIS_
-        __in_opt PDEBUG_OUTPUT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
         ) PURE;
     // Output flags provide control over
     // the distribution of output among clients.
@@ -3173,11 +3690,11 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // disruptions in output may occur.
     STDMETHOD(GetOutputMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOutputMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
     // These methods allow access to another clients
     // output mask.  They are necessary for changing
@@ -3186,24 +3703,24 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // and can be called from any thread.
     STDMETHOD(GetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __out PULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetOtherOutputMask)(
         THIS_
-        __in PDEBUG_CLIENT Client,
-        __in ULONG Mask
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
         ) PURE;
     // Control the width of an output line for
     // commands which produce formatted output.
     // This setting is just a suggestion.
     STDMETHOD(GetOutputWidth)(
         THIS_
-        __out PULONG Columns
+        _Out_ PULONG Columns
         ) PURE;
     STDMETHOD(SetOutputWidth)(
         THIS_
-        __in ULONG Columns
+        _In_ ULONG Columns
         ) PURE;
     // Some of the engines output commands produce
     // multiple lines of output.  A prefix can be
@@ -3215,13 +3732,13 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // the line prefix are marked in their documentation.
     STDMETHOD(GetOutputLinePrefix)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
         ) PURE;
     STDMETHOD(SetOutputLinePrefix)(
         THIS_
-        __in_opt PCSTR Prefix
+        _In_opt_ PCSTR Prefix
         ) PURE;
 
     // Returns a string describing the machine
@@ -3232,17 +3749,17 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // may also be present.
     STDMETHOD(GetIdentity)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
         ) PURE;
     // Format is a printf-like format string
     // with one %s where the identity string should go.
     STDMETHOD(OutputIdentity)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCSTR Format
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
         ) PURE;
 
     // Event callbacks allow a client to
@@ -3250,11 +3767,11 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // during the debug session.
     STDMETHOD(GetEventCallbacks)(
         THIS_
-        __out PDEBUG_EVENT_CALLBACKS* Callbacks
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
         ) PURE;
     STDMETHOD(SetEventCallbacks)(
         THIS_
-        __in_opt PDEBUG_EVENT_CALLBACKS Callbacks
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
         ) PURE;
 
     // The engine sometimes merges compatible callback
@@ -3276,10 +3793,10 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // Comment is not supported in all formats.
     STDMETHOD(WriteDumpFile2)(
         THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCSTR Comment
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
         ) PURE;
     // Registers additional files of supporting information
     // for a dump file open.  This method must be called
@@ -3289,14 +3806,14 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // be used until OpenDumpFile is called.
     STDMETHOD(AddDumpInformationFile)(
         THIS_
-        __in PCSTR InfoFile,
-        __in ULONG Type
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
         ) PURE;
 
     // Requests that the remote process server shut down.
     STDMETHOD(EndProcessServer)(
         THIS_
-        __in ULONG64 Server
+        _In_ ULONG64 Server
         ) PURE;
     // Waits for a started process server to
     // exit.  Allows an application running a
@@ -3307,7 +3824,7 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // shut down and S_FALSE for a timeout.
     STDMETHOD(WaitForProcessServerEnd)(
         THIS_
-        __in ULONG Timeout
+        _In_ ULONG Timeout
         ) PURE;
 
     // Returns S_OK if the system is configured
@@ -3341,37 +3858,37 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
 
     STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
         THIS_
-        __in ULONG64 Server,
-        __in PCWSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _In_ PCWSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetRunningProcessDescriptionWide)(
         THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PWSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PWSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PWSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
         ) PURE;
 
     STDMETHOD(CreateProcessWide)(
         THIS_
-        __in ULONG64 Server,
-        __in PWSTR CommandLine,
-        __in ULONG CreateFlags
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags
         ) PURE;
     STDMETHOD(CreateProcessAndAttachWide)(
         THIS_
-        __in ULONG64 Server,
-        __in_opt PWSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
         ) PURE;
 
     // IDebugClient4.
@@ -3384,53 +3901,2443 @@ DECLARE_INTERFACE_(IDebugClient4, IUnknown)
     // File handles cannot be used in remote calls.
     STDMETHOD(OpenDumpFileWide)(
         THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle
         ) PURE;
     STDMETHOD(WriteDumpFileWide)(
         THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCWSTR Comment
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCWSTR Comment
         ) PURE;
     STDMETHOD(AddDumpInformationFileWide)(
         THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle,
-        __in ULONG Type
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Type
         ) PURE;
     // These methods can be used to retrieve
     // file information for all targets that
     // involve files.
     STDMETHOD(GetNumberDumpFiles)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetDumpFile)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Handle,
-        __out PULONG Type
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
         ) PURE;
     STDMETHOD(GetDumpFileWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Handle,
-        __out PULONG Type
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
         ) PURE;
 };
 
 #undef INTERFACE
 #define INTERFACE IDebugClient5
 DECLARE_INTERFACE_(IDebugClient5, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugClient.
+
+    // The following set of methods start
+    // the different kinds of debuggees.
+
+    // Begins a debug session using the kernel
+    // debugging protocol.  This method selects
+    // the protocol as the debuggee communication
+    // mechanism but does not initiate the communication
+    // itself.
+    STDMETHOD(AttachKernel)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptions)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    // Updates the connection options for a live
+    // kernel connection.  This can only be used
+    // to modify parameters for the connection, not
+    // to switch to a completely different kind of
+    // connection.
+    // This method is reentrant.
+    STDMETHOD(SetKernelConnectionOptions)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+
+    // Starts a process server for remote
+    // user-mode process control.
+    // The local process server is server zero.
+    STDMETHOD(StartProcessServer)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServer)(
+        THIS_
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+    STDMETHOD(DisconnectProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+
+    // Enumerates and describes processes
+    // accessible through the given process server.
+    STDMETHOD(GetRunningProcessSystemIds)(
+        THIS_
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
+        ) PURE;
+    STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescription)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    // Attaches to a running user-mode process.
+    STDMETHOD(AttachProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Creates a new user-mode process for debugging.
+    // CreateFlags are as given to Win32s CreateProcess.
+    // One of DEBUG_PROCESS or DEBUG_ONLY_THIS_PROCESS
+    // must be specified.
+    STDMETHOD(CreateProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    // Creates or attaches to a user-mode process, or both.
+    // If CommandLine is NULL this method operates as
+    // AttachProcess does.  If ProcessId is zero it
+    // operates as CreateProcess does.  If CommandLine is
+    // non-NULL and ProcessId is non-zero the method first
+    // starts a process with the given information but
+    // in a suspended state.  The engine then attaches to
+    // the indicated process.  Once the attach is successful
+    // the suspended process is resumed.  This provides
+    // synchronization between the new process and the
+    // attachment.
+    STDMETHOD(CreateProcessAndAttach)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Gets and sets process control flags.
+    STDMETHOD(GetProcessOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Opens any kind of user- or kernel-mode dump file
+    // and begins a debug session with the information
+    // contained within it.
+    STDMETHOD(OpenDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile
+        ) PURE;
+    // Writes a dump file from the current session information.
+    // The kind of dump file written is determined by the
+    // kind of session and the type qualifier given.
+    // For example, if the current session is a kernel
+    // debug session (DEBUG_CLASS_KERNEL) and the qualifier
+    // is DEBUG_DUMP_SMALL a small kernel dump will be written.
+    STDMETHOD(WriteDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
+        ) PURE;
+
+    // Indicates that a remote client is ready to
+    // begin participating in the current session.
+    // HistoryLimit gives a character limit on
+    // the amount of output history to be sent.
+    STDMETHOD(ConnectSession)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
+        ) PURE;
+    // Indicates that the engine should start accepting
+    // remote connections. Options specifies connection types
+    // and their parameters.  Supported strings are:
+    //    npipe:Pipe=<Pipe name>
+    //    tcp:Port=<IP port>
+    STDMETHOD(StartServer)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+    // List the servers running on the given machine.
+    // Uses the line prefix.
+    STDMETHOD(OutputServers)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Attempts to terminate all processes in the debuggers list.
+    STDMETHOD(TerminateProcesses)(
+        THIS
+        ) PURE;
+    // Attempts to detach from all processes in the debuggers list.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachProcesses)(
+        THIS
+        ) PURE;
+    // Stops the current debug session.  If a process
+    // was created or attached an active EndSession can
+    // terminate or detach from it.
+    // If a kernel connection was opened it will be closed but the
+    // target machine is otherwise unaffected.
+    STDMETHOD(EndSession)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // If a process was started and ran to completion
+    // this method can be used to retrieve its exit code.
+    STDMETHOD(GetExitCode)(
+        THIS_
+        _Out_ PULONG Code
+        ) PURE;
+
+    // Client event callbacks are called on the thread
+    // of the client.  In order to give thread
+    // execution to the engine for callbacks all
+    // client threads should call DispatchCallbacks
+    // when they are idle.  Callbacks are only
+    // received when a thread calls DispatchCallbacks
+    // or WaitForEvent.  WaitForEvent can only be
+    // called by the thread that started the debug
+    // session so all other client threads should
+    // call DispatchCallbacks when possible.
+    // DispatchCallbacks returns when ExitDispatch is used
+    // to interrupt dispatch or when the timeout expires.
+    // DispatchCallbacks dispatches callbacks for all
+    // clients associated with the thread calling
+    // DispatchCallbacks.
+    // DispatchCallbacks returns S_FALSE when the
+    // timeout expires.
+    STDMETHOD(DispatchCallbacks)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+    // ExitDispatch can be used to interrupt callback
+    // dispatch when a client thread is needed by the
+    // client.  This method is reentrant and can
+    // be called from any thread.
+    STDMETHOD(ExitDispatch)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client
+        ) PURE;
+
+    // Clients are specific to the thread that
+    // created them.  Calls from other threads
+    // fail immediately.  The CreateClient method
+    // is a notable exception; it allows creation
+    // of a new client for a new thread.
+    STDMETHOD(CreateClient)(
+        THIS_
+        _Out_ PDEBUG_CLIENT* Client
+        ) PURE;
+
+    STDMETHOD(GetInputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetInputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
+        ) PURE;
+
+    // Output callback interfaces are described separately.
+    STDMETHOD(GetOutputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
+        ) PURE;
+    // Output flags provide control over
+    // the distribution of output among clients.
+    // Output masks select which output streams
+    // should be sent to the output callbacks.
+    // Only Output calls with a mask that
+    // contains one of the output mask bits
+    // will be sent to the output callbacks.
+    // These methods are reentrant.
+    // If such access is not synchronized
+    // disruptions in output may occur.
+    STDMETHOD(GetOutputMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOutputMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+    // These methods allow access to another clients
+    // output mask.  They are necessary for changing
+    // a clients output mask when it is
+    // waiting for events.  These methods are reentrant
+    // and can be called from any thread.
+    STDMETHOD(GetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
+        ) PURE;
+    // Control the width of an output line for
+    // commands which produce formatted output.
+    // This setting is just a suggestion.
+    STDMETHOD(GetOutputWidth)(
+        THIS_
+        _Out_ PULONG Columns
+        ) PURE;
+    STDMETHOD(SetOutputWidth)(
+        THIS_
+        _In_ ULONG Columns
+        ) PURE;
+    // Some of the engines output commands produce
+    // multiple lines of output.  A prefix can be
+    // set that the engine will automatically output
+    // for each line in that case, allowing a caller
+    // to control indentation or identifying marks.
+    // This is not a general setting for any output
+    // with a newline in it.  Methods which use
+    // the line prefix are marked in their documentation.
+    STDMETHOD(GetOutputLinePrefix)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR Prefix
+        ) PURE;
+
+    // Returns a string describing the machine
+    // and user this client represents.  The
+    // specific content of the string varies
+    // with operating system.  If the client is
+    // remotely connected some network information
+    // may also be present.
+    STDMETHOD(GetIdentity)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    // Format is a printf-like format string
+    // with one %s where the identity string should go.
+    STDMETHOD(OutputIdentity)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
+        ) PURE;
+
+    // Event callbacks allow a client to
+    // receive notification about changes
+    // during the debug session.
+    STDMETHOD(GetEventCallbacks)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
+        ) PURE;
+
+    // The engine sometimes merges compatible callback
+    // requests to reduce callback overhead.  This is
+    // most noticeable with output as small pieces of
+    // output are collected into larger groups to
+    // reduce the overall number of output callback calls.
+    // A client can use this method to force all pending
+    // callbacks to be delivered.  This is rarely necessary.
+    STDMETHOD(FlushCallbacks)(
+        THIS
+        ) PURE;
+
+    // IDebugClient2.
+
+    // Functions similarly to WriteDumpFile with
+    // the addition of the ability to specify
+    // per-dump-format write control flags.
+    // Comment is not supported in all formats.
+    STDMETHOD(WriteDumpFile2)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
+        ) PURE;
+    // Registers additional files of supporting information
+    // for a dump file open.  This method must be called
+    // before OpenDumpFile is called.
+    // The files registered may be opened at the time
+    // this method is called but generally will not
+    // be used until OpenDumpFile is called.
+    STDMETHOD(AddDumpInformationFile)(
+        THIS_
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
+        ) PURE;
+
+    // Requests that the remote process server shut down.
+    STDMETHOD(EndProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+    // Waits for a started process server to
+    // exit.  Allows an application running a
+    // process server to monitor the process
+    // server so that it can tell when a remote
+    // client has asked for it to exit.
+    // Returns S_OK if the process server has
+    // shut down and S_FALSE for a timeout.
+    STDMETHOD(WaitForProcessServerEnd)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Returns S_OK if the system is configured
+    // to allow kernel debugging.
+    STDMETHOD(IsKernelDebuggerEnabled)(
+        THIS
+        ) PURE;
+
+    // Attempts to terminate the current process.
+    // Exit process events for the process may be generated.
+    STDMETHOD(TerminateCurrentProcess)(
+        THIS
+        ) PURE;
+    // Attempts to detach from the current process.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachCurrentProcess)(
+        THIS
+        ) PURE;
+    // Removes the process from the debuggers process
+    // list without making any other changes.  The process
+    // will still be marked as being debugged and will
+    // not run.  This allows a debugger to be shut down
+    // and a new debugger attached without taking the
+    // process out of the debugged state.
+    // This is only supported on some system versions.
+    STDMETHOD(AbandonCurrentProcess)(
+        THIS
+        ) PURE;
+
+    // IDebugClient3.
+
+    STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescriptionWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PWSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    STDMETHOD(CreateProcessWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttachWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // IDebugClient4.
+
+    // In the following methods both a filename and a file
+    // handle can be passed in.  If a file handle is given
+    // the filename may be omitted, although providing it
+    // allows the debugger to properly report the name when
+    // queried.
+    // File handles cannot be used in remote calls.
+    STDMETHOD(OpenDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle
+        ) PURE;
+    STDMETHOD(WriteDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCWSTR Comment
+        ) PURE;
+    STDMETHOD(AddDumpInformationFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Type
+        ) PURE;
+    // These methods can be used to retrieve
+    // file information for all targets that
+    // involve files.
+    STDMETHOD(GetNumberDumpFiles)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetDumpFile)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(GetDumpFileWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+
+    // IDebugClient5.
+
+    STDMETHOD(AttachKernelWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCWSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptionsWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    STDMETHOD(SetKernelConnectionOptionsWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+
+    STDMETHOD(StartProcessServerWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCWSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServerWide)(
+        THIS_
+        _In_ PCWSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+
+    STDMETHOD(StartServerWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+    STDMETHOD(OutputServersWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetOutputCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_OUTPUT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+    STDMETHOD(GetOutputLinePrefixWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR Prefix
+        ) PURE;
+
+    STDMETHOD(GetIdentityWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    STDMETHOD(OutputIdentityWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCWSTR Format
+        ) PURE;
+
+    STDMETHOD(GetEventCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_EVENT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+
+    STDMETHOD(CreateProcess2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcess2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // Helpers for saving and restoring the
+    // current output line prefix.
+    STDMETHOD(PushOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PushOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PopOutputLinePrefix)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    // Queries to determine if any clients
+    // could potentially respond to the given callback.
+    STDMETHOD(GetNumberInputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberOutputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberEventCallbacks)(
+        THIS_
+        _In_ ULONG EventFlags,
+        _Out_ PULONG Count
+        ) PURE;
+
+    // Control over locking the session against
+    // undesired quits.  The quit lock string
+    // cannot be retrieved from a secure session.
+    STDMETHOD(GetQuitLockString)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockString)(
+        THIS_
+        _In_ PCSTR String
+        ) PURE;
+    STDMETHOD(GetQuitLockStringWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockStringWide)(
+        THIS_
+        _In_ PCWSTR String
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugClient6
+DECLARE_INTERFACE_(IDebugClient6, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugClient.
+
+    // The following set of methods start
+    // the different kinds of debuggees.
+
+    // Begins a debug session using the kernel
+    // debugging protocol.  This method selects
+    // the protocol as the debuggee communication
+    // mechanism but does not initiate the communication
+    // itself.
+    STDMETHOD(AttachKernel)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptions)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    // Updates the connection options for a live
+    // kernel connection.  This can only be used
+    // to modify parameters for the connection, not
+    // to switch to a completely different kind of
+    // connection.
+    // This method is reentrant.
+    STDMETHOD(SetKernelConnectionOptions)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+
+    // Starts a process server for remote
+    // user-mode process control.
+    // The local process server is server zero.
+    STDMETHOD(StartProcessServer)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServer)(
+        THIS_
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+    STDMETHOD(DisconnectProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+
+    // Enumerates and describes processes
+    // accessible through the given process server.
+    STDMETHOD(GetRunningProcessSystemIds)(
+        THIS_
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
+        ) PURE;
+    STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescription)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    // Attaches to a running user-mode process.
+    STDMETHOD(AttachProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Creates a new user-mode process for debugging.
+    // CreateFlags are as given to Win32s CreateProcess.
+    // One of DEBUG_PROCESS or DEBUG_ONLY_THIS_PROCESS
+    // must be specified.
+    STDMETHOD(CreateProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    // Creates or attaches to a user-mode process, or both.
+    // If CommandLine is NULL this method operates as
+    // AttachProcess does.  If ProcessId is zero it
+    // operates as CreateProcess does.  If CommandLine is
+    // non-NULL and ProcessId is non-zero the method first
+    // starts a process with the given information but
+    // in a suspended state.  The engine then attaches to
+    // the indicated process.  Once the attach is successful
+    // the suspended process is resumed.  This provides
+    // synchronization between the new process and the
+    // attachment.
+    STDMETHOD(CreateProcessAndAttach)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Gets and sets process control flags.
+    STDMETHOD(GetProcessOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Opens any kind of user- or kernel-mode dump file
+    // and begins a debug session with the information
+    // contained within it.
+    STDMETHOD(OpenDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile
+        ) PURE;
+    // Writes a dump file from the current session information.
+    // The kind of dump file written is determined by the
+    // kind of session and the type qualifier given.
+    // For example, if the current session is a kernel
+    // debug session (DEBUG_CLASS_KERNEL) and the qualifier
+    // is DEBUG_DUMP_SMALL a small kernel dump will be written.
+    STDMETHOD(WriteDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
+        ) PURE;
+
+    // Indicates that a remote client is ready to
+    // begin participating in the current session.
+    // HistoryLimit gives a character limit on
+    // the amount of output history to be sent.
+    STDMETHOD(ConnectSession)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
+        ) PURE;
+    // Indicates that the engine should start accepting
+    // remote connections. Options specifies connection types
+    // and their parameters.  Supported strings are:
+    //    npipe:Pipe=<Pipe name>
+    //    tcp:Port=<IP port>
+    STDMETHOD(StartServer)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+    // List the servers running on the given machine.
+    // Uses the line prefix.
+    STDMETHOD(OutputServers)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Attempts to terminate all processes in the debuggers list.
+    STDMETHOD(TerminateProcesses)(
+        THIS
+        ) PURE;
+    // Attempts to detach from all processes in the debuggers list.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachProcesses)(
+        THIS
+        ) PURE;
+    // Stops the current debug session.  If a process
+    // was created or attached an active EndSession can
+    // terminate or detach from it.
+    // If a kernel connection was opened it will be closed but the
+    // target machine is otherwise unaffected.
+    STDMETHOD(EndSession)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // If a process was started and ran to completion
+    // this method can be used to retrieve its exit code.
+    STDMETHOD(GetExitCode)(
+        THIS_
+        _Out_ PULONG Code
+        ) PURE;
+
+    // Client event callbacks are called on the thread
+    // of the client.  In order to give thread
+    // execution to the engine for callbacks all
+    // client threads should call DispatchCallbacks
+    // when they are idle.  Callbacks are only
+    // received when a thread calls DispatchCallbacks
+    // or WaitForEvent.  WaitForEvent can only be
+    // called by the thread that started the debug
+    // session so all other client threads should
+    // call DispatchCallbacks when possible.
+    // DispatchCallbacks returns when ExitDispatch is used
+    // to interrupt dispatch or when the timeout expires.
+    // DispatchCallbacks dispatches callbacks for all
+    // clients associated with the thread calling
+    // DispatchCallbacks.
+    // DispatchCallbacks returns S_FALSE when the
+    // timeout expires.
+    STDMETHOD(DispatchCallbacks)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+    // ExitDispatch can be used to interrupt callback
+    // dispatch when a client thread is needed by the
+    // client.  This method is reentrant and can
+    // be called from any thread.
+    STDMETHOD(ExitDispatch)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client
+        ) PURE;
+
+    // Clients are specific to the thread that
+    // created them.  Calls from other threads
+    // fail immediately.  The CreateClient method
+    // is a notable exception; it allows creation
+    // of a new client for a new thread.
+    STDMETHOD(CreateClient)(
+        THIS_
+        _Out_ PDEBUG_CLIENT* Client
+        ) PURE;
+
+    STDMETHOD(GetInputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetInputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
+        ) PURE;
+
+    // Output callback interfaces are described separately.
+    STDMETHOD(GetOutputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
+        ) PURE;
+    // Output flags provide control over
+    // the distribution of output among clients.
+    // Output masks select which output streams
+    // should be sent to the output callbacks.
+    // Only Output calls with a mask that
+    // contains one of the output mask bits
+    // will be sent to the output callbacks.
+    // These methods are reentrant.
+    // If such access is not synchronized
+    // disruptions in output may occur.
+    STDMETHOD(GetOutputMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOutputMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+    // These methods allow access to another clients
+    // output mask.  They are necessary for changing
+    // a clients output mask when it is
+    // waiting for events.  These methods are reentrant
+    // and can be called from any thread.
+    STDMETHOD(GetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
+        ) PURE;
+    // Control the width of an output line for
+    // commands which produce formatted output.
+    // This setting is just a suggestion.
+    STDMETHOD(GetOutputWidth)(
+        THIS_
+        _Out_ PULONG Columns
+        ) PURE;
+    STDMETHOD(SetOutputWidth)(
+        THIS_
+        _In_ ULONG Columns
+        ) PURE;
+    // Some of the engines output commands produce
+    // multiple lines of output.  A prefix can be
+    // set that the engine will automatically output
+    // for each line in that case, allowing a caller
+    // to control indentation or identifying marks.
+    // This is not a general setting for any output
+    // with a newline in it.  Methods which use
+    // the line prefix are marked in their documentation.
+    STDMETHOD(GetOutputLinePrefix)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR Prefix
+        ) PURE;
+
+    // Returns a string describing the machine
+    // and user this client represents.  The
+    // specific content of the string varies
+    // with operating system.  If the client is
+    // remotely connected some network information
+    // may also be present.
+    STDMETHOD(GetIdentity)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    // Format is a printf-like format string
+    // with one %s where the identity string should go.
+    STDMETHOD(OutputIdentity)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
+        ) PURE;
+
+    // Event callbacks allow a client to
+    // receive notification about changes
+    // during the debug session.
+    STDMETHOD(GetEventCallbacks)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
+        ) PURE;
+
+    // The engine sometimes merges compatible callback
+    // requests to reduce callback overhead.  This is
+    // most noticeable with output as small pieces of
+    // output are collected into larger groups to
+    // reduce the overall number of output callback calls.
+    // A client can use this method to force all pending
+    // callbacks to be delivered.  This is rarely necessary.
+    STDMETHOD(FlushCallbacks)(
+        THIS
+        ) PURE;
+
+    // IDebugClient2.
+
+    // Functions similarly to WriteDumpFile with
+    // the addition of the ability to specify
+    // per-dump-format write control flags.
+    // Comment is not supported in all formats.
+    STDMETHOD(WriteDumpFile2)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
+        ) PURE;
+    // Registers additional files of supporting information
+    // for a dump file open.  This method must be called
+    // before OpenDumpFile is called.
+    // The files registered may be opened at the time
+    // this method is called but generally will not
+    // be used until OpenDumpFile is called.
+    STDMETHOD(AddDumpInformationFile)(
+        THIS_
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
+        ) PURE;
+
+    // Requests that the remote process server shut down.
+    STDMETHOD(EndProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+    // Waits for a started process server to
+    // exit.  Allows an application running a
+    // process server to monitor the process
+    // server so that it can tell when a remote
+    // client has asked for it to exit.
+    // Returns S_OK if the process server has
+    // shut down and S_FALSE for a timeout.
+    STDMETHOD(WaitForProcessServerEnd)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Returns S_OK if the system is configured
+    // to allow kernel debugging.
+    STDMETHOD(IsKernelDebuggerEnabled)(
+        THIS
+        ) PURE;
+
+    // Attempts to terminate the current process.
+    // Exit process events for the process may be generated.
+    STDMETHOD(TerminateCurrentProcess)(
+        THIS
+        ) PURE;
+    // Attempts to detach from the current process.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachCurrentProcess)(
+        THIS
+        ) PURE;
+    // Removes the process from the debuggers process
+    // list without making any other changes.  The process
+    // will still be marked as being debugged and will
+    // not run.  This allows a debugger to be shut down
+    // and a new debugger attached without taking the
+    // process out of the debugged state.
+    // This is only supported on some system versions.
+    STDMETHOD(AbandonCurrentProcess)(
+        THIS
+        ) PURE;
+
+    // IDebugClient3.
+
+    STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescriptionWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PWSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    STDMETHOD(CreateProcessWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttachWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // IDebugClient4.
+
+    // In the following methods both a filename and a file
+    // handle can be passed in.  If a file handle is given
+    // the filename may be omitted, although providing it
+    // allows the debugger to properly report the name when
+    // queried.
+    // File handles cannot be used in remote calls.
+    STDMETHOD(OpenDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle
+        ) PURE;
+    STDMETHOD(WriteDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCWSTR Comment
+        ) PURE;
+    STDMETHOD(AddDumpInformationFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Type
+        ) PURE;
+    // These methods can be used to retrieve
+    // file information for all targets that
+    // involve files.
+    STDMETHOD(GetNumberDumpFiles)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetDumpFile)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(GetDumpFileWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+
+    // IDebugClient5.
+
+    STDMETHOD(AttachKernelWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCWSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptionsWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    STDMETHOD(SetKernelConnectionOptionsWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+
+    STDMETHOD(StartProcessServerWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCWSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServerWide)(
+        THIS_
+        _In_ PCWSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+
+    STDMETHOD(StartServerWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+    STDMETHOD(OutputServersWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetOutputCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_OUTPUT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+    STDMETHOD(GetOutputLinePrefixWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR Prefix
+        ) PURE;
+
+    STDMETHOD(GetIdentityWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    STDMETHOD(OutputIdentityWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCWSTR Format
+        ) PURE;
+
+    STDMETHOD(GetEventCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_EVENT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+
+    STDMETHOD(CreateProcess2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcess2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // Helpers for saving and restoring the
+    // current output line prefix.
+    STDMETHOD(PushOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PushOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PopOutputLinePrefix)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    // Queries to determine if any clients
+    // could potentially respond to the given callback.
+    STDMETHOD(GetNumberInputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberOutputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberEventCallbacks)(
+        THIS_
+        _In_ ULONG EventFlags,
+        _Out_ PULONG Count
+        ) PURE;
+
+    // Control over locking the session against
+    // undesired quits.  The quit lock string
+    // cannot be retrieved from a secure session.
+    STDMETHOD(GetQuitLockString)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockString)(
+        THIS_
+        _In_ PCSTR String
+        ) PURE;
+    STDMETHOD(GetQuitLockStringWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockStringWide)(
+        THIS_
+        _In_ PCWSTR String
+        ) PURE;
+
+    // IDebugClient6
+
+    STDMETHOD(SetEventContextCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_EVENT_CONTEXT_CALLBACKS Callbacks
+        ) PURE;
+
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugClient7
+DECLARE_INTERFACE_(IDebugClient7, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugClient.
+
+    // The following set of methods start
+    // the different kinds of debuggees.
+
+    // Begins a debug session using the kernel
+    // debugging protocol.  This method selects
+    // the protocol as the debuggee communication
+    // mechanism but does not initiate the communication
+    // itself.
+    STDMETHOD(AttachKernel)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptions)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    // Updates the connection options for a live
+    // kernel connection.  This can only be used
+    // to modify parameters for the connection, not
+    // to switch to a completely different kind of
+    // connection.
+    // This method is reentrant.
+    STDMETHOD(SetKernelConnectionOptions)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+
+    // Starts a process server for remote
+    // user-mode process control.
+    // The local process server is server zero.
+    STDMETHOD(StartProcessServer)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServer)(
+        THIS_
+        _In_ PCSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+    STDMETHOD(DisconnectProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+
+    // Enumerates and describes processes
+    // accessible through the given process server.
+    STDMETHOD(GetRunningProcessSystemIds)(
+        THIS_
+        _In_ ULONG64 Server,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _In_ ULONG Count,
+        _Out_opt_ PULONG ActualCount
+        ) PURE;
+    STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescription)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    // Attaches to a running user-mode process.
+    STDMETHOD(AttachProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Creates a new user-mode process for debugging.
+    // CreateFlags are as given to Win32s CreateProcess.
+    // One of DEBUG_PROCESS or DEBUG_ONLY_THIS_PROCESS
+    // must be specified.
+    STDMETHOD(CreateProcess)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    // Creates or attaches to a user-mode process, or both.
+    // If CommandLine is NULL this method operates as
+    // AttachProcess does.  If ProcessId is zero it
+    // operates as CreateProcess does.  If CommandLine is
+    // non-NULL and ProcessId is non-zero the method first
+    // starts a process with the given information but
+    // in a suspended state.  The engine then attaches to
+    // the indicated process.  Once the attach is successful
+    // the suspended process is resumed.  This provides
+    // synchronization between the new process and the
+    // attachment.
+    STDMETHOD(CreateProcessAndAttach)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    // Gets and sets process control flags.
+    STDMETHOD(GetProcessOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetProcessOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Opens any kind of user- or kernel-mode dump file
+    // and begins a debug session with the information
+    // contained within it.
+    STDMETHOD(OpenDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile
+        ) PURE;
+    // Writes a dump file from the current session information.
+    // The kind of dump file written is determined by the
+    // kind of session and the type qualifier given.
+    // For example, if the current session is a kernel
+    // debug session (DEBUG_CLASS_KERNEL) and the qualifier
+    // is DEBUG_DUMP_SMALL a small kernel dump will be written.
+    STDMETHOD(WriteDumpFile)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier
+        ) PURE;
+
+    // Indicates that a remote client is ready to
+    // begin participating in the current session.
+    // HistoryLimit gives a character limit on
+    // the amount of output history to be sent.
+    STDMETHOD(ConnectSession)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG HistoryLimit
+        ) PURE;
+    // Indicates that the engine should start accepting
+    // remote connections. Options specifies connection types
+    // and their parameters.  Supported strings are:
+    //    npipe:Pipe=<Pipe name>
+    //    tcp:Port=<IP port>
+    STDMETHOD(StartServer)(
+        THIS_
+        _In_ PCSTR Options
+        ) PURE;
+    // List the servers running on the given machine.
+    // Uses the line prefix.
+    STDMETHOD(OutputServers)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Attempts to terminate all processes in the debuggers list.
+    STDMETHOD(TerminateProcesses)(
+        THIS
+        ) PURE;
+    // Attempts to detach from all processes in the debuggers list.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachProcesses)(
+        THIS
+        ) PURE;
+    // Stops the current debug session.  If a process
+    // was created or attached an active EndSession can
+    // terminate or detach from it.
+    // If a kernel connection was opened it will be closed but the
+    // target machine is otherwise unaffected.
+    STDMETHOD(EndSession)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // If a process was started and ran to completion
+    // this method can be used to retrieve its exit code.
+    STDMETHOD(GetExitCode)(
+        THIS_
+        _Out_ PULONG Code
+        ) PURE;
+
+    // Client event callbacks are called on the thread
+    // of the client.  In order to give thread
+    // execution to the engine for callbacks all
+    // client threads should call DispatchCallbacks
+    // when they are idle.  Callbacks are only
+    // received when a thread calls DispatchCallbacks
+    // or WaitForEvent.  WaitForEvent can only be
+    // called by the thread that started the debug
+    // session so all other client threads should
+    // call DispatchCallbacks when possible.
+    // DispatchCallbacks returns when ExitDispatch is used
+    // to interrupt dispatch or when the timeout expires.
+    // DispatchCallbacks dispatches callbacks for all
+    // clients associated with the thread calling
+    // DispatchCallbacks.
+    // DispatchCallbacks returns S_FALSE when the
+    // timeout expires.
+    STDMETHOD(DispatchCallbacks)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+    // ExitDispatch can be used to interrupt callback
+    // dispatch when a client thread is needed by the
+    // client.  This method is reentrant and can
+    // be called from any thread.
+    STDMETHOD(ExitDispatch)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client
+        ) PURE;
+
+    // Clients are specific to the thread that
+    // created them.  Calls from other threads
+    // fail immediately.  The CreateClient method
+    // is a notable exception; it allows creation
+    // of a new client for a new thread.
+    STDMETHOD(CreateClient)(
+        THIS_
+        _Out_ PDEBUG_CLIENT* Client
+        ) PURE;
+
+    STDMETHOD(GetInputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_INPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetInputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_INPUT_CALLBACKS Callbacks
+        ) PURE;
+
+    // Output callback interfaces are described separately.
+    STDMETHOD(GetOutputCallbacks)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_OUTPUT_CALLBACKS Callbacks
+        ) PURE;
+    // Output flags provide control over
+    // the distribution of output among clients.
+    // Output masks select which output streams
+    // should be sent to the output callbacks.
+    // Only Output calls with a mask that
+    // contains one of the output mask bits
+    // will be sent to the output callbacks.
+    // These methods are reentrant.
+    // If such access is not synchronized
+    // disruptions in output may occur.
+    STDMETHOD(GetOutputMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOutputMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+    // These methods allow access to another clients
+    // output mask.  They are necessary for changing
+    // a clients output mask when it is
+    // waiting for events.  These methods are reentrant
+    // and can be called from any thread.
+    STDMETHOD(GetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetOtherOutputMask)(
+        THIS_
+        _In_ PDEBUG_CLIENT Client,
+        _In_ ULONG Mask
+        ) PURE;
+    // Control the width of an output line for
+    // commands which produce formatted output.
+    // This setting is just a suggestion.
+    STDMETHOD(GetOutputWidth)(
+        THIS_
+        _Out_ PULONG Columns
+        ) PURE;
+    STDMETHOD(SetOutputWidth)(
+        THIS_
+        _In_ ULONG Columns
+        ) PURE;
+    // Some of the engines output commands produce
+    // multiple lines of output.  A prefix can be
+    // set that the engine will automatically output
+    // for each line in that case, allowing a caller
+    // to control indentation or identifying marks.
+    // This is not a general setting for any output
+    // with a newline in it.  Methods which use
+    // the line prefix are marked in their documentation.
+    STDMETHOD(GetOutputLinePrefix)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR Prefix
+        ) PURE;
+
+    // Returns a string describing the machine
+    // and user this client represents.  The
+    // specific content of the string varies
+    // with operating system.  If the client is
+    // remotely connected some network information
+    // may also be present.
+    STDMETHOD(GetIdentity)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    // Format is a printf-like format string
+    // with one %s where the identity string should go.
+    STDMETHOD(OutputIdentity)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCSTR Format
+        ) PURE;
+
+    // Event callbacks allow a client to
+    // receive notification about changes
+    // during the debug session.
+    STDMETHOD(GetEventCallbacks)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_EVENT_CALLBACKS Callbacks
+        ) PURE;
+
+    // The engine sometimes merges compatible callback
+    // requests to reduce callback overhead.  This is
+    // most noticeable with output as small pieces of
+    // output are collected into larger groups to
+    // reduce the overall number of output callback calls.
+    // A client can use this method to force all pending
+    // callbacks to be delivered.  This is rarely necessary.
+    STDMETHOD(FlushCallbacks)(
+        THIS
+        ) PURE;
+
+    // IDebugClient2.
+
+    // Functions similarly to WriteDumpFile with
+    // the addition of the ability to specify
+    // per-dump-format write control flags.
+    // Comment is not supported in all formats.
+    STDMETHOD(WriteDumpFile2)(
+        THIS_
+        _In_ PCSTR DumpFile,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCSTR Comment
+        ) PURE;
+    // Registers additional files of supporting information
+    // for a dump file open.  This method must be called
+    // before OpenDumpFile is called.
+    // The files registered may be opened at the time
+    // this method is called but generally will not
+    // be used until OpenDumpFile is called.
+    STDMETHOD(AddDumpInformationFile)(
+        THIS_
+        _In_ PCSTR InfoFile,
+        _In_ ULONG Type
+        ) PURE;
+
+    // Requests that the remote process server shut down.
+    STDMETHOD(EndProcessServer)(
+        THIS_
+        _In_ ULONG64 Server
+        ) PURE;
+    // Waits for a started process server to
+    // exit.  Allows an application running a
+    // process server to monitor the process
+    // server so that it can tell when a remote
+    // client has asked for it to exit.
+    // Returns S_OK if the process server has
+    // shut down and S_FALSE for a timeout.
+    STDMETHOD(WaitForProcessServerEnd)(
+        THIS_
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Returns S_OK if the system is configured
+    // to allow kernel debugging.
+    STDMETHOD(IsKernelDebuggerEnabled)(
+        THIS
+        ) PURE;
+
+    // Attempts to terminate the current process.
+    // Exit process events for the process may be generated.
+    STDMETHOD(TerminateCurrentProcess)(
+        THIS
+        ) PURE;
+    // Attempts to detach from the current process.
+    // This requires OS support for debugger detach.
+    STDMETHOD(DetachCurrentProcess)(
+        THIS
+        ) PURE;
+    // Removes the process from the debuggers process
+    // list without making any other changes.  The process
+    // will still be marked as being debugged and will
+    // not run.  This allows a debugger to be shut down
+    // and a new debugger attached without taking the
+    // process out of the debugged state.
+    // This is only supported on some system versions.
+    STDMETHOD(AbandonCurrentProcess)(
+        THIS
+        ) PURE;
+
+    // IDebugClient3.
+
+    STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR ExeName,
+        _In_ ULONG Flags,
+        _Out_ PULONG Id
+        ) PURE;
+    STDMETHOD(GetRunningProcessDescriptionWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG SystemId,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(ExeNameSize) PWSTR ExeName,
+        _In_ ULONG ExeNameSize,
+        _Out_opt_ PULONG ActualExeNameSize,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG ActualDescriptionSize
+        ) PURE;
+
+    STDMETHOD(CreateProcessWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttachWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_ ULONG CreateFlags,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // IDebugClient4.
+
+    // In the following methods both a filename and a file
+    // handle can be passed in.  If a file handle is given
+    // the filename may be omitted, although providing it
+    // allows the debugger to properly report the name when
+    // queried.
+    // File handles cannot be used in remote calls.
+    STDMETHOD(OpenDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle
+        ) PURE;
+    STDMETHOD(WriteDumpFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Qualifier,
+        _In_ ULONG FormatFlags,
+        _In_opt_ PCWSTR Comment
+        ) PURE;
+    STDMETHOD(AddDumpInformationFileWide)(
+        THIS_
+        _In_opt_ PCWSTR FileName,
+        _In_ ULONG64 FileHandle,
+        _In_ ULONG Type
+        ) PURE;
+    // These methods can be used to retrieve
+    // file information for all targets that
+    // involve files.
+    STDMETHOD(GetNumberDumpFiles)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetDumpFile)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(GetDumpFileWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Handle,
+        _Out_ PULONG Type
+        ) PURE;
+
+    // IDebugClient5.
+
+    STDMETHOD(AttachKernelWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PCWSTR ConnectOptions
+        ) PURE;
+    STDMETHOD(GetKernelConnectionOptionsWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG OptionsSize
+        ) PURE;
+    STDMETHOD(SetKernelConnectionOptionsWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+
+    STDMETHOD(StartProcessServerWide)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ PCWSTR Options,
+        _In_opt_ _Reserved_ PVOID Reserved
+        ) PURE;
+    STDMETHOD(ConnectProcessServerWide)(
+        THIS_
+        _In_ PCWSTR RemoteOptions,
+        _Out_ PULONG64 Server
+        ) PURE;
+
+    STDMETHOD(StartServerWide)(
+        THIS_
+        _In_ PCWSTR Options
+        ) PURE;
+    STDMETHOD(OutputServersWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Machine,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetOutputCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_OUTPUT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetOutputCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_OUTPUT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+    STDMETHOD(GetOutputLinePrefixWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PrefixSize
+        ) PURE;
+    STDMETHOD(SetOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR Prefix
+        ) PURE;
+
+    STDMETHOD(GetIdentityWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG IdentitySize
+        ) PURE;
+    STDMETHOD(OutputIdentityWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ PCWSTR Format
+        ) PURE;
+
+    STDMETHOD(GetEventCallbacksWide)(
+        THIS_
+        _Out_ PDEBUG_EVENT_CALLBACKS_WIDE* Callbacks
+        ) PURE;
+    STDMETHOD(SetEventCallbacksWide)(
+        THIS_
+        _In_ PDEBUG_EVENT_CALLBACKS_WIDE Callbacks
+        ) PURE;
+
+    STDMETHOD(CreateProcess2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcess2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCSTR InitialDirectory,
+        _In_opt_ PCSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+    STDMETHOD(CreateProcessAndAttach2Wide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_opt_ PWSTR CommandLine,
+        _In_reads_bytes_(OptionsBufferSize) PVOID OptionsBuffer,
+        _In_ ULONG OptionsBufferSize,
+        _In_opt_ PCWSTR InitialDirectory,
+        _In_opt_ PCWSTR Environment,
+        _In_ ULONG ProcessId,
+        _In_ ULONG AttachFlags
+        ) PURE;
+
+    // Helpers for saving and restoring the
+    // current output line prefix.
+    STDMETHOD(PushOutputLinePrefix)(
+        THIS_
+        _In_opt_ PCSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PushOutputLinePrefixWide)(
+        THIS_
+        _In_opt_ PCWSTR NewPrefix,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(PopOutputLinePrefix)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    // Queries to determine if any clients
+    // could potentially respond to the given callback.
+    STDMETHOD(GetNumberInputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberOutputCallbacks)(
+        THIS_
+        _Out_ PULONG Count
+        ) PURE;
+    STDMETHOD(GetNumberEventCallbacks)(
+        THIS_
+        _In_ ULONG EventFlags,
+        _Out_ PULONG Count
+        ) PURE;
+
+    // Control over locking the session against
+    // undesired quits.  The quit lock string
+    // cannot be retrieved from a secure session.
+    STDMETHOD(GetQuitLockString)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockString)(
+        THIS_
+        _In_ PCSTR String
+        ) PURE;
+    STDMETHOD(GetQuitLockStringWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(SetQuitLockStringWide)(
+        THIS_
+        _In_ PCWSTR String
+        ) PURE;
+
+    // IDebugClient6
+
+    STDMETHOD(SetEventContextCallbacks)(
+        THIS_
+        _In_opt_ PDEBUG_EVENT_CONTEXT_CALLBACKS Callbacks
+        ) PURE;
+
+    // IDebugClient7
+
+    STDMETHOD(SetClientContext)(
+        THIS_
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugPlmClient
+DECLARE_INTERFACE_(IDebugPlmClient, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugPlmClient
+
+    // Launches suspended Plm Application
+    STDMETHOD(LaunchPlmPackageForDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG Timeout,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR AppName,
+        _In_opt_ PCWSTR Arguments,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugPlmClient2
+DECLARE_INTERFACE_(IDebugPlmClient2, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugPlmClient
+
+    // Launches suspended Plm Application
+    STDMETHOD(LaunchPlmPackageForDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG Timeout,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR AppName,
+        _In_opt_ PCWSTR Arguments,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId
+        ) PURE;
+
+    // IDebugPlmClient2
+
+     // Launches suspended Plm Bg Task
+    STDMETHOD(LaunchPlmBgTaskForDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG Timeout,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR BackgroundTaskId,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugPlmClient3
+DECLARE_INTERFACE_(IDebugPlmClient3, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugPlmClient
+
+    // Launches suspended Plm Application
+    STDMETHOD(LaunchPlmPackageForDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG Timeout,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR AppName,
+        _In_opt_ PCWSTR Arguments,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId
+        ) PURE;
+
+    // IDebugPlmClient2
+
+     // Launches suspended Plm Bg Task
+    STDMETHOD(LaunchPlmBgTaskForDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ ULONG Timeout,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR BackgroundTaskId,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId
+        ) PURE;
+
+    // IDebugPlmClient3
+
+    STDMETHOD(QueryPlmPackageWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName,
+        _In_ PDEBUG_OUTPUT_STREAM Stream
+        ) PURE;
+
+    STDMETHOD(QueryPlmPackageList)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PDEBUG_OUTPUT_STREAM Stream
+        ) PURE;
+
+    STDMETHOD(EnablePlmPackageDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName
+        ) PURE;
+
+    STDMETHOD(DisablePlmPackageDebugWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName
+        ) PURE;
+
+    STDMETHOD(SuspendPlmPackageWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName
+        ) PURE;
+
+    STDMETHOD(ResumePlmPackageWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName
+        ) PURE;
+
+    STDMETHOD(TerminatePlmPackageWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName
+        ) PURE;
+
+    // Launches and attaches to Plm Application. Starts debugger session
+    // if it is not already started
+    STDMETHOD(LaunchAndDebugPlmAppWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR AppName,
+        _In_ PCWSTR Arguments
+        ) PURE;
+
+    // Launches and attaches to Plm Bg Task. Starts debugger session
+    // if it is not already started
+    STDMETHOD(ActivateAndDebugPlmBgTaskWide)(
+        THIS_
+        _In_ ULONG64 Server,
+        _In_ PCWSTR PackageFullName,
+        _In_ PCWSTR BackgroundTaskId
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugOutputStream
+DECLARE_INTERFACE_(IDebugOutputStream, IUnknown)
 {
     // IUnknown.
     STDMETHOD(QueryInterface)(
@@ -3445,713 +6352,10 @@ DECLARE_INTERFACE_(IDebugClient5, IUnknown)
         THIS
         ) PURE;
 
-    // IDebugClient.
-
-    // The following set of methods start
-    // the different kinds of debuggees.
-
-    // Begins a debug session using the kernel
-    // debugging protocol.  This method selects
-    // the protocol as the debuggee communication
-    // mechanism but does not initiate the communication
-    // itself.
-    STDMETHOD(AttachKernel)(
+    // IDebugOutputStream.
+    STDMETHOD(Write)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PCSTR ConnectOptions
-        ) PURE;
-    STDMETHOD(GetKernelConnectionOptions)(
-        THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
-        ) PURE;
-    // Updates the connection options for a live
-    // kernel connection.  This can only be used
-    // to modify parameters for the connection, not
-    // to switch to a completely different kind of
-    // connection.
-    // This method is reentrant.
-    STDMETHOD(SetKernelConnectionOptions)(
-        THIS_
-        __in PCSTR Options
-        ) PURE;
-
-    // Starts a process server for remote
-    // user-mode process control.
-    // The local process server is server zero.
-    STDMETHOD(StartProcessServer)(
-        THIS_
-        __in ULONG Flags,
-        __in PCSTR Options,
-        __in_opt __reserved PVOID Reserved
-        ) PURE;
-    STDMETHOD(ConnectProcessServer)(
-        THIS_
-        __in PCSTR RemoteOptions,
-        __out PULONG64 Server
-        ) PURE;
-    STDMETHOD(DisconnectProcessServer)(
-        THIS_
-        __in ULONG64 Server
-        ) PURE;
-
-    // Enumerates and describes processes
-    // accessible through the given process server.
-    STDMETHOD(GetRunningProcessSystemIds)(
-        THIS_
-        __in ULONG64 Server,
-        __out_ecount_opt(Count) PULONG Ids,
-        __in ULONG Count,
-        __out_opt PULONG ActualCount
-        ) PURE;
-    STDMETHOD(GetRunningProcessSystemIdByExecutableName)(
-        THIS_
-        __in ULONG64 Server,
-        __in PCSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
-        ) PURE;
-    STDMETHOD(GetRunningProcessDescription)(
-        THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
-        ) PURE;
-
-    // Attaches to a running user-mode process.
-    STDMETHOD(AttachProcess)(
-        THIS_
-        __in ULONG64 Server,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
-        ) PURE;
-    // Creates a new user-mode process for debugging.
-    // CreateFlags are as given to Win32s CreateProcess.
-    // One of DEBUG_PROCESS or DEBUG_ONLY_THIS_PROCESS
-    // must be specified.
-    STDMETHOD(CreateProcess)(
-        THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in ULONG CreateFlags
-        ) PURE;
-    // Creates or attaches to a user-mode process, or both.
-    // If CommandLine is NULL this method operates as
-    // AttachProcess does.  If ProcessId is zero it
-    // operates as CreateProcess does.  If CommandLine is
-    // non-NULL and ProcessId is non-zero the method first
-    // starts a process with the given information but
-    // in a suspended state.  The engine then attaches to
-    // the indicated process.  Once the attach is successful
-    // the suspended process is resumed.  This provides
-    // synchronization between the new process and the
-    // attachment.
-    STDMETHOD(CreateProcessAndAttach)(
-        THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
-        ) PURE;
-    // Gets and sets process control flags.
-    STDMETHOD(GetProcessOptions)(
-        THIS_
-        __out PULONG Options
-        ) PURE;
-    STDMETHOD(AddProcessOptions)(
-        THIS_
-        __in ULONG Options
-        ) PURE;
-    STDMETHOD(RemoveProcessOptions)(
-        THIS_
-        __in ULONG Options
-        ) PURE;
-    STDMETHOD(SetProcessOptions)(
-        THIS_
-        __in ULONG Options
-        ) PURE;
-
-    // Opens any kind of user- or kernel-mode dump file
-    // and begins a debug session with the information
-    // contained within it.
-    STDMETHOD(OpenDumpFile)(
-        THIS_
-        __in PCSTR DumpFile
-        ) PURE;
-    // Writes a dump file from the current session information.
-    // The kind of dump file written is determined by the
-    // kind of session and the type qualifier given.
-    // For example, if the current session is a kernel
-    // debug session (DEBUG_CLASS_KERNEL) and the qualifier
-    // is DEBUG_DUMP_SMALL a small kernel dump will be written.
-    STDMETHOD(WriteDumpFile)(
-        THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier
-        ) PURE;
-
-    // Indicates that a remote client is ready to
-    // begin participating in the current session.
-    // HistoryLimit gives a character limit on
-    // the amount of output history to be sent.
-    STDMETHOD(ConnectSession)(
-        THIS_
-        __in ULONG Flags,
-        __in ULONG HistoryLimit
-        ) PURE;
-    // Indicates that the engine should start accepting
-    // remote connections. Options specifies connection types
-    // and their parameters.  Supported strings are:
-    //    npipe:Pipe=<Pipe name>
-    //    tcp:Port=<IP port>
-    STDMETHOD(StartServer)(
-        THIS_
-        __in PCSTR Options
-        ) PURE;
-    // List the servers running on the given machine.
-    // Uses the line prefix.
-    STDMETHOD(OutputServers)(
-        THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Machine,
-        __in ULONG Flags
-        ) PURE;
-
-    // Attempts to terminate all processes in the debuggers list.
-    STDMETHOD(TerminateProcesses)(
-        THIS
-        ) PURE;
-    // Attempts to detach from all processes in the debuggers list.
-    // This requires OS support for debugger detach.
-    STDMETHOD(DetachProcesses)(
-        THIS
-        ) PURE;
-    // Stops the current debug session.  If a process
-    // was created or attached an active EndSession can
-    // terminate or detach from it.
-    // If a kernel connection was opened it will be closed but the
-    // target machine is otherwise unaffected.
-    STDMETHOD(EndSession)(
-        THIS_
-        __in ULONG Flags
-        ) PURE;
-    // If a process was started and ran to completion
-    // this method can be used to retrieve its exit code.
-    STDMETHOD(GetExitCode)(
-        THIS_
-        __out PULONG Code
-        ) PURE;
-
-    // Client event callbacks are called on the thread
-    // of the client.  In order to give thread
-    // execution to the engine for callbacks all
-    // client threads should call DispatchCallbacks
-    // when they are idle.  Callbacks are only
-    // received when a thread calls DispatchCallbacks
-    // or WaitForEvent.  WaitForEvent can only be
-    // called by the thread that started the debug
-    // session so all other client threads should
-    // call DispatchCallbacks when possible.
-    // DispatchCallbacks returns when ExitDispatch is used
-    // to interrupt dispatch or when the timeout expires.
-    // DispatchCallbacks dispatches callbacks for all
-    // clients associated with the thread calling
-    // DispatchCallbacks.
-    // DispatchCallbacks returns S_FALSE when the
-    // timeout expires.
-    STDMETHOD(DispatchCallbacks)(
-        THIS_
-        __in ULONG Timeout
-        ) PURE;
-    // ExitDispatch can be used to interrupt callback
-    // dispatch when a client thread is needed by the
-    // client.  This method is reentrant and can
-    // be called from any thread.
-    STDMETHOD(ExitDispatch)(
-        THIS_
-        __in PDEBUG_CLIENT Client
-        ) PURE;
-
-    // Clients are specific to the thread that
-    // created them.  Calls from other threads
-    // fail immediately.  The CreateClient method
-    // is a notable exception; it allows creation
-    // of a new client for a new thread.
-    STDMETHOD(CreateClient)(
-        THIS_
-        __out PDEBUG_CLIENT* Client
-        ) PURE;
-
-    STDMETHOD(GetInputCallbacks)(
-        THIS_
-        __out PDEBUG_INPUT_CALLBACKS* Callbacks
-        ) PURE;
-    STDMETHOD(SetInputCallbacks)(
-        THIS_
-        __in_opt PDEBUG_INPUT_CALLBACKS Callbacks
-        ) PURE;
-
-    // Output callback interfaces are described separately.
-    STDMETHOD(GetOutputCallbacks)(
-        THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS* Callbacks
-        ) PURE;
-    STDMETHOD(SetOutputCallbacks)(
-        THIS_
-        __in_opt PDEBUG_OUTPUT_CALLBACKS Callbacks
-        ) PURE;
-    // Output flags provide control over
-    // the distribution of output among clients.
-    // Output masks select which output streams
-    // should be sent to the output callbacks.
-    // Only Output calls with a mask that
-    // contains one of the output mask bits
-    // will be sent to the output callbacks.
-    // These methods are reentrant.
-    // If such access is not synchronized
-    // disruptions in output may occur.
-    STDMETHOD(GetOutputMask)(
-        THIS_
-        __out PULONG Mask
-        ) PURE;
-    STDMETHOD(SetOutputMask)(
-        THIS_
-        __in ULONG Mask
-        ) PURE;
-    // These methods allow access to another clients
-    // output mask.  They are necessary for changing
-    // a clients output mask when it is
-    // waiting for events.  These methods are reentrant
-    // and can be called from any thread.
-    STDMETHOD(GetOtherOutputMask)(
-        THIS_
-        __in PDEBUG_CLIENT Client,
-        __out PULONG Mask
-        ) PURE;
-    STDMETHOD(SetOtherOutputMask)(
-        THIS_
-        __in PDEBUG_CLIENT Client,
-        __in ULONG Mask
-        ) PURE;
-    // Control the width of an output line for
-    // commands which produce formatted output.
-    // This setting is just a suggestion.
-    STDMETHOD(GetOutputWidth)(
-        THIS_
-        __out PULONG Columns
-        ) PURE;
-    STDMETHOD(SetOutputWidth)(
-        THIS_
-        __in ULONG Columns
-        ) PURE;
-    // Some of the engines output commands produce
-    // multiple lines of output.  A prefix can be
-    // set that the engine will automatically output
-    // for each line in that case, allowing a caller
-    // to control indentation or identifying marks.
-    // This is not a general setting for any output
-    // with a newline in it.  Methods which use
-    // the line prefix are marked in their documentation.
-    STDMETHOD(GetOutputLinePrefix)(
-        THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
-        ) PURE;
-    STDMETHOD(SetOutputLinePrefix)(
-        THIS_
-        __in_opt PCSTR Prefix
-        ) PURE;
-
-    // Returns a string describing the machine
-    // and user this client represents.  The
-    // specific content of the string varies
-    // with operating system.  If the client is
-    // remotely connected some network information
-    // may also be present.
-    STDMETHOD(GetIdentity)(
-        THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
-        ) PURE;
-    // Format is a printf-like format string
-    // with one %s where the identity string should go.
-    STDMETHOD(OutputIdentity)(
-        THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCSTR Format
-        ) PURE;
-
-    // Event callbacks allow a client to
-    // receive notification about changes
-    // during the debug session.
-    STDMETHOD(GetEventCallbacks)(
-        THIS_
-        __out PDEBUG_EVENT_CALLBACKS* Callbacks
-        ) PURE;
-    STDMETHOD(SetEventCallbacks)(
-        THIS_
-        __in_opt PDEBUG_EVENT_CALLBACKS Callbacks
-        ) PURE;
-
-    // The engine sometimes merges compatible callback
-    // requests to reduce callback overhead.  This is
-    // most noticeable with output as small pieces of
-    // output are collected into larger groups to
-    // reduce the overall number of output callback calls.
-    // A client can use this method to force all pending
-    // callbacks to be delivered.  This is rarely necessary.
-    STDMETHOD(FlushCallbacks)(
-        THIS
-        ) PURE;
-
-    // IDebugClient2.
-
-    // Functions similarly to WriteDumpFile with
-    // the addition of the ability to specify
-    // per-dump-format write control flags.
-    // Comment is not supported in all formats.
-    STDMETHOD(WriteDumpFile2)(
-        THIS_
-        __in PCSTR DumpFile,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCSTR Comment
-        ) PURE;
-    // Registers additional files of supporting information
-    // for a dump file open.  This method must be called
-    // before OpenDumpFile is called.
-    // The files registered may be opened at the time
-    // this method is called but generally will not
-    // be used until OpenDumpFile is called.
-    STDMETHOD(AddDumpInformationFile)(
-        THIS_
-        __in PCSTR InfoFile,
-        __in ULONG Type
-        ) PURE;
-
-    // Requests that the remote process server shut down.
-    STDMETHOD(EndProcessServer)(
-        THIS_
-        __in ULONG64 Server
-        ) PURE;
-    // Waits for a started process server to
-    // exit.  Allows an application running a
-    // process server to monitor the process
-    // server so that it can tell when a remote
-    // client has asked for it to exit.
-    // Returns S_OK if the process server has
-    // shut down and S_FALSE for a timeout.
-    STDMETHOD(WaitForProcessServerEnd)(
-        THIS_
-        __in ULONG Timeout
-        ) PURE;
-
-    // Returns S_OK if the system is configured
-    // to allow kernel debugging.
-    STDMETHOD(IsKernelDebuggerEnabled)(
-        THIS
-        ) PURE;
-
-    // Attempts to terminate the current process.
-    // Exit process events for the process may be generated.
-    STDMETHOD(TerminateCurrentProcess)(
-        THIS
-        ) PURE;
-    // Attempts to detach from the current process.
-    // This requires OS support for debugger detach.
-    STDMETHOD(DetachCurrentProcess)(
-        THIS
-        ) PURE;
-    // Removes the process from the debuggers process
-    // list without making any other changes.  The process
-    // will still be marked as being debugged and will
-    // not run.  This allows a debugger to be shut down
-    // and a new debugger attached without taking the
-    // process out of the debugged state.
-    // This is only supported on some system versions.
-    STDMETHOD(AbandonCurrentProcess)(
-        THIS
-        ) PURE;
-
-    // IDebugClient3.
-
-    STDMETHOD(GetRunningProcessSystemIdByExecutableNameWide)(
-        THIS_
-        __in ULONG64 Server,
-        __in PCWSTR ExeName,
-        __in ULONG Flags,
-        __out PULONG Id
-        ) PURE;
-    STDMETHOD(GetRunningProcessDescriptionWide)(
-        THIS_
-        __in ULONG64 Server,
-        __in ULONG SystemId,
-        __in ULONG Flags,
-        __out_ecount_opt(ExeNameSize) PWSTR ExeName,
-        __in ULONG ExeNameSize,
-        __out_opt PULONG ActualExeNameSize,
-        __out_ecount_opt(DescriptionSize) PWSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG ActualDescriptionSize
-        ) PURE;
-
-    STDMETHOD(CreateProcessWide)(
-        THIS_
-        __in ULONG64 Server,
-        __in PWSTR CommandLine,
-        __in ULONG CreateFlags
-        ) PURE;
-    STDMETHOD(CreateProcessAndAttachWide)(
-        THIS_
-        __in ULONG64 Server,
-        __in_opt PWSTR CommandLine,
-        __in ULONG CreateFlags,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
-        ) PURE;
-
-    // IDebugClient4.
-
-    // In the following methods both a filename and a file
-    // handle can be passed in.  If a file handle is given
-    // the filename may be omitted, although providing it
-    // allows the debugger to properly report the name when
-    // queried.
-    // File handles cannot be used in remote calls.
-    STDMETHOD(OpenDumpFileWide)(
-        THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle
-        ) PURE;
-    STDMETHOD(WriteDumpFileWide)(
-        THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle,
-        __in ULONG Qualifier,
-        __in ULONG FormatFlags,
-        __in_opt PCWSTR Comment
-        ) PURE;
-    STDMETHOD(AddDumpInformationFileWide)(
-        THIS_
-        __in_opt PCWSTR FileName,
-        __in ULONG64 FileHandle,
-        __in ULONG Type
-        ) PURE;
-    // These methods can be used to retrieve
-    // file information for all targets that
-    // involve files.
-    STDMETHOD(GetNumberDumpFiles)(
-        THIS_
-        __out PULONG Number
-        ) PURE;
-    STDMETHOD(GetDumpFile)(
-        THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Handle,
-        __out PULONG Type
-        ) PURE;
-    STDMETHOD(GetDumpFileWide)(
-        THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Handle,
-        __out PULONG Type
-        ) PURE;
-
-    // IDebugClient5.
-
-    STDMETHOD(AttachKernelWide)(
-        THIS_
-        __in ULONG Flags,
-        __in_opt PCWSTR ConnectOptions
-        ) PURE;
-    STDMETHOD(GetKernelConnectionOptionsWide)(
-        THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG OptionsSize
-        ) PURE;
-    STDMETHOD(SetKernelConnectionOptionsWide)(
-        THIS_
-        __in PCWSTR Options
-        ) PURE;
-
-    STDMETHOD(StartProcessServerWide)(
-        THIS_
-        __in ULONG Flags,
-        __in PCWSTR Options,
-        __in_opt __reserved PVOID Reserved
-        ) PURE;
-    STDMETHOD(ConnectProcessServerWide)(
-        THIS_
-        __in PCWSTR RemoteOptions,
-        __out PULONG64 Server
-        ) PURE;
-
-    STDMETHOD(StartServerWide)(
-        THIS_
-        __in PCWSTR Options
-        ) PURE;
-    STDMETHOD(OutputServersWide)(
-        THIS_
-        __in ULONG OutputControl,
-        __in PCWSTR Machine,
-        __in ULONG Flags
-        ) PURE;
-
-    STDMETHOD(GetOutputCallbacksWide)(
-        THIS_
-        __out PDEBUG_OUTPUT_CALLBACKS_WIDE* Callbacks
-        ) PURE;
-    STDMETHOD(SetOutputCallbacksWide)(
-        THIS_
-        __in PDEBUG_OUTPUT_CALLBACKS_WIDE Callbacks
-        ) PURE;
-    STDMETHOD(GetOutputLinePrefixWide)(
-        THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PrefixSize
-        ) PURE;
-    STDMETHOD(SetOutputLinePrefixWide)(
-        THIS_
-        __in_opt PCWSTR Prefix
-        ) PURE;
-
-    STDMETHOD(GetIdentityWide)(
-        THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG IdentitySize
-        ) PURE;
-    STDMETHOD(OutputIdentityWide)(
-        THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in PCWSTR Format
-        ) PURE;
-
-    STDMETHOD(GetEventCallbacksWide)(
-        THIS_
-        __out PDEBUG_EVENT_CALLBACKS_WIDE* Callbacks
-        ) PURE;
-    STDMETHOD(SetEventCallbacksWide)(
-        THIS_
-        __in PDEBUG_EVENT_CALLBACKS_WIDE Callbacks
-        ) PURE;
-
-    STDMETHOD(CreateProcess2)(
-        THIS_
-        __in ULONG64 Server,
-        __in PSTR CommandLine,
-        __in_bcount(OptionsBufferSize) PVOID OptionsBuffer,
-        __in ULONG OptionsBufferSize,
-        __in_opt PCSTR InitialDirectory,
-        __in_opt PCSTR Environment
-        ) PURE;
-    STDMETHOD(CreateProcess2Wide)(
-        THIS_
-        __in ULONG64 Server,
-        __in PWSTR CommandLine,
-        __in_bcount(OptionsBufferSize) PVOID OptionsBuffer,
-        __in ULONG OptionsBufferSize,
-        __in_opt PCWSTR InitialDirectory,
-        __in_opt PCWSTR Environment
-        ) PURE;
-    STDMETHOD(CreateProcessAndAttach2)(
-        THIS_
-        __in ULONG64 Server,
-        __in_opt PSTR CommandLine,
-        __in_bcount(OptionsBufferSize) PVOID OptionsBuffer,
-        __in ULONG OptionsBufferSize,
-        __in_opt PCSTR InitialDirectory,
-        __in_opt PCSTR Environment,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
-        ) PURE;
-    STDMETHOD(CreateProcessAndAttach2Wide)(
-        THIS_
-        __in ULONG64 Server,
-        __in_opt PWSTR CommandLine,
-        __in_bcount(OptionsBufferSize) PVOID OptionsBuffer,
-        __in ULONG OptionsBufferSize,
-        __in_opt PCWSTR InitialDirectory,
-        __in_opt PCWSTR Environment,
-        __in ULONG ProcessId,
-        __in ULONG AttachFlags
-        ) PURE;
-
-    // Helpers for saving and restoring the
-    // current output line prefix.
-    STDMETHOD(PushOutputLinePrefix)(
-        THIS_
-        __in_opt PCSTR NewPrefix,
-        __out PULONG64 Handle
-        ) PURE;
-    STDMETHOD(PushOutputLinePrefixWide)(
-        THIS_
-        __in_opt PCWSTR NewPrefix,
-        __out PULONG64 Handle
-        ) PURE;
-    STDMETHOD(PopOutputLinePrefix)(
-        THIS_
-        __in ULONG64 Handle
-        ) PURE;
-
-    // Queries to determine if any clients
-    // could potentially respond to the given callback.
-    STDMETHOD(GetNumberInputCallbacks)(
-        THIS_
-        __out PULONG Count
-        ) PURE;
-    STDMETHOD(GetNumberOutputCallbacks)(
-        THIS_
-        __out PULONG Count
-        ) PURE;
-    STDMETHOD(GetNumberEventCallbacks)(
-        THIS_
-        __in ULONG EventFlags,
-        __out PULONG Count
-        ) PURE;
-
-    // Control over locking the session against
-    // undesired quits.  The quit lock string
-    // cannot be retrieved from a secure session.
-    STDMETHOD(GetQuitLockString)(
-        THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
-        ) PURE;
-    STDMETHOD(SetQuitLockString)(
-        THIS_
-        __in PCSTR String
-        ) PURE;
-    STDMETHOD(GetQuitLockStringWide)(
-        THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
-        ) PURE;
-    STDMETHOD(SetQuitLockStringWide)(
-        THIS_
-        __in PCWSTR String
+        _In_ PCWSTR psz
         ) PURE;
 };
 
@@ -4179,8 +6383,11 @@ DECLARE_INTERFACE_(IDebugClient5, IUnknown)
 #define DEBUG_STATUS_REVERSE_STEP_BRANCH 12
 #define DEBUG_STATUS_REVERSE_STEP_OVER   13
 #define DEBUG_STATUS_REVERSE_STEP_INTO   14
+#define DEBUG_STATUS_OUT_OF_SYNC		 15
+#define DEBUG_STATUS_WAIT_INPUT			 16
+#define DEBUG_STATUS_TIMEOUT             17
 
-#define DEBUG_STATUS_MASK                0xf
+#define DEBUG_STATUS_MASK                0x1f
 
 // This bit is added in DEBUG_CES_EXECUTION_STATUS
 // notifications when the engines execution status
@@ -4365,7 +6572,15 @@ DECLARE_INTERFACE_(IDebugClient5, IUnknown)
 // Requests that dbgeng run DML-enhanced versions of commands
 // and operations by default.
 #define DEBUG_ENGOPT_PREFER_DML                  0x00040000
-#define DEBUG_ENGOPT_ALL                         0x0007FFFF
+// Explicitly disable SQM upload.
+#define DEBUG_ENGOPT_DISABLESQM                  0x00080000
+// This is used to disable the source stepping (step over/step in) into CFG code.
+#define DEBUG_ENGOPT_DISABLE_STEPLINES_OPTIONS   0x00200000
+// This is used when debugging target with sensitive data.
+// It will disable saving dumps during debugging
+// Can be set only (no reset once it is set)
+#define DEBUG_ENGOPT_DEBUGGING_SENSITIVE_DATA    0x00400000
+#define DEBUG_ENGOPT_ALL                         0x004FFFFF
 
 // General unspecified ID constant.
 #define DEBUG_ANY_ID 0xffffffff
@@ -4382,6 +6597,64 @@ typedef struct _DEBUG_STACK_FRAME
     BOOL    Virtual;
     ULONG   FrameNumber;
 } DEBUG_STACK_FRAME, *PDEBUG_STACK_FRAME;
+
+#define DBG_FRAME_DEFAULT                0 // the same as INLINE_FRAME_CONTEXT_INIT in dbghelp.h
+#define DBG_FRAME_IGNORE_INLINE 0xFFFFFFFF // the same as INLINE_FRAME_CONTEXT_IGNORE in dbghelp.h
+
+typedef struct _DEBUG_STACK_FRAME_EX
+{
+    // First DEBUG_STACK_FRAME structure
+    ULONG64 InstructionOffset;
+    ULONG64 ReturnOffset;
+    ULONG64 FrameOffset;
+    ULONG64 StackOffset;
+    ULONG64 FuncTableEntry;
+    ULONG64 Params[4];
+    ULONG64 Reserved[6];
+    BOOL    Virtual;
+    ULONG   FrameNumber;
+
+    // Extended DEBUG_STACK_FRAME fields.
+    ULONG InlineFrameContext;
+    ULONG Reserved1; // For alignment purpose.
+} DEBUG_STACK_FRAME_EX, *PDEBUG_STACK_FRAME_EX;
+
+// The types of inline frame context.
+#define STACK_FRAME_TYPE_INIT   0x00
+#define STACK_FRAME_TYPE_STACK  0x01
+#define STACK_FRAME_TYPE_INLINE 0x02
+#define STACK_FRAME_TYPE_RA     0x80 // Whether the instruction pointer is the current IP or a RA from callee frame.
+#define STACK_FRAME_TYPE_IGNORE 0xFF
+
+#pragma warning(push)
+#pragma warning(disable:4201) // nonstandard extension used : nameless struct
+
+typedef union _INLINE_FRAME_CONTEXT {
+    DWORD ContextValue;
+    struct {
+        BYTE FrameId;
+        BYTE FrameType;
+        WORD FrameSignature;
+    };
+} INLINE_FRAME_CONTEXT;
+
+#pragma warning(pop)
+
+typedef struct _STACK_SRC_INFO
+{
+    PCWSTR ImagePath;
+    PCWSTR ModuleName;
+    PCWSTR Function;
+    ULONG Displacement;
+    ULONG Row;
+    ULONG Column;
+} STACK_SRC_INFO, *PSTACK_SRC_INFO;
+
+typedef struct _STACK_SYM_FRAME_INFO
+{
+    DEBUG_STACK_FRAME_EX StackFrameEx;
+    STACK_SRC_INFO       SrcInfo;
+} STACK_SYM_FRAME_INFO, *PSTACK_SYM_FRAME_INFO;
 
 // OutputStackTrace flags.
 // Display a small number of arguments for each call.
@@ -4422,6 +6695,10 @@ typedef struct _DEBUG_STACK_FRAME
 #define DEBUG_STACK_DML                     0x00000800
 // Show offset from stack frame
 #define DEBUG_STACK_FRAME_OFFSETS           0x00001000
+// The stack trace information is from a stack provider
+#define DEBUG_STACK_PROVIDER                0x00002000
+// The architecture of the frame (for mixed architecture stacks)
+#define DEBUG_STACK_FRAME_ARCH              0x00004000
 
 // Classes of debuggee.  Each class
 // has different qualifiers for specific
@@ -4441,6 +6718,7 @@ typedef struct _DEBUG_STACK_FRAME
 #define DEBUG_DUMP_IMAGE_FILE 1027
 #define DEBUG_DUMP_TRACE_LOG  1028
 #define DEBUG_DUMP_WINDOWS_CE 1029
+#define DEBUG_DUMP_ACTIVE     1030
 
 // Specific types of kernel debuggees.
 #define DEBUG_KERNEL_CONNECTION     0
@@ -4448,9 +6726,11 @@ typedef struct _DEBUG_STACK_FRAME
 #define DEBUG_KERNEL_EXDI_DRIVER    2
 #define DEBUG_KERNEL_IDNA           3
 #define DEBUG_KERNEL_INSTALL_DRIVER 4
+#define DEBUG_KERNEL_REPT           5
 
 #define DEBUG_KERNEL_SMALL_DUMP  DEBUG_DUMP_SMALL
 #define DEBUG_KERNEL_DUMP        DEBUG_DUMP_DEFAULT
+#define DEBUG_KERNEL_ACTIVE_DUMP DEBUG_DUMP_ACTIVE
 #define DEBUG_KERNEL_FULL_DUMP   DEBUG_DUMP_FULL
 
 #define DEBUG_KERNEL_TRACE_LOG   DEBUG_DUMP_TRACE_LOG
@@ -4459,6 +6739,7 @@ typedef struct _DEBUG_STACK_FRAME
 #define DEBUG_USER_WINDOWS_PROCESS         0
 #define DEBUG_USER_WINDOWS_PROCESS_SERVER  1
 #define DEBUG_USER_WINDOWS_IDNA            2
+#define DEBUG_USER_WINDOWS_REPT            3
 #define DEBUG_USER_WINDOWS_SMALL_DUMP      DEBUG_DUMP_SMALL
 #define DEBUG_USER_WINDOWS_DUMP            DEBUG_DUMP_DEFAULT
 #define DEBUG_USER_WINDOWS_DUMP_WINDOWS_CE DEBUG_DUMP_WINDOWS_CE
@@ -4485,6 +6766,33 @@ typedef struct _DEBUG_STACK_FRAME
 // to Execute will repeat the last Execute
 // string.
 #define DEBUG_EXECUTE_NO_REPEAT  0x00000004
+// If this flag is set , the source of command
+// execution is user typing from remote session.
+#define DEBUG_EXECUTE_USER_TYPED  0x00000008
+// If this flag is set , the source of command
+// execution is user clicking from remote session.
+#define DEBUG_EXECUTE_USER_CLICKED  0x00000010
+// If this flag is set , the source of command
+// execution is debugger extension.
+#define DEBUG_EXECUTE_EXTENSION  0x00000020
+// If this flag is set , the source of command
+// execution is internal command like debugger setup.
+#define DEBUG_EXECUTE_INTERNAL  0x00000040
+// If this flag is set , the source of command
+// execution is debugger script.
+#define DEBUG_EXECUTE_SCRIPT  0x00000080
+// If this flag is set, the source of command
+// execution is a toolbar button.
+#define DEBUG_EXECUTE_TOOLBAR  0x00000100
+// If this flag is set, the source of command
+// execution is a menu item.
+#define DEBUG_EXECUTE_MENU  0x00000200
+// If this flag is set, the source of command
+// execution is a keyboard shortcut or hotkey.
+#define DEBUG_EXECUTE_HOTKEY  0x00000400
+// If this flag is set, the source of command
+// execution is a command registered on an event.
+#define DEBUG_EXECUTE_EVENT  0x00000800
 
 // Specific event filter types.  Some event
 // filters have optional arguments to further
@@ -4699,8 +7007,8 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -4721,7 +7029,7 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetInterrupt)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Interrupting a user-mode process requires
     // access to some system resources that the
@@ -4732,19 +7040,19 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // These methods control the interrupt timeout.
     STDMETHOD(GetInterruptTimeout)(
         THIS_
-        __out PULONG Seconds
+        _Out_ PULONG Seconds
         ) PURE;
     STDMETHOD(SetInterruptTimeout)(
         THIS_
-        __in ULONG Seconds
+        _In_ ULONG Seconds
         ) PURE;
 
     STDMETHOD(GetLogFile)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PBOOL Append
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
         ) PURE;
     // Opens a log file which collects all
     // output.  Output from every client except
@@ -4754,8 +7062,8 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // already open.
     STDMETHOD(OpenLogFile)(
         THIS_
-        __in PCSTR File,
-        __in BOOL Append
+        _In_ PCSTR File,
+        _In_ BOOL Append
         ) PURE;
     STDMETHOD(CloseLogFile)(
         THIS
@@ -4763,11 +7071,11 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Controls what output is logged.
     STDMETHOD(GetLogMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetLogMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
 
     // Input requests input from all clients.
@@ -4776,9 +7084,9 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // input is discarded.
     STDMETHOD(Input)(
         THIS_
-        __out_ecount(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InputSize
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
         ) PURE;
     // This method is used by clients to return
     // input when it is available.  It will
@@ -4788,7 +7096,7 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // This method is reentrant.
     STDMETHOD(ReturnInput)(
         THIS_
-        __in PCSTR Buffer
+        _In_ PCSTR Buffer
         ) PURE;
 
     // Sends output through clients
@@ -4798,15 +7106,15 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // settings.
     STDMETHODV(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputVaList)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // The following methods allow direct control
     // over the distribution of the given output
@@ -4816,17 +7124,17 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // only be used when necessary.
     STDMETHODV(ControlledOutput)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(ControlledOutputVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
 
     // Displays the standard command-line prompt
@@ -4838,22 +7146,22 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // does not get input.
     STDMETHODV(OutputPrompt)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputPromptVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // Gets the text that would be displayed by OutputPrompt.
     STDMETHOD(GetPromptText)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // Outputs information about the current
     // debuggee state such as a register
@@ -4862,8 +7170,8 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputCurrentState)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Outputs the debugger and extension version
@@ -4871,7 +7179,7 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputVersionInformation)(
         THIS_
-        __in ULONG OutputControl
+        _In_ ULONG OutputControl
         ) PURE;
 
     // In user-mode debugging sessions the
@@ -4883,42 +7191,42 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // the e argument to ntsd.
     STDMETHOD(GetNotifyEventHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(SetNotifyEventHandle)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Assemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in PCSTR Instr,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     STDMETHOD(Disassemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DisassemblySize,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Returns the value of the effective address
     // computed for the last Disassemble, if there
     // was one.
     STDMETHOD(GetDisassembleEffectiveOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Uses the line prefix if necessary.
     STDMETHOD(OutputDisassembly)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out PULONG64 EndOffset
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Produces multiple lines of disassembly output.
     // There will be PreviousLines of disassembly before
@@ -4934,15 +7242,15 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputDisassemblyLines)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG PreviousLines,
-        __in ULONG TotalLines,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_opt PULONG OffsetLine,
-        __out_opt PULONG64 StartOffset,
-        __out_opt PULONG64 EndOffset,
-        __out_ecount_opt(TotalLines) PULONG64 LineOffsets
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
         ) PURE;
     // Returns the offset of the start of
     // the instruction thats the given
@@ -4953,27 +7261,27 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // the memory containing it.
     STDMETHOD(GetNearInstruction)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out PULONG64 NearOffset
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
         ) PURE;
 
     // Offsets can be passed in as zero to use the current
     // thread state.
     STDMETHOD(GetStackTrace)(
         THIS_
-        __in ULONG64 FrameOffset,
-        __in ULONG64 StackOffset,
-        __in ULONG64 InstructionOffset,
-        __out_ecount(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __out_opt PULONG FramesFilled
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
         ) PURE;
     // Does a simple stack trace to determine
     // what the current return address is.
     STDMETHOD(GetReturnOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // If Frames is NULL OutputStackTrace will
     // use GetStackTrace to get FramesSize frames
@@ -4983,49 +7291,49 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputStackTrace)(
         THIS_
-        __in ULONG OutputControl,
-        __in_ecount_opt(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
         ) PURE;
 
     // Returns information about the debuggee such
     // as user vs. kernel, dump vs. live, etc.
     STDMETHOD(GetDebuggeeType)(
         THIS_
-        __out PULONG Class,
-        __out PULONG Qualifier
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
         ) PURE;
     // Returns the type of physical processors in
     // the machine.
     // Returns one of the IMAGE_FILE_MACHINE values.
     STDMETHOD(GetActualProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Returns the type of processor used in the
     // current processor context.
     STDMETHOD(GetExecutingProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Query all the possible processor types that
     // may be encountered during this debug session.
     STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetPossibleExecutingProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Get the number of actual processors in
     // the machine.
     STDMETHOD(GetNumberProcessors)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // PlatformId is one of the VER_PLATFORM values.
     // Major and minor are as given in the NT
@@ -5042,23 +7350,23 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // information.
     STDMETHOD(GetSystemVersion)(
         THIS_
-        __out PULONG PlatformId,
-        __out PULONG Major,
-        __out PULONG Minor,
-        __out_ecount_opt(ServicePackStringSize) PSTR ServicePackString,
-        __in ULONG ServicePackStringSize,
-        __out_opt PULONG ServicePackStringUsed,
-        __out PULONG ServicePackNumber,
-        __out_ecount_opt(BuildStringSize) PSTR BuildString,
-        __in ULONG BuildStringSize,
-        __out_opt PULONG BuildStringUsed
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
         ) PURE;
     // Returns the page size for the currently executing
     // processor context.  The page size may vary between
     // processor types.
     STDMETHOD(GetPageSize)(
         THIS_
-        __out PULONG Size
+        _Out_ PULONG Size
         ) PURE;
     // Returns S_OK if the current processor context uses
     // 64-bit addresses, otherwise S_FALSE.
@@ -5070,11 +7378,11 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // in kernel debugging sessions.
     STDMETHOD(ReadBugCheckData)(
         THIS_
-        __out PULONG Code,
-        __out PULONG64 Arg1,
-        __out PULONG64 Arg2,
-        __out PULONG64 Arg3,
-        __out PULONG64 Arg4
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
         ) PURE;
 
     // Query all the processor types supported by
@@ -5083,25 +7391,25 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // or the debuggee.
     STDMETHOD(GetNumberSupportedProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSupportedProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Returns a full, descriptive name and an
     // abbreviated name for a processor type.
     STDMETHOD(GetProcessorTypeNames)(
         THIS_
-        __in ULONG Type,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     // Gets and sets the type of processor to
@@ -5110,11 +7418,11 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // getting stack traces and so on.
     STDMETHOD(GetEffectiveProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     STDMETHOD(SetEffectiveProcessorType)(
         THIS_
-        __in ULONG Type
+        _In_ ULONG Type
         ) PURE;
 
     // Returns information about whether and how
@@ -5126,7 +7434,7 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // This method is reentrant.
     STDMETHOD(GetExecutionStatus)(
         THIS_
-        __out PULONG Status
+        _Out_ PULONG Status
         ) PURE;
     // Changes the execution status of the
     // engine from stopped to running.
@@ -5134,7 +7442,7 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // status values.
     STDMETHOD(SetExecutionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // Controls what code interpretation level the debugger
@@ -5143,30 +7451,30 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // assembly instruction along with other related operations.
     STDMETHOD(GetCodeLevel)(
         THIS_
-        __out PULONG Level
+        _Out_ PULONG Level
         ) PURE;
     STDMETHOD(SetCodeLevel)(
         THIS_
-        __in ULONG Level
+        _In_ ULONG Level
         ) PURE;
 
     // Gets and sets engine control flags.
     // These methods are reentrant.
     STDMETHOD(GetEngineOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Gets and sets control values for
@@ -5178,13 +7486,13 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // may be set.
     STDMETHOD(GetSystemErrorControl)(
         THIS_
-        __out PULONG OutputLevel,
-        __out PULONG BreakLevel
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
         ) PURE;
     STDMETHOD(SetSystemErrorControl)(
         THIS_
-        __in ULONG OutputLevel,
-        __in ULONG BreakLevel
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
         ) PURE;
 
     // The command processor supports simple
@@ -5194,26 +7502,26 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // the command invocations $u0-$u9.
     STDMETHOD(GetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MacroSize
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
         ) PURE;
     STDMETHOD(SetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __in PCSTR Macro
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
         ) PURE;
 
     // Controls the default number radix used
     // in expressions and commands.
     STDMETHOD(GetRadix)(
         THIS_
-        __out PULONG Radix
+        _Out_ PULONG Radix
         ) PURE;
     STDMETHOD(SetRadix)(
         THIS_
-        __in ULONG Radix
+        _In_ ULONG Radix
         ) PURE;
 
     // Evaluates the given expression string and
@@ -5225,10 +7533,10 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // not used when evaluating the expression.
     STDMETHOD(Evaluate)(
         THIS_
-        __in PCSTR Expression,
-        __in ULONG DesiredType,
-        __out PDEBUG_VALUE Value,
-        __out_opt PULONG RemainderIndex
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
         ) PURE;
     // Attempts to convert the input value to a value
     // of the requested type in the output value.
@@ -5236,16 +7544,16 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Successful conversions may be lossy.
     STDMETHOD(CoerceValue)(
         THIS_
-        __in PDEBUG_VALUE In,
-        __in ULONG OutType,
-        __out PDEBUG_VALUE Out
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
         ) PURE;
     STDMETHOD(CoerceValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_VALUE In,
-        __in_ecount(Count) PULONG OutTypes,
-        __out_ecount(Count) PDEBUG_VALUE Out
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
         ) PURE;
 
     // Executes the given command string.
@@ -5258,25 +7566,25 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // of time.
     STDMETHOD(Execute)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Command,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
         ) PURE;
     // Executes the given command file by
     // reading a line at a time and processing
     // it with Execute.
     STDMETHOD(ExecuteCommandFile)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR CommandFile,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
         ) PURE;
 
     // Breakpoint interfaces are described
     // elsewhere in this section.
     STDMETHOD(GetNumberBreakpoints)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // It is possible for this retrieval function to
     // fail even with an index within the number of
@@ -5284,13 +7592,13 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // a private breakpoint.
     STDMETHOD(GetBreakpointByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     STDMETHOD(GetBreakpointById)(
         THIS_
-        __in ULONG Id,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // If Ids is non-NULL the Count breakpoints
     // referred to in the Ids array are returned,
@@ -5298,10 +7606,10 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Start + Count  1 are returned.
     STDMETHOD(GetBreakpointParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Ids,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
     // Breakpoints are created empty and disabled.
     // When their parameters have been set they
@@ -5314,40 +7622,40 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // the call will fail.
     STDMETHOD(AddBreakpoint)(
         THIS_
-        __in ULONG Type,
-        __in ULONG DesiredId,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // Breakpoint interface is invalid after this call.
     STDMETHOD(RemoveBreakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         ) PURE;
 
     // Control and use extension DLLs.
     STDMETHOD(AddExtension)(
         THIS_
-        __in PCSTR Path,
-        __in ULONG Flags,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(RemoveExtension)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
     STDMETHOD(GetExtensionByPath)(
         THIS_
-        __in PCSTR Path,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Handle is zero the extension
     // chain is walked searching for the
     // function.
     STDMETHOD(CallExtension)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR Function,
-        __in_opt PCSTR Arguments
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
         ) PURE;
     // GetExtensionFunction works like
     // GetProcAddress on extension DLLs
@@ -5362,9 +7670,9 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // This function cannot be called remotely.
     STDMETHOD(GetExtensionFunction)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR FuncName,
-        __out FARPROC* Function
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
         ) PURE;
     // These methods return alternate
     // extension interfaces in order to allow
@@ -5375,11 +7683,11 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // These methods cannot be called remotely.
     STDMETHOD(GetWindbgExtensionApis32)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS32 Api
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
         ) PURE;
     STDMETHOD(GetWindbgExtensionApis64)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS64 Api
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
         ) PURE;
 
     // The engine provides a simple mechanism
@@ -5405,65 +7713,65 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // exception settings are used.
     STDMETHOD(GetNumberEventFilters)(
         THIS_
-        __out PULONG SpecificEvents,
-        __out PULONG SpecificExceptions,
-        __out PULONG ArbitraryExceptions
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
         ) PURE;
     // Some filters have descriptive text associated with them.
     STDMETHOD(GetEventFilterText)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // All filters support executing a command when the
     // event occurs.
     STDMETHOD(GetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
     STDMETHOD(GetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     STDMETHOD(SetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     // Some specific filters have arguments to further
     // qualify their operation.
     STDMETHOD(GetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ArgumentSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
         ) PURE;
     STDMETHOD(SetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Argument
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
         ) PURE;
     // If Codes is non-NULL Start is ignored.
     STDMETHOD(GetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Codes,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // The codes in the parameter data control the application
     // of the parameter data.  If a code is not already in
@@ -5472,22 +7780,22 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // Specific exception filters cannot be removed.
     STDMETHOD(SetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // Exception filters support an additional command for
     // second-chance events.
     STDMETHOD(GetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
 
     // Yields processing to the engine until
@@ -5505,8 +7813,8 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // kernel debugging.
     STDMETHOD(WaitForEvent)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG Timeout
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
         ) PURE;
 
     // Retrieves information about the last event that occurred.
@@ -5515,15 +7823,15 @@ DECLARE_INTERFACE_(IDebugControl, IUnknown)
     // information.  Not all events have additional information.
     STDMETHOD(GetLastEventInformation)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG DescriptionUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
         ) PURE;
 };
 
@@ -5537,8 +7845,8 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -5559,7 +7867,7 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetInterrupt)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Interrupting a user-mode process requires
     // access to some system resources that the
@@ -5570,19 +7878,19 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // These methods control the interrupt timeout.
     STDMETHOD(GetInterruptTimeout)(
         THIS_
-        __out PULONG Seconds
+        _Out_ PULONG Seconds
         ) PURE;
     STDMETHOD(SetInterruptTimeout)(
         THIS_
-        __in ULONG Seconds
+        _In_ ULONG Seconds
         ) PURE;
 
     STDMETHOD(GetLogFile)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PBOOL Append
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
         ) PURE;
     // Opens a log file which collects all
     // output.  Output from every client except
@@ -5592,8 +7900,8 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // already open.
     STDMETHOD(OpenLogFile)(
         THIS_
-        __in PCSTR File,
-        __in BOOL Append
+        _In_ PCSTR File,
+        _In_ BOOL Append
         ) PURE;
     STDMETHOD(CloseLogFile)(
         THIS
@@ -5601,11 +7909,11 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Controls what output is logged.
     STDMETHOD(GetLogMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetLogMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
 
     // Input requests input from all clients.
@@ -5614,9 +7922,9 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // input is discarded.
     STDMETHOD(Input)(
         THIS_
-        __out_ecount(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InputSize
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
         ) PURE;
     // This method is used by clients to return
     // input when it is available.  It will
@@ -5626,7 +7934,7 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // This method is reentrant.
     STDMETHOD(ReturnInput)(
         THIS_
-        __in PCSTR Buffer
+        _In_ PCSTR Buffer
         ) PURE;
 
     // Sends output through clients
@@ -5636,15 +7944,15 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // settings.
     STDMETHODV(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputVaList)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // The following methods allow direct control
     // over the distribution of the given output
@@ -5654,17 +7962,17 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // only be used when necessary.
     STDMETHODV(ControlledOutput)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(ControlledOutputVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
 
     // Displays the standard command-line prompt
@@ -5676,22 +7984,22 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // does not get input.
     STDMETHODV(OutputPrompt)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputPromptVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // Gets the text that would be displayed by OutputPrompt.
     STDMETHOD(GetPromptText)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // Outputs information about the current
     // debuggee state such as a register
@@ -5700,8 +8008,8 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputCurrentState)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Outputs the debugger and extension version
@@ -5709,7 +8017,7 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputVersionInformation)(
         THIS_
-        __in ULONG OutputControl
+        _In_ ULONG OutputControl
         ) PURE;
 
     // In user-mode debugging sessions the
@@ -5721,42 +8029,42 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // the e argument to ntsd.
     STDMETHOD(GetNotifyEventHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(SetNotifyEventHandle)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Assemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in PCSTR Instr,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     STDMETHOD(Disassemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DisassemblySize,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Returns the value of the effective address
     // computed for the last Disassemble, if there
     // was one.
     STDMETHOD(GetDisassembleEffectiveOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Uses the line prefix if necessary.
     STDMETHOD(OutputDisassembly)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out PULONG64 EndOffset
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Produces multiple lines of disassembly output.
     // There will be PreviousLines of disassembly before
@@ -5772,15 +8080,15 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputDisassemblyLines)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG PreviousLines,
-        __in ULONG TotalLines,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_opt PULONG OffsetLine,
-        __out_opt PULONG64 StartOffset,
-        __out_opt PULONG64 EndOffset,
-        __out_ecount_opt(TotalLines) PULONG64 LineOffsets
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
         ) PURE;
     // Returns the offset of the start of
     // the instruction thats the given
@@ -5791,27 +8099,27 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // the memory containing it.
     STDMETHOD(GetNearInstruction)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out PULONG64 NearOffset
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
         ) PURE;
 
     // Offsets can be passed in as zero to use the current
     // thread state.
     STDMETHOD(GetStackTrace)(
         THIS_
-        __in ULONG64 FrameOffset,
-        __in ULONG64 StackOffset,
-        __in ULONG64 InstructionOffset,
-        __out_ecount(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __out_opt PULONG FramesFilled
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
         ) PURE;
     // Does a simple stack trace to determine
     // what the current return address is.
     STDMETHOD(GetReturnOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // If Frames is NULL OutputStackTrace will
     // use GetStackTrace to get FramesSize frames
@@ -5821,49 +8129,49 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputStackTrace)(
         THIS_
-        __in ULONG OutputControl,
-        __in_ecount_opt(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
         ) PURE;
 
     // Returns information about the debuggee such
     // as user vs. kernel, dump vs. live, etc.
     STDMETHOD(GetDebuggeeType)(
         THIS_
-        __out PULONG Class,
-        __out PULONG Qualifier
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
         ) PURE;
     // Returns the type of physical processors in
     // the machine.
     // Returns one of the IMAGE_FILE_MACHINE values.
     STDMETHOD(GetActualProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Returns the type of processor used in the
     // current processor context.
     STDMETHOD(GetExecutingProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Query all the possible processor types that
     // may be encountered during this debug session.
     STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetPossibleExecutingProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Get the number of actual processors in
     // the machine.
     STDMETHOD(GetNumberProcessors)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // PlatformId is one of the VER_PLATFORM values.
     // Major and minor are as given in the NT
@@ -5880,23 +8188,23 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // information.
     STDMETHOD(GetSystemVersion)(
         THIS_
-        __out PULONG PlatformId,
-        __out PULONG Major,
-        __out PULONG Minor,
-        __out_ecount_opt(ServicePackStringSize) PSTR ServicePackString,
-        __in ULONG ServicePackStringSize,
-        __out_opt PULONG ServicePackStringUsed,
-        __out PULONG ServicePackNumber,
-        __out_ecount_opt(BuildStringSize) PSTR BuildString,
-        __in ULONG BuildStringSize,
-        __out_opt PULONG BuildStringUsed
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
         ) PURE;
     // Returns the page size for the currently executing
     // processor context.  The page size may vary between
     // processor types.
     STDMETHOD(GetPageSize)(
         THIS_
-        __out PULONG Size
+        _Out_ PULONG Size
         ) PURE;
     // Returns S_OK if the current processor context uses
     // 64-bit addresses, otherwise S_FALSE.
@@ -5908,11 +8216,11 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // in kernel debugging sessions.
     STDMETHOD(ReadBugCheckData)(
         THIS_
-        __out PULONG Code,
-        __out PULONG64 Arg1,
-        __out PULONG64 Arg2,
-        __out PULONG64 Arg3,
-        __out PULONG64 Arg4
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
         ) PURE;
 
     // Query all the processor types supported by
@@ -5921,25 +8229,25 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // or the debuggee.
     STDMETHOD(GetNumberSupportedProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSupportedProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Returns a full, descriptive name and an
     // abbreviated name for a processor type.
     STDMETHOD(GetProcessorTypeNames)(
         THIS_
-        __in ULONG Type,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     // Gets and sets the type of processor to
@@ -5948,11 +8256,11 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // getting stack traces and so on.
     STDMETHOD(GetEffectiveProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     STDMETHOD(SetEffectiveProcessorType)(
         THIS_
-        __in ULONG Type
+        _In_ ULONG Type
         ) PURE;
 
     // Returns information about whether and how
@@ -5964,7 +8272,7 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // This method is reentrant.
     STDMETHOD(GetExecutionStatus)(
         THIS_
-        __out PULONG Status
+        _Out_ PULONG Status
         ) PURE;
     // Changes the execution status of the
     // engine from stopped to running.
@@ -5972,7 +8280,7 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // status values.
     STDMETHOD(SetExecutionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // Controls what code interpretation level the debugger
@@ -5981,30 +8289,30 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // assembly instruction along with other related operations.
     STDMETHOD(GetCodeLevel)(
         THIS_
-        __out PULONG Level
+        _Out_ PULONG Level
         ) PURE;
     STDMETHOD(SetCodeLevel)(
         THIS_
-        __in ULONG Level
+        _In_ ULONG Level
         ) PURE;
 
     // Gets and sets engine control flags.
     // These methods are reentrant.
     STDMETHOD(GetEngineOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Gets and sets control values for
@@ -6016,13 +8324,13 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // may be set.
     STDMETHOD(GetSystemErrorControl)(
         THIS_
-        __out PULONG OutputLevel,
-        __out PULONG BreakLevel
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
         ) PURE;
     STDMETHOD(SetSystemErrorControl)(
         THIS_
-        __in ULONG OutputLevel,
-        __in ULONG BreakLevel
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
         ) PURE;
 
     // The command processor supports simple
@@ -6032,26 +8340,26 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // the command invocations $u0-$u9.
     STDMETHOD(GetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MacroSize
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
         ) PURE;
     STDMETHOD(SetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __in PCSTR Macro
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
         ) PURE;
 
     // Controls the default number radix used
     // in expressions and commands.
     STDMETHOD(GetRadix)(
         THIS_
-        __out PULONG Radix
+        _Out_ PULONG Radix
         ) PURE;
     STDMETHOD(SetRadix)(
         THIS_
-        __in ULONG Radix
+        _In_ ULONG Radix
         ) PURE;
 
     // Evaluates the given expression string and
@@ -6063,10 +8371,10 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // not used when evaluating the expression.
     STDMETHOD(Evaluate)(
         THIS_
-        __in PCSTR Expression,
-        __in ULONG DesiredType,
-        __out PDEBUG_VALUE Value,
-        __out_opt PULONG RemainderIndex
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
         ) PURE;
     // Attempts to convert the input value to a value
     // of the requested type in the output value.
@@ -6074,16 +8382,16 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Successful conversions may be lossy.
     STDMETHOD(CoerceValue)(
         THIS_
-        __in PDEBUG_VALUE In,
-        __in ULONG OutType,
-        __out PDEBUG_VALUE Out
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
         ) PURE;
     STDMETHOD(CoerceValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_VALUE In,
-        __in_ecount(Count) PULONG OutTypes,
-        __out_ecount(Count) PDEBUG_VALUE Out
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
         ) PURE;
 
     // Executes the given command string.
@@ -6096,25 +8404,25 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // of time.
     STDMETHOD(Execute)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Command,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
         ) PURE;
     // Executes the given command file by
     // reading a line at a time and processing
     // it with Execute.
     STDMETHOD(ExecuteCommandFile)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR CommandFile,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
         ) PURE;
 
     // Breakpoint interfaces are described
     // elsewhere in this section.
     STDMETHOD(GetNumberBreakpoints)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // It is possible for this retrieval function to
     // fail even with an index within the number of
@@ -6122,13 +8430,13 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // a private breakpoint.
     STDMETHOD(GetBreakpointByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     STDMETHOD(GetBreakpointById)(
         THIS_
-        __in ULONG Id,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // If Ids is non-NULL the Count breakpoints
     // referred to in the Ids array are returned,
@@ -6136,10 +8444,10 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Start + Count  1 are returned.
     STDMETHOD(GetBreakpointParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Ids,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
     // Breakpoints are created empty and disabled.
     // When their parameters have been set they
@@ -6152,40 +8460,40 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // the call will fail.
     STDMETHOD(AddBreakpoint)(
         THIS_
-        __in ULONG Type,
-        __in ULONG DesiredId,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // Breakpoint interface is invalid after this call.
     STDMETHOD(RemoveBreakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         ) PURE;
 
     // Control and use extension DLLs.
     STDMETHOD(AddExtension)(
         THIS_
-        __in PCSTR Path,
-        __in ULONG Flags,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(RemoveExtension)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
     STDMETHOD(GetExtensionByPath)(
         THIS_
-        __in PCSTR Path,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Handle is zero the extension
     // chain is walked searching for the
     // function.
     STDMETHOD(CallExtension)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR Function,
-        __in_opt PCSTR Arguments
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
         ) PURE;
     // GetExtensionFunction works like
     // GetProcAddress on extension DLLs
@@ -6198,9 +8506,9 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // This function cannot be called remotely.
     STDMETHOD(GetExtensionFunction)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR FuncName,
-        __out FARPROC* Function
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
         ) PURE;
     // These methods return alternate
     // extension interfaces in order to allow
@@ -6211,11 +8519,11 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // These methods cannot be called remotely.
     STDMETHOD(GetWindbgExtensionApis32)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS32 Api
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
         ) PURE;
     STDMETHOD(GetWindbgExtensionApis64)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS64 Api
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
         ) PURE;
 
     // The engine provides a simple mechanism
@@ -6241,65 +8549,65 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // exception settings are used.
     STDMETHOD(GetNumberEventFilters)(
         THIS_
-        __out PULONG SpecificEvents,
-        __out PULONG SpecificExceptions,
-        __out PULONG ArbitraryExceptions
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
         ) PURE;
     // Some filters have descriptive text associated with them.
     STDMETHOD(GetEventFilterText)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // All filters support executing a command when the
     // event occurs.
     STDMETHOD(GetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
     STDMETHOD(GetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     STDMETHOD(SetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     // Some specific filters have arguments to further
     // qualify their operation.
     STDMETHOD(GetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ArgumentSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
         ) PURE;
     STDMETHOD(SetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Argument
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
         ) PURE;
     // If Codes is non-NULL Start is ignored.
     STDMETHOD(GetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Codes,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // The codes in the parameter data control the application
     // of the parameter data.  If a code is not already in
@@ -6308,22 +8616,22 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // Specific exception filters cannot be removed.
     STDMETHOD(SetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // Exception filters support an additional command for
     // second-chance events.
     STDMETHOD(GetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
 
     // Yields processing to the engine until
@@ -6341,8 +8649,8 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // kernel debugging.
     STDMETHOD(WaitForEvent)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG Timeout
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
         ) PURE;
 
     // Retrieves information about the last event that occurred.
@@ -6351,35 +8659,35 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // information.  Not all events have additional information.
     STDMETHOD(GetLastEventInformation)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG DescriptionUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
         ) PURE;
 
     // IDebugControl2.
 
     STDMETHOD(GetCurrentTimeDate)(
         THIS_
-        __out PULONG TimeDate
+        _Out_ PULONG TimeDate
         ) PURE;
     // Retrieves the number of seconds since the
     // machine started running.
     STDMETHOD(GetCurrentSystemUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // If the current session is a dump session,
     // retrieves any extended format information.
     STDMETHOD(GetDumpFormatFlags)(
         THIS_
-        __out PULONG FormatFlags
+        _Out_ PULONG FormatFlags
         ) PURE;
 
     // The debugger has been enhanced to allow
@@ -6393,28 +8701,28 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // string can exist.
     STDMETHOD(GetNumberTextReplacements)(
         THIS_
-        __out PULONG NumRepl
+        _Out_ PULONG NumRepl
         ) PURE;
     // If SrcText is non-NULL the replacement
     // is looked up by source text, otherwise
     // Index is used to get the Nth replacement.
     STDMETHOD(GetTextReplacement)(
         THIS_
-        __in_opt PCSTR SrcText,
-        __in ULONG Index,
-        __out_ecount_opt(SrcBufferSize) PSTR SrcBuffer,
-        __in ULONG SrcBufferSize,
-        __out_opt PULONG SrcSize,
-        __out_ecount_opt(DstBufferSize) PSTR DstBuffer,
-        __in ULONG DstBufferSize,
-        __out_opt PULONG DstSize
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
         ) PURE;
     // Setting the destination text to
     // NULL removes the alias.
     STDMETHOD(SetTextReplacement)(
         THIS_
-        __in PCSTR SrcText,
-        __in_opt PCSTR DstText
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
         ) PURE;
     STDMETHOD(RemoveTextReplacements)(
         THIS
@@ -6423,8 +8731,8 @@ DECLARE_INTERFACE_(IDebugControl2, IUnknown)
     // replacements.
     STDMETHOD(OutputTextReplacements)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 };
 
@@ -6479,8 +8787,8 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -6501,7 +8809,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetInterrupt)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Interrupting a user-mode process requires
     // access to some system resources that the
@@ -6512,19 +8820,19 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // These methods control the interrupt timeout.
     STDMETHOD(GetInterruptTimeout)(
         THIS_
-        __out PULONG Seconds
+        _Out_ PULONG Seconds
         ) PURE;
     STDMETHOD(SetInterruptTimeout)(
         THIS_
-        __in ULONG Seconds
+        _In_ ULONG Seconds
         ) PURE;
 
     STDMETHOD(GetLogFile)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PBOOL Append
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
         ) PURE;
     // Opens a log file which collects all
     // output.  Output from every client except
@@ -6534,8 +8842,8 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // already open.
     STDMETHOD(OpenLogFile)(
         THIS_
-        __in PCSTR File,
-        __in BOOL Append
+        _In_ PCSTR File,
+        _In_ BOOL Append
         ) PURE;
     STDMETHOD(CloseLogFile)(
         THIS
@@ -6543,11 +8851,11 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Controls what output is logged.
     STDMETHOD(GetLogMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetLogMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
 
     // Input requests input from all clients.
@@ -6556,9 +8864,9 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // input is discarded.
     STDMETHOD(Input)(
         THIS_
-        __out_ecount(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InputSize
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
         ) PURE;
     // This method is used by clients to return
     // input when it is available.  It will
@@ -6568,7 +8876,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // This method is reentrant.
     STDMETHOD(ReturnInput)(
         THIS_
-        __in PCSTR Buffer
+        _In_ PCSTR Buffer
         ) PURE;
 
     // Sends output through clients
@@ -6578,15 +8886,15 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // settings.
     STDMETHODV(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputVaList)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // The following methods allow direct control
     // over the distribution of the given output
@@ -6596,17 +8904,17 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // only be used when necessary.
     STDMETHODV(ControlledOutput)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(ControlledOutputVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
 
     // Displays the standard command-line prompt
@@ -6618,22 +8926,22 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // does not get input.
     STDMETHODV(OutputPrompt)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputPromptVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // Gets the text that would be displayed by OutputPrompt.
     STDMETHOD(GetPromptText)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // Outputs information about the current
     // debuggee state such as a register
@@ -6642,8 +8950,8 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputCurrentState)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Outputs the debugger and extension version
@@ -6651,7 +8959,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputVersionInformation)(
         THIS_
-        __in ULONG OutputControl
+        _In_ ULONG OutputControl
         ) PURE;
 
     // In user-mode debugging sessions the
@@ -6663,42 +8971,42 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // the e argument to ntsd.
     STDMETHOD(GetNotifyEventHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(SetNotifyEventHandle)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Assemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in PCSTR Instr,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     STDMETHOD(Disassemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DisassemblySize,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Returns the value of the effective address
     // computed for the last Disassemble, if there
     // was one.
     STDMETHOD(GetDisassembleEffectiveOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Uses the line prefix if necessary.
     STDMETHOD(OutputDisassembly)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out PULONG64 EndOffset
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Produces multiple lines of disassembly output.
     // There will be PreviousLines of disassembly before
@@ -6714,15 +9022,15 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputDisassemblyLines)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG PreviousLines,
-        __in ULONG TotalLines,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_opt PULONG OffsetLine,
-        __out_opt PULONG64 StartOffset,
-        __out_opt PULONG64 EndOffset,
-        __out_ecount_opt(TotalLines) PULONG64 LineOffsets
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
         ) PURE;
     // Returns the offset of the start of
     // the instruction thats the given
@@ -6733,27 +9041,27 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // the memory containing it.
     STDMETHOD(GetNearInstruction)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out PULONG64 NearOffset
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
         ) PURE;
 
     // Offsets can be passed in as zero to use the current
     // thread state.
     STDMETHOD(GetStackTrace)(
         THIS_
-        __in ULONG64 FrameOffset,
-        __in ULONG64 StackOffset,
-        __in ULONG64 InstructionOffset,
-        __out_ecount(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __out_opt PULONG FramesFilled
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
         ) PURE;
     // Does a simple stack trace to determine
     // what the current return address is.
     STDMETHOD(GetReturnOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // If Frames is NULL OutputStackTrace will
     // use GetStackTrace to get FramesSize frames
@@ -6763,49 +9071,49 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputStackTrace)(
         THIS_
-        __in ULONG OutputControl,
-        __in_ecount_opt(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
         ) PURE;
 
     // Returns information about the debuggee such
     // as user vs. kernel, dump vs. live, etc.
     STDMETHOD(GetDebuggeeType)(
         THIS_
-        __out PULONG Class,
-        __out PULONG Qualifier
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
         ) PURE;
     // Returns the type of physical processors in
     // the machine.
     // Returns one of the IMAGE_FILE_MACHINE values.
     STDMETHOD(GetActualProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Returns the type of processor used in the
     // current processor context.
     STDMETHOD(GetExecutingProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Query all the possible processor types that
     // may be encountered during this debug session.
     STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetPossibleExecutingProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Get the number of actual processors in
     // the machine.
     STDMETHOD(GetNumberProcessors)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // PlatformId is one of the VER_PLATFORM values.
     // Major and minor are as given in the NT
@@ -6822,23 +9130,23 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // information.
     STDMETHOD(GetSystemVersion)(
         THIS_
-        __out PULONG PlatformId,
-        __out PULONG Major,
-        __out PULONG Minor,
-        __out_ecount_opt(ServicePackStringSize) PSTR ServicePackString,
-        __in ULONG ServicePackStringSize,
-        __out_opt PULONG ServicePackStringUsed,
-        __out PULONG ServicePackNumber,
-        __out_ecount_opt(BuildStringSize) PSTR BuildString,
-        __in ULONG BuildStringSize,
-        __out_opt PULONG BuildStringUsed
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
         ) PURE;
     // Returns the page size for the currently executing
     // processor context.  The page size may vary between
     // processor types.
     STDMETHOD(GetPageSize)(
         THIS_
-        __out PULONG Size
+        _Out_ PULONG Size
         ) PURE;
     // Returns S_OK if the current processor context uses
     // 64-bit addresses, otherwise S_FALSE.
@@ -6850,11 +9158,11 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // in kernel debugging sessions.
     STDMETHOD(ReadBugCheckData)(
         THIS_
-        __out PULONG Code,
-        __out PULONG64 Arg1,
-        __out PULONG64 Arg2,
-        __out PULONG64 Arg3,
-        __out PULONG64 Arg4
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
         ) PURE;
 
     // Query all the processor types supported by
@@ -6863,25 +9171,25 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // or the debuggee.
     STDMETHOD(GetNumberSupportedProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSupportedProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Returns a full, descriptive name and an
     // abbreviated name for a processor type.
     STDMETHOD(GetProcessorTypeNames)(
         THIS_
-        __in ULONG Type,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     // Gets and sets the type of processor to
@@ -6890,11 +9198,11 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // getting stack traces and so on.
     STDMETHOD(GetEffectiveProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     STDMETHOD(SetEffectiveProcessorType)(
         THIS_
-        __in ULONG Type
+        _In_ ULONG Type
         ) PURE;
 
     // Returns information about whether and how
@@ -6906,7 +9214,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // This method is reentrant.
     STDMETHOD(GetExecutionStatus)(
         THIS_
-        __out PULONG Status
+        _Out_ PULONG Status
         ) PURE;
     // Changes the execution status of the
     // engine from stopped to running.
@@ -6914,7 +9222,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // status values.
     STDMETHOD(SetExecutionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // Controls what code interpretation level the debugger
@@ -6923,30 +9231,30 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // assembly instruction along with other related operations.
     STDMETHOD(GetCodeLevel)(
         THIS_
-        __out PULONG Level
+        _Out_ PULONG Level
         ) PURE;
     STDMETHOD(SetCodeLevel)(
         THIS_
-        __in ULONG Level
+        _In_ ULONG Level
         ) PURE;
 
     // Gets and sets engine control flags.
     // These methods are reentrant.
     STDMETHOD(GetEngineOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Gets and sets control values for
@@ -6958,13 +9266,13 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // may be set.
     STDMETHOD(GetSystemErrorControl)(
         THIS_
-        __out PULONG OutputLevel,
-        __out PULONG BreakLevel
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
         ) PURE;
     STDMETHOD(SetSystemErrorControl)(
         THIS_
-        __in ULONG OutputLevel,
-        __in ULONG BreakLevel
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
         ) PURE;
 
     // The command processor supports simple
@@ -6974,26 +9282,26 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // the command invocations $u0-$u9.
     STDMETHOD(GetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MacroSize
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
         ) PURE;
     STDMETHOD(SetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __in PCSTR Macro
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
         ) PURE;
 
     // Controls the default number radix used
     // in expressions and commands.
     STDMETHOD(GetRadix)(
         THIS_
-        __out PULONG Radix
+        _Out_ PULONG Radix
         ) PURE;
     STDMETHOD(SetRadix)(
         THIS_
-        __in ULONG Radix
+        _In_ ULONG Radix
         ) PURE;
 
     // Evaluates the given expression string and
@@ -7005,10 +9313,10 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // not used when evaluating the expression.
     STDMETHOD(Evaluate)(
         THIS_
-        __in PCSTR Expression,
-        __in ULONG DesiredType,
-        __out PDEBUG_VALUE Value,
-        __out_opt PULONG RemainderIndex
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
         ) PURE;
     // Attempts to convert the input value to a value
     // of the requested type in the output value.
@@ -7016,16 +9324,16 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Successful conversions may be lossy.
     STDMETHOD(CoerceValue)(
         THIS_
-        __in PDEBUG_VALUE In,
-        __in ULONG OutType,
-        __out PDEBUG_VALUE Out
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
         ) PURE;
     STDMETHOD(CoerceValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_VALUE In,
-        __in_ecount(Count) PULONG OutTypes,
-        __out_ecount(Count) PDEBUG_VALUE Out
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
         ) PURE;
 
     // Executes the given command string.
@@ -7038,25 +9346,25 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // of time.
     STDMETHOD(Execute)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Command,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
         ) PURE;
     // Executes the given command file by
     // reading a line at a time and processing
     // it with Execute.
     STDMETHOD(ExecuteCommandFile)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR CommandFile,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
         ) PURE;
 
     // Breakpoint interfaces are described
     // elsewhere in this section.
     STDMETHOD(GetNumberBreakpoints)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // It is possible for this retrieval function to
     // fail even with an index within the number of
@@ -7064,13 +9372,13 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // a private breakpoint.
     STDMETHOD(GetBreakpointByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     STDMETHOD(GetBreakpointById)(
         THIS_
-        __in ULONG Id,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // If Ids is non-NULL the Count breakpoints
     // referred to in the Ids array are returned,
@@ -7078,10 +9386,10 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Start + Count  1 are returned.
     STDMETHOD(GetBreakpointParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Ids,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
     // Breakpoints are created empty and disabled.
     // When their parameters have been set they
@@ -7094,40 +9402,40 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // the call will fail.
     STDMETHOD(AddBreakpoint)(
         THIS_
-        __in ULONG Type,
-        __in ULONG DesiredId,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // Breakpoint interface is invalid after this call.
     STDMETHOD(RemoveBreakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         ) PURE;
 
     // Control and use extension DLLs.
     STDMETHOD(AddExtension)(
         THIS_
-        __in PCSTR Path,
-        __in ULONG Flags,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(RemoveExtension)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
     STDMETHOD(GetExtensionByPath)(
         THIS_
-        __in PCSTR Path,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Handle is zero the extension
     // chain is walked searching for the
     // function.
     STDMETHOD(CallExtension)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR Function,
-        __in_opt PCSTR Arguments
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
         ) PURE;
     // GetExtensionFunction works like
     // GetProcAddress on extension DLLs
@@ -7140,9 +9448,9 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // This function cannot be called remotely.
     STDMETHOD(GetExtensionFunction)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR FuncName,
-        __out FARPROC* Function
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
         ) PURE;
     // These methods return alternate
     // extension interfaces in order to allow
@@ -7153,11 +9461,11 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // These methods cannot be called remotely.
     STDMETHOD(GetWindbgExtensionApis32)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS32 Api
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
         ) PURE;
     STDMETHOD(GetWindbgExtensionApis64)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS64 Api
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
         ) PURE;
 
     // The engine provides a simple mechanism
@@ -7183,65 +9491,65 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // exception settings are used.
     STDMETHOD(GetNumberEventFilters)(
         THIS_
-        __out PULONG SpecificEvents,
-        __out PULONG SpecificExceptions,
-        __out PULONG ArbitraryExceptions
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
         ) PURE;
     // Some filters have descriptive text associated with them.
     STDMETHOD(GetEventFilterText)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // All filters support executing a command when the
     // event occurs.
     STDMETHOD(GetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
     STDMETHOD(GetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     STDMETHOD(SetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     // Some specific filters have arguments to further
     // qualify their operation.
     STDMETHOD(GetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ArgumentSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
         ) PURE;
     STDMETHOD(SetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Argument
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
         ) PURE;
     // If Codes is non-NULL Start is ignored.
     STDMETHOD(GetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Codes,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // The codes in the parameter data control the application
     // of the parameter data.  If a code is not already in
@@ -7250,22 +9558,22 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Specific exception filters cannot be removed.
     STDMETHOD(SetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // Exception filters support an additional command for
     // second-chance events.
     STDMETHOD(GetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
 
     // Yields processing to the engine until
@@ -7283,8 +9591,8 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // kernel debugging.
     STDMETHOD(WaitForEvent)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG Timeout
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
         ) PURE;
 
     // Retrieves information about the last event that occurred.
@@ -7293,35 +9601,35 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // information.  Not all events have additional information.
     STDMETHOD(GetLastEventInformation)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG DescriptionUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
         ) PURE;
 
     // IDebugControl2.
 
     STDMETHOD(GetCurrentTimeDate)(
         THIS_
-        __out PULONG TimeDate
+        _Out_ PULONG TimeDate
         ) PURE;
     // Retrieves the number of seconds since the
     // machine started running.
     STDMETHOD(GetCurrentSystemUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // If the current session is a dump session,
     // retrieves any extended format information.
     STDMETHOD(GetDumpFormatFlags)(
         THIS_
-        __out PULONG FormatFlags
+        _Out_ PULONG FormatFlags
         ) PURE;
 
     // The debugger has been enhanced to allow
@@ -7335,28 +9643,28 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // string can exist.
     STDMETHOD(GetNumberTextReplacements)(
         THIS_
-        __out PULONG NumRepl
+        _Out_ PULONG NumRepl
         ) PURE;
     // If SrcText is non-NULL the replacement
     // is looked up by source text, otherwise
     // Index is used to get the Nth replacement.
     STDMETHOD(GetTextReplacement)(
         THIS_
-        __in_opt PCSTR SrcText,
-        __in ULONG Index,
-        __out_ecount_opt(SrcBufferSize) PSTR SrcBuffer,
-        __in ULONG SrcBufferSize,
-        __out_opt PULONG SrcSize,
-        __out_ecount_opt(DstBufferSize) PSTR DstBuffer,
-        __in ULONG DstBufferSize,
-        __out_opt PULONG DstSize
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
         ) PURE;
     // Setting the destination text to
     // NULL removes the alias.
     STDMETHOD(SetTextReplacement)(
         THIS_
-        __in PCSTR SrcText,
-        __in_opt PCSTR DstText
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
         ) PURE;
     STDMETHOD(RemoveTextReplacements)(
         THIS
@@ -7365,8 +9673,8 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // replacements.
     STDMETHOD(OutputTextReplacements)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // IDebugControl3.
@@ -7374,49 +9682,49 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // Control options for assembly and disassembly.
     STDMETHOD(GetAssemblyOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Control the expression syntax.
     STDMETHOD(GetExpressionSyntax)(
         THIS_
-        __out PULONG Flags
+        _Out_ PULONG Flags
         ) PURE;
     STDMETHOD(SetExpressionSyntax)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Look up a syntax by its abbreviated
     // name and set it.
     STDMETHOD(SetExpressionSyntaxByName)(
         THIS_
-        __in PCSTR AbbrevName
+        _In_ PCSTR AbbrevName
         ) PURE;
     STDMETHOD(GetNumberExpressionSyntaxes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetExpressionSyntaxNames)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     //
@@ -7447,7 +9755,7 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // may be possible, such as for a dynamic session.
     STDMETHOD(GetNumberEvents)(
         THIS_
-        __out PULONG Events
+        _Out_ PULONG Events
         ) PURE;
     // Sessions may have descriptive information for
     // the various events available.  The amount of
@@ -7455,15 +9763,15 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // session and data.
     STDMETHOD(GetEventIndexDescription)(
         THIS_
-        __in ULONG Index,
-        __in ULONG Which,
-        __in_opt PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DescSize
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
         ) PURE;
     STDMETHOD(GetCurrentEventIndex)(
         THIS_
-        __out PULONG Index
+        _Out_ PULONG Index
         ) PURE;
     // SetNextEventIndex works like seek in that
     // it can set an absolute or relative index.
@@ -7474,9 +9782,9 @@ DECLARE_INTERFACE_(IDebugControl3, IUnknown)
     // is called.
     STDMETHOD(SetNextEventIndex)(
         THIS_
-        __in ULONG Relation,
-        __in ULONG Value,
-        __out PULONG NextIndex
+        _In_ ULONG Relation,
+        _In_ ULONG Value,
+        _Out_ PULONG NextIndex
         ) PURE;
 };
 
@@ -7525,8 +9833,8 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -7547,7 +9855,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // This method is reentrant.
     STDMETHOD(SetInterrupt)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Interrupting a user-mode process requires
     // access to some system resources that the
@@ -7558,19 +9866,19 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // These methods control the interrupt timeout.
     STDMETHOD(GetInterruptTimeout)(
         THIS_
-        __out PULONG Seconds
+        _Out_ PULONG Seconds
         ) PURE;
     STDMETHOD(SetInterruptTimeout)(
         THIS_
-        __in ULONG Seconds
+        _In_ ULONG Seconds
         ) PURE;
 
     STDMETHOD(GetLogFile)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PBOOL Append
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
         ) PURE;
     // Opens a log file which collects all
     // output.  Output from every client except
@@ -7580,8 +9888,8 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // already open.
     STDMETHOD(OpenLogFile)(
         THIS_
-        __in PCSTR File,
-        __in BOOL Append
+        _In_ PCSTR File,
+        _In_ BOOL Append
         ) PURE;
     STDMETHOD(CloseLogFile)(
         THIS
@@ -7589,11 +9897,11 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Controls what output is logged.
     STDMETHOD(GetLogMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     STDMETHOD(SetLogMask)(
         THIS_
-        __in ULONG Mask
+        _In_ ULONG Mask
         ) PURE;
 
     // Input requests input from all clients.
@@ -7602,9 +9910,9 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // input is discarded.
     STDMETHOD(Input)(
         THIS_
-        __out_ecount(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InputSize
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
         ) PURE;
     // This method is used by clients to return
     // input when it is available.  It will
@@ -7614,7 +9922,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // This method is reentrant.
     STDMETHOD(ReturnInput)(
         THIS_
-        __in PCSTR Buffer
+        _In_ PCSTR Buffer
         ) PURE;
 
     // Sends output through clients
@@ -7624,15 +9932,15 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // settings.
     STDMETHODV(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputVaList)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // The following methods allow direct control
     // over the distribution of the given output
@@ -7642,17 +9950,17 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // only be used when necessary.
     STDMETHODV(ControlledOutput)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(ControlledOutputVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
 
     // Displays the standard command-line prompt
@@ -7664,22 +9972,22 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // does not get input.
     STDMETHODV(OutputPrompt)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputPromptVaList)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
         ) PURE;
     // Gets the text that would be displayed by OutputPrompt.
     STDMETHOD(GetPromptText)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // Outputs information about the current
     // debuggee state such as a register
@@ -7688,8 +9996,8 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputCurrentState)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Outputs the debugger and extension version
@@ -7697,7 +10005,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputVersionInformation)(
         THIS_
-        __in ULONG OutputControl
+        _In_ ULONG OutputControl
         ) PURE;
 
     // In user-mode debugging sessions the
@@ -7709,42 +10017,42 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // the e argument to ntsd.
     STDMETHOD(GetNotifyEventHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(SetNotifyEventHandle)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Assemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in PCSTR Instr,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     STDMETHOD(Disassemble)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DisassemblySize,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Returns the value of the effective address
     // computed for the last Disassemble, if there
     // was one.
     STDMETHOD(GetDisassembleEffectiveOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Uses the line prefix if necessary.
     STDMETHOD(OutputDisassembly)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out PULONG64 EndOffset
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     // Produces multiple lines of disassembly output.
     // There will be PreviousLines of disassembly before
@@ -7760,15 +10068,15 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputDisassemblyLines)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG PreviousLines,
-        __in ULONG TotalLines,
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_opt PULONG OffsetLine,
-        __out_opt PULONG64 StartOffset,
-        __out_opt PULONG64 EndOffset,
-        __out_ecount_opt(TotalLines) PULONG64 LineOffsets
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
         ) PURE;
     // Returns the offset of the start of
     // the instruction thats the given
@@ -7779,27 +10087,27 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // the memory containing it.
     STDMETHOD(GetNearInstruction)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out PULONG64 NearOffset
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
         ) PURE;
 
     // Offsets can be passed in as zero to use the current
     // thread state.
     STDMETHOD(GetStackTrace)(
         THIS_
-        __in ULONG64 FrameOffset,
-        __in ULONG64 StackOffset,
-        __in ULONG64 InstructionOffset,
-        __out_ecount(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __out_opt PULONG FramesFilled
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
         ) PURE;
     // Does a simple stack trace to determine
     // what the current return address is.
     STDMETHOD(GetReturnOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // If Frames is NULL OutputStackTrace will
     // use GetStackTrace to get FramesSize frames
@@ -7809,49 +10117,49 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputStackTrace)(
         THIS_
-        __in ULONG OutputControl,
-        __in_ecount_opt(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
         ) PURE;
 
     // Returns information about the debuggee such
     // as user vs. kernel, dump vs. live, etc.
     STDMETHOD(GetDebuggeeType)(
         THIS_
-        __out PULONG Class,
-        __out PULONG Qualifier
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
         ) PURE;
     // Returns the type of physical processors in
     // the machine.
     // Returns one of the IMAGE_FILE_MACHINE values.
     STDMETHOD(GetActualProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Returns the type of processor used in the
     // current processor context.
     STDMETHOD(GetExecutingProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     // Query all the possible processor types that
     // may be encountered during this debug session.
     STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetPossibleExecutingProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Get the number of actual processors in
     // the machine.
     STDMETHOD(GetNumberProcessors)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // PlatformId is one of the VER_PLATFORM values.
     // Major and minor are as given in the NT
@@ -7868,23 +10176,23 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // information.
     STDMETHOD(GetSystemVersion)(
         THIS_
-        __out PULONG PlatformId,
-        __out PULONG Major,
-        __out PULONG Minor,
-        __out_ecount_opt(ServicePackStringSize) PSTR ServicePackString,
-        __in ULONG ServicePackStringSize,
-        __out_opt PULONG ServicePackStringUsed,
-        __out PULONG ServicePackNumber,
-        __out_ecount_opt(BuildStringSize) PSTR BuildString,
-        __in ULONG BuildStringSize,
-        __out_opt PULONG BuildStringUsed
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
         ) PURE;
     // Returns the page size for the currently executing
     // processor context.  The page size may vary between
     // processor types.
     STDMETHOD(GetPageSize)(
         THIS_
-        __out PULONG Size
+        _Out_ PULONG Size
         ) PURE;
     // Returns S_OK if the current processor context uses
     // 64-bit addresses, otherwise S_FALSE.
@@ -7896,11 +10204,11 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // in kernel debugging sessions.
     STDMETHOD(ReadBugCheckData)(
         THIS_
-        __out PULONG Code,
-        __out PULONG64 Arg1,
-        __out PULONG64 Arg2,
-        __out PULONG64 Arg3,
-        __out PULONG64 Arg4
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
         ) PURE;
 
     // Query all the processor types supported by
@@ -7909,25 +10217,25 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // or the debuggee.
     STDMETHOD(GetNumberSupportedProcessorTypes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSupportedProcessorTypes)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Types
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
         ) PURE;
     // Returns a full, descriptive name and an
     // abbreviated name for a processor type.
     STDMETHOD(GetProcessorTypeNames)(
         THIS_
-        __in ULONG Type,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     // Gets and sets the type of processor to
@@ -7936,11 +10244,11 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // getting stack traces and so on.
     STDMETHOD(GetEffectiveProcessorType)(
         THIS_
-        __out PULONG Type
+        _Out_ PULONG Type
         ) PURE;
     STDMETHOD(SetEffectiveProcessorType)(
         THIS_
-        __in ULONG Type
+        _In_ ULONG Type
         ) PURE;
 
     // Returns information about whether and how
@@ -7952,7 +10260,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // This method is reentrant.
     STDMETHOD(GetExecutionStatus)(
         THIS_
-        __out PULONG Status
+        _Out_ PULONG Status
         ) PURE;
     // Changes the execution status of the
     // engine from stopped to running.
@@ -7960,7 +10268,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // status values.
     STDMETHOD(SetExecutionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // Controls what code interpretation level the debugger
@@ -7969,30 +10277,30 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // assembly instruction along with other related operations.
     STDMETHOD(GetCodeLevel)(
         THIS_
-        __out PULONG Level
+        _Out_ PULONG Level
         ) PURE;
     STDMETHOD(SetCodeLevel)(
         THIS_
-        __in ULONG Level
+        _In_ ULONG Level
         ) PURE;
 
     // Gets and sets engine control flags.
     // These methods are reentrant.
     STDMETHOD(GetEngineOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetEngineOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Gets and sets control values for
@@ -8004,13 +10312,13 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // may be set.
     STDMETHOD(GetSystemErrorControl)(
         THIS_
-        __out PULONG OutputLevel,
-        __out PULONG BreakLevel
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
         ) PURE;
     STDMETHOD(SetSystemErrorControl)(
         THIS_
-        __in ULONG OutputLevel,
-        __in ULONG BreakLevel
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
         ) PURE;
 
     // The command processor supports simple
@@ -8020,26 +10328,26 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // the command invocations $u0-$u9.
     STDMETHOD(GetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MacroSize
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
         ) PURE;
     STDMETHOD(SetTextMacro)(
         THIS_
-        __in ULONG Slot,
-        __in PCSTR Macro
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
         ) PURE;
 
     // Controls the default number radix used
     // in expressions and commands.
     STDMETHOD(GetRadix)(
         THIS_
-        __out PULONG Radix
+        _Out_ PULONG Radix
         ) PURE;
     STDMETHOD(SetRadix)(
         THIS_
-        __in ULONG Radix
+        _In_ ULONG Radix
         ) PURE;
 
     // Evaluates the given expression string and
@@ -8051,10 +10359,10 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // not used when evaluating the expression.
     STDMETHOD(Evaluate)(
         THIS_
-        __in PCSTR Expression,
-        __in ULONG DesiredType,
-        __out PDEBUG_VALUE Value,
-        __out_opt PULONG RemainderIndex
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
         ) PURE;
     // Attempts to convert the input value to a value
     // of the requested type in the output value.
@@ -8062,16 +10370,16 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Successful conversions may be lossy.
     STDMETHOD(CoerceValue)(
         THIS_
-        __in PDEBUG_VALUE In,
-        __in ULONG OutType,
-        __out PDEBUG_VALUE Out
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
         ) PURE;
     STDMETHOD(CoerceValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_VALUE In,
-        __in_ecount(Count) PULONG OutTypes,
-        __out_ecount(Count) PDEBUG_VALUE Out
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
         ) PURE;
 
     // Executes the given command string.
@@ -8084,25 +10392,25 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // of time.
     STDMETHOD(Execute)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR Command,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
         ) PURE;
     // Executes the given command file by
     // reading a line at a time and processing
     // it with Execute.
     STDMETHOD(ExecuteCommandFile)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCSTR CommandFile,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
         ) PURE;
 
     // Breakpoint interfaces are described
     // elsewhere in this section.
     STDMETHOD(GetNumberBreakpoints)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // It is possible for this retrieval function to
     // fail even with an index within the number of
@@ -8110,13 +10418,13 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // a private breakpoint.
     STDMETHOD(GetBreakpointByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     STDMETHOD(GetBreakpointById)(
         THIS_
-        __in ULONG Id,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // If Ids is non-NULL the Count breakpoints
     // referred to in the Ids array are returned,
@@ -8124,10 +10432,10 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Start + Count  1 are returned.
     STDMETHOD(GetBreakpointParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Ids,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
         ) PURE;
     // Breakpoints are created empty and disabled.
     // When their parameters have been set they
@@ -8140,40 +10448,40 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // the call will fail.
     STDMETHOD(AddBreakpoint)(
         THIS_
-        __in ULONG Type,
-        __in ULONG DesiredId,
-        __out PDEBUG_BREAKPOINT* Bp
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
         ) PURE;
     // Breakpoint interface is invalid after this call.
     STDMETHOD(RemoveBreakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         ) PURE;
 
     // Control and use extension DLLs.
     STDMETHOD(AddExtension)(
         THIS_
-        __in PCSTR Path,
-        __in ULONG Flags,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(RemoveExtension)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
     STDMETHOD(GetExtensionByPath)(
         THIS_
-        __in PCSTR Path,
-        __out PULONG64 Handle
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Handle is zero the extension
     // chain is walked searching for the
     // function.
     STDMETHOD(CallExtension)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR Function,
-        __in_opt PCSTR Arguments
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
         ) PURE;
     // GetExtensionFunction works like
     // GetProcAddress on extension DLLs
@@ -8186,9 +10494,9 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // This function cannot be called remotely.
     STDMETHOD(GetExtensionFunction)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCSTR FuncName,
-        __out FARPROC* Function
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
         ) PURE;
     // These methods return alternate
     // extension interfaces in order to allow
@@ -8199,11 +10507,11 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // These methods cannot be called remotely.
     STDMETHOD(GetWindbgExtensionApis32)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS32 Api
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
         ) PURE;
     STDMETHOD(GetWindbgExtensionApis64)(
         THIS_
-        __inout PWINDBG_EXTENSION_APIS64 Api
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
         ) PURE;
 
     // The engine provides a simple mechanism
@@ -8229,65 +10537,65 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // exception settings are used.
     STDMETHOD(GetNumberEventFilters)(
         THIS_
-        __out PULONG SpecificEvents,
-        __out PULONG SpecificExceptions,
-        __out PULONG ArbitraryExceptions
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
         ) PURE;
     // Some filters have descriptive text associated with them.
     STDMETHOD(GetEventFilterText)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     // All filters support executing a command when the
     // event occurs.
     STDMETHOD(GetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetEventFilterCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
     STDMETHOD(GetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     STDMETHOD(SetSpecificFilterParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
         ) PURE;
     // Some specific filters have arguments to further
     // qualify their operation.
     STDMETHOD(GetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ArgumentSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
         ) PURE;
     STDMETHOD(SetSpecificFilterArgument)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Argument
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
         ) PURE;
     // If Codes is non-NULL Start is ignored.
     STDMETHOD(GetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Codes,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // The codes in the parameter data control the application
     // of the parameter data.  If a code is not already in
@@ -8296,22 +10604,22 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Specific exception filters cannot be removed.
     STDMETHOD(SetExceptionFilterParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
         ) PURE;
     // Exception filters support an additional command for
     // second-chance events.
     STDMETHOD(GetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetExceptionFilterSecondCommand)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Command
+        _In_ ULONG Index,
+        _In_ PCSTR Command
         ) PURE;
 
     // Yields processing to the engine until
@@ -8329,8 +10637,8 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // kernel debugging.
     STDMETHOD(WaitForEvent)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG Timeout
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
         ) PURE;
 
     // Retrieves information about the last event that occurred.
@@ -8339,35 +10647,35 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // information.  Not all events have additional information.
     STDMETHOD(GetLastEventInformation)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed,
-        __out_ecount_opt(DescriptionSize) PSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG DescriptionUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
         ) PURE;
 
     // IDebugControl2.
 
     STDMETHOD(GetCurrentTimeDate)(
         THIS_
-        __out PULONG TimeDate
+        _Out_ PULONG TimeDate
         ) PURE;
     // Retrieves the number of seconds since the
     // machine started running.
     STDMETHOD(GetCurrentSystemUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // If the current session is a dump session,
     // retrieves any extended format information.
     STDMETHOD(GetDumpFormatFlags)(
         THIS_
-        __out PULONG FormatFlags
+        _Out_ PULONG FormatFlags
         ) PURE;
 
     // The debugger has been enhanced to allow
@@ -8381,28 +10689,28 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // string can exist.
     STDMETHOD(GetNumberTextReplacements)(
         THIS_
-        __out PULONG NumRepl
+        _Out_ PULONG NumRepl
         ) PURE;
     // If SrcText is non-NULL the replacement
     // is looked up by source text, otherwise
     // Index is used to get the Nth replacement.
     STDMETHOD(GetTextReplacement)(
         THIS_
-        __in_opt PCSTR SrcText,
-        __in ULONG Index,
-        __out_ecount_opt(SrcBufferSize) PSTR SrcBuffer,
-        __in ULONG SrcBufferSize,
-        __out_opt PULONG SrcSize,
-        __out_ecount_opt(DstBufferSize) PSTR DstBuffer,
-        __in ULONG DstBufferSize,
-        __out_opt PULONG DstSize
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
         ) PURE;
     // Setting the destination text to
     // NULL removes the alias.
     STDMETHOD(SetTextReplacement)(
         THIS_
-        __in PCSTR SrcText,
-        __in_opt PCSTR DstText
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
         ) PURE;
     STDMETHOD(RemoveTextReplacements)(
         THIS
@@ -8411,8 +10719,8 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // replacements.
     STDMETHOD(OutputTextReplacements)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // IDebugControl3.
@@ -8420,49 +10728,49 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // Control options for assembly and disassembly.
     STDMETHOD(GetAssemblyOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetAssemblyOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // Control the expression syntax.
     STDMETHOD(GetExpressionSyntax)(
         THIS_
-        __out PULONG Flags
+        _Out_ PULONG Flags
         ) PURE;
     STDMETHOD(SetExpressionSyntax)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
         ) PURE;
     // Look up a syntax by its abbreviated
     // name and set it.
     STDMETHOD(SetExpressionSyntaxByName)(
         THIS_
-        __in PCSTR AbbrevName
+        _In_ PCSTR AbbrevName
         ) PURE;
     STDMETHOD(GetNumberExpressionSyntaxes)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetExpressionSyntaxNames)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(FullNameBufferSize) PSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     //
@@ -8493,7 +10801,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // may be possible, such as for a dynamic session.
     STDMETHOD(GetNumberEvents)(
         THIS_
-        __out PULONG Events
+        _Out_ PULONG Events
         ) PURE;
     // Sessions may have descriptive information for
     // the various events available.  The amount of
@@ -8501,15 +10809,15 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // session and data.
     STDMETHOD(GetEventIndexDescription)(
         THIS_
-        __in ULONG Index,
-        __in ULONG Which,
-        __in_opt PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DescSize
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
         ) PURE;
     STDMETHOD(GetCurrentEventIndex)(
         THIS_
-        __out PULONG Index
+        _Out_ PULONG Index
         ) PURE;
     // SetNextEventIndex works like seek in that
     // it can set an absolute or relative index.
@@ -8520,310 +10828,310 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // is called.
     STDMETHOD(SetNextEventIndex)(
         THIS_
-        __in ULONG Relation,
-        __in ULONG Value,
-        __out PULONG NextIndex
+        _In_ ULONG Relation,
+        _In_ ULONG Value,
+        _Out_ PULONG NextIndex
         ) PURE;
 
     // IDebugControl4.
 
     STDMETHOD(GetLogFileWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PBOOL Append
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
         ) PURE;
     STDMETHOD(OpenLogFileWide)(
         THIS_
-        __in PCWSTR File,
-        __in BOOL Append
+        _In_ PCWSTR File,
+        _In_ BOOL Append
         ) PURE;
 
     STDMETHOD(InputWide)(
         THIS_
-        __out_ecount(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InputSize
+        _Out_writes_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
         ) PURE;
     STDMETHOD(ReturnInputWide)(
         THIS_
-        __in PCWSTR Buffer
+        _In_ PCWSTR Buffer
         ) PURE;
 
     STDMETHODV(OutputWide)(
         THIS_
-        __in ULONG Mask,
-        __in PCWSTR Format,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputVaListWide)(
         THIS_
-        __in ULONG Mask,
-        __in PCWSTR Format,
-        __in va_list Args
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
         ) PURE;
     STDMETHODV(ControlledOutputWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCWSTR Format,
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
         ...
         ) PURE;
     STDMETHOD(ControlledOutputVaListWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Mask,
-        __in PCWSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
         ) PURE;
 
     STDMETHODV(OutputPromptWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCWSTR Format,
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
         ...
         ) PURE;
     STDMETHOD(OutputPromptVaListWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in_opt PCWSTR Format,
-        __in va_list Args
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        _In_ va_list Args
         ) PURE;
     STDMETHOD(GetPromptTextWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
 
     STDMETHOD(AssembleWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in PCWSTR Instr,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ PCWSTR Instr,
+        _Out_ PULONG64 EndOffset
         ) PURE;
     STDMETHOD(DisassembleWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DisassemblySize,
-        __out PULONG64 EndOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
         ) PURE;
 
     STDMETHOD(GetProcessorTypeNamesWide)(
         THIS_
-        __in ULONG Type,
-        __out_ecount_opt(FullNameBufferSize) PWSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     STDMETHOD(GetTextMacroWide)(
         THIS_
-        __in ULONG Slot,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MacroSize
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
         ) PURE;
     STDMETHOD(SetTextMacroWide)(
         THIS_
-        __in ULONG Slot,
-        __in PCWSTR Macro
+        _In_ ULONG Slot,
+        _In_ PCWSTR Macro
         ) PURE;
 
     STDMETHOD(EvaluateWide)(
         THIS_
-        __in PCWSTR Expression,
-        __in ULONG DesiredType,
-        __out PDEBUG_VALUE Value,
-        __out_opt PULONG RemainderIndex
+        _In_ PCWSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
         ) PURE;
 
     STDMETHOD(ExecuteWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCWSTR Command,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Command,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(ExecuteCommandFileWide)(
         THIS_
-        __in ULONG OutputControl,
-        __in PCWSTR CommandFile,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR CommandFile,
+        _In_ ULONG Flags
         ) PURE;
 
     STDMETHOD(GetBreakpointByIndex2)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_BREAKPOINT2* Bp
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
         ) PURE;
     STDMETHOD(GetBreakpointById2)(
         THIS_
-        __in ULONG Id,
-        __out PDEBUG_BREAKPOINT2* Bp
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
         ) PURE;
     STDMETHOD(AddBreakpoint2)(
         THIS_
-        __in ULONG Type,
-        __in ULONG DesiredId,
-        __out PDEBUG_BREAKPOINT2* Bp
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
         ) PURE;
     STDMETHOD(RemoveBreakpoint2)(
         THIS_
-        __in PDEBUG_BREAKPOINT2 Bp
+        _In_ PDEBUG_BREAKPOINT2 Bp
         ) PURE;
 
     STDMETHOD(AddExtensionWide)(
         THIS_
-        __in PCWSTR Path,
-        __in ULONG Flags,
-        __out PULONG64 Handle
+        _In_ PCWSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(GetExtensionByPathWide)(
         THIS_
-        __in PCWSTR Path,
-        __out PULONG64 Handle
+        _In_ PCWSTR Path,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(CallExtensionWide)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCWSTR Function,
-        __in_opt PCWSTR Arguments
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR Function,
+        _In_opt_ PCWSTR Arguments
         ) PURE;
     STDMETHOD(GetExtensionFunctionWide)(
         THIS_
-        __in ULONG64 Handle,
-        __in PCWSTR FuncName,
-        __out FARPROC* Function
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR FuncName,
+        _Out_ FARPROC* Function
         ) PURE;
 
     STDMETHOD(GetEventFilterTextWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TextSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
         ) PURE;
     STDMETHOD(GetEventFilterCommandWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetEventFilterCommandWide)(
         THIS_
-        __in ULONG Index,
-        __in PCWSTR Command
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
         ) PURE;
     STDMETHOD(GetSpecificFilterArgumentWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ArgumentSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
         ) PURE;
     STDMETHOD(SetSpecificFilterArgumentWide)(
         THIS_
-        __in ULONG Index,
-        __in PCWSTR Argument
+        _In_ ULONG Index,
+        _In_ PCWSTR Argument
         ) PURE;
     STDMETHOD(GetExceptionFilterSecondCommandWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG CommandSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
         ) PURE;
     STDMETHOD(SetExceptionFilterSecondCommandWide)(
         THIS_
-        __in ULONG Index,
-        __in PCWSTR Command
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
         ) PURE;
 
     STDMETHOD(GetLastEventInformationWide)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed,
-        __out_ecount_opt(DescriptionSize) PWSTR Description,
-        __in ULONG DescriptionSize,
-        __out_opt PULONG DescriptionUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
         ) PURE;
 
     STDMETHOD(GetTextReplacementWide)(
         THIS_
-        __in_opt PCWSTR SrcText,
-        __in ULONG Index,
-        __out_ecount_opt(SrcBufferSize) PWSTR SrcBuffer,
-        __in ULONG SrcBufferSize,
-        __out_opt PULONG SrcSize,
-        __out_ecount_opt(DstBufferSize) PWSTR DstBuffer,
-        __in ULONG DstBufferSize,
-        __out_opt PULONG DstSize
+        _In_opt_ PCWSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PWSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PWSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
         ) PURE;
     STDMETHOD(SetTextReplacementWide)(
         THIS_
-        __in PCWSTR SrcText,
-        __in_opt PCWSTR DstText
+        _In_ PCWSTR SrcText,
+        _In_opt_ PCWSTR DstText
         ) PURE;
 
     STDMETHOD(SetExpressionSyntaxByNameWide)(
         THIS_
-        __in PCWSTR AbbrevName
+        _In_ PCWSTR AbbrevName
         ) PURE;
     STDMETHOD(GetExpressionSyntaxNamesWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(FullNameBufferSize) PWSTR FullNameBuffer,
-        __in ULONG FullNameBufferSize,
-        __out_opt PULONG FullNameSize,
-        __out_ecount_opt(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
-        __in ULONG AbbrevNameBufferSize,
-        __out_opt PULONG AbbrevNameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
         ) PURE;
 
     STDMETHOD(GetEventIndexDescriptionWide)(
         THIS_
-        __in ULONG Index,
-        __in ULONG Which,
-        __in_opt PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DescSize
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
         ) PURE;
 
     STDMETHOD(GetLogFile2)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PULONG Flags
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
         ) PURE;
     STDMETHOD(OpenLogFile2)(
         THIS_
-        __in PCSTR File,
-        __in ULONG Flags
+        _In_ PCSTR File,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(GetLogFile2Wide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FileSize,
-        __out PULONG Flags
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
         ) PURE;
     STDMETHOD(OpenLogFile2Wide)(
         THIS_
-        __in PCWSTR File,
-        __in ULONG Flags
+        _In_ PCWSTR File,
+        _In_ ULONG Flags
         ) PURE;
 
     // GetSystemVersion always returns the kd
@@ -8833,26 +11141,26 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // to determine the Win32 version values.
     STDMETHOD(GetSystemVersionValues)(
         THIS_
-        __out PULONG PlatformId,
-        __out PULONG Win32Major,
-        __out PULONG Win32Minor,
-        __out_opt PULONG KdMajor,
-        __out_opt PULONG KdMinor
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Win32Major,
+        _Out_ PULONG Win32Minor,
+        _Out_opt_ PULONG KdMajor,
+        _Out_opt_ PULONG KdMinor
         ) PURE;
     // Strings are selected with DEBUG_SYSVERSTR_*.
     STDMETHOD(GetSystemVersionString)(
         THIS_
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
     STDMETHOD(GetSystemVersionStringWide)(
         THIS_
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
 
     // Stack tracing with a full initial context
@@ -8863,24 +11171,24 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // FrameContexts.
     STDMETHOD(GetContextStackTrace)(
         THIS_
-        __in_bcount_opt(StartContextSize) PVOID StartContext,
-        __in ULONG StartContextSize,
-        __out_ecount_opt(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __out_bcount_opt(FrameContextsSize) PVOID FrameContexts,
-        __in ULONG FrameContextsSize,
-        __in ULONG FrameContextsEntrySize,
-        __out_opt PULONG FramesFilled
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
         ) PURE;
     STDMETHOD(OutputContextStackTrace)(
         THIS_
-        __in ULONG OutputControl,
-        __in_ecount(FramesSize) PDEBUG_STACK_FRAME Frames,
-        __in ULONG FramesSize,
-        __in_bcount(FrameContextsSize) PVOID FrameContexts,
-        __in ULONG FrameContextsSize,
-        __in ULONG FrameContextsEntrySize,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
         ) PURE;
 
     // Some targets, such as user-mode minidump files,
@@ -8889,15 +11197,15 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // access to that information.
     STDMETHOD(GetStoredEventInformation)(
         THIS_
-        __out PULONG Type,
-        __out PULONG ProcessId,
-        __out PULONG ThreadId,
-        __out_bcount_opt(ContextSize) PVOID Context,
-        __in ULONG ContextSize,
-        __out_opt PULONG ContextUsed,
-        __out_bcount_opt(ExtraInformationSize) PVOID ExtraInformation,
-        __in ULONG ExtraInformationSize,
-        __out_opt PULONG ExtraInformationUsed
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize,
+        _Out_opt_ PULONG ContextUsed,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed
         ) PURE;
 
     // Managed debugging support relies on debugging
@@ -8906,25 +11214,4439 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
     // use of the runtime debugging APIs.
     STDMETHOD(GetManagedStatus)(
         THIS_
-        __out_opt PULONG Flags,
-        __in ULONG WhichString,
-        __out_ecount_opt(StringSize) PSTR String,
-        __in ULONG StringSize,
-        __out_opt PULONG StringNeeded
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
         ) PURE;
     STDMETHOD(GetManagedStatusWide)(
         THIS_
-        __out_opt PULONG Flags,
-        __in ULONG WhichString,
-        __out_ecount_opt(StringSize) PWSTR String,
-        __in ULONG StringSize,
-        __out_opt PULONG StringNeeded
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PWSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
         ) PURE;
     // Clears and reinitializes the engine's
     // managed code debugging support.
     STDMETHOD(ResetManagedStatus)(
         THIS_
-        __in ULONG Flags
+        _In_ ULONG Flags
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugControl5
+DECLARE_INTERFACE_(IDebugControl5, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugControl.
+
+    // Checks for a user interrupt, such a Ctrl-C
+    // or stop button.
+    // This method is reentrant.
+    STDMETHOD(GetInterrupt)(
+        THIS
+        ) PURE;
+    // Registers a user interrupt.
+    // This method is reentrant.
+    STDMETHOD(SetInterrupt)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Interrupting a user-mode process requires
+    // access to some system resources that the
+    // process may hold itself, preventing the
+    // interrupt from occurring.  The engine
+    // will time-out pending interrupt requests
+    // and simulate an interrupt if necessary.
+    // These methods control the interrupt timeout.
+    STDMETHOD(GetInterruptTimeout)(
+        THIS_
+        _Out_ PULONG Seconds
+        ) PURE;
+    STDMETHOD(SetInterruptTimeout)(
+        THIS_
+        _In_ ULONG Seconds
+        ) PURE;
+
+    STDMETHOD(GetLogFile)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    // Opens a log file which collects all
+    // output.  Output from every client except
+    // those that explicitly disable logging
+    // goes into the log.
+    // Opening a log file closes any log file
+    // already open.
+    STDMETHOD(OpenLogFile)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ BOOL Append
+        ) PURE;
+    STDMETHOD(CloseLogFile)(
+        THIS
+        ) PURE;
+    // Controls what output is logged.
+    STDMETHOD(GetLogMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetLogMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+
+    // Input requests input from all clients.
+    // The first input that is returned is used
+    // to satisfy the call.  Other returned
+    // input is discarded.
+    STDMETHOD(Input)(
+        THIS_
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    // This method is used by clients to return
+    // input when it is available.  It will
+    // return S_OK if the input is used to
+    // satisfy an Input call and S_FALSE if
+    // the input is ignored.
+    // This method is reentrant.
+    STDMETHOD(ReturnInput)(
+        THIS_
+        _In_ PCSTR Buffer
+        ) PURE;
+
+    // Sends output through clients
+    // output callbacks if the mask is allowed
+    // by the current output control mask and
+    // according to the output distribution
+    // settings.
+    STDMETHODV(Output)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaList)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // The following methods allow direct control
+    // over the distribution of the given output
+    // for situations where something other than
+    // the default is desired.  These methods require
+    // extra work in the engine so they should
+    // only be used when necessary.
+    STDMETHODV(ControlledOutput)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    // Displays the standard command-line prompt
+    // followed by the given output.  If Format
+    // is NULL no additional output is produced.
+    // Output is produced under the
+    // DEBUG_OUTPUT_PROMPT mask.
+    // This method only outputs the prompt; it
+    // does not get input.
+    STDMETHODV(OutputPrompt)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // Gets the text that would be displayed by OutputPrompt.
+    STDMETHOD(GetPromptText)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // Outputs information about the current
+    // debuggee state such as a register
+    // summary, disassembly at the current PC,
+    // closest symbol and others.
+    // Uses the line prefix.
+    STDMETHOD(OutputCurrentState)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Outputs the debugger and extension version
+    // information.  This method is reentrant.
+    // Uses the line prefix.
+    STDMETHOD(OutputVersionInformation)(
+        THIS_
+        _In_ ULONG OutputControl
+        ) PURE;
+
+    // In user-mode debugging sessions the
+    // engine will set an event when
+    // exceptions are continued.  This can
+    // be used to synchronize other processes
+    // with the debuggers handling of events.
+    // For example, this is used to support
+    // the e argument to ntsd.
+    STDMETHOD(GetNotifyEventHandle)(
+        THIS_
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(SetNotifyEventHandle)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    STDMETHOD(Assemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(Disassemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Returns the value of the effective address
+    // computed for the last Disassemble, if there
+    // was one.
+    STDMETHOD(GetDisassembleEffectiveOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // Uses the line prefix if necessary.
+    STDMETHOD(OutputDisassembly)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Produces multiple lines of disassembly output.
+    // There will be PreviousLines of disassembly before
+    // the given offset if a valid disassembly exists.
+    // In all, there will be TotalLines of output produced.
+    // The first and last line offsets are returned
+    // specially and all lines offsets can be retrieved
+    // through LineOffsets.  LineOffsets will contain
+    // offsets for each line where disassembly started.
+    // When disassembly of a single instruction takes
+    // multiple lines the initial offset will be followed
+    // by DEBUG_INVALID_OFFSET.
+    // Uses the line prefix.
+    STDMETHOD(OutputDisassemblyLines)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
+        ) PURE;
+    // Returns the offset of the start of
+    // the instruction thats the given
+    // delta away from the instruction
+    // at the initial offset.
+    // This routine does not check for
+    // validity of the instruction or
+    // the memory containing it.
+    STDMETHOD(GetNearInstruction)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
+        ) PURE;
+
+    // Offsets can be passed in as zero to use the current
+    // thread state.
+    STDMETHOD(GetStackTrace)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    // Does a simple stack trace to determine
+    // what the current return address is.
+    STDMETHOD(GetReturnOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // If Frames is NULL OutputStackTrace will
+    // use GetStackTrace to get FramesSize frames
+    // and then output them.  The current register
+    // values for frame, stack and instruction offsets
+    // are used.
+    // Uses the line prefix.
+    STDMETHOD(OutputStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Returns information about the debuggee such
+    // as user vs. kernel, dump vs. live, etc.
+    STDMETHOD(GetDebuggeeType)(
+        THIS_
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
+        ) PURE;
+    // Returns the type of physical processors in
+    // the machine.
+    // Returns one of the IMAGE_FILE_MACHINE values.
+    STDMETHOD(GetActualProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Returns the type of processor used in the
+    // current processor context.
+    STDMETHOD(GetExecutingProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Query all the possible processor types that
+    // may be encountered during this debug session.
+    STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetPossibleExecutingProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Get the number of actual processors in
+    // the machine.
+    STDMETHOD(GetNumberProcessors)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // PlatformId is one of the VER_PLATFORM values.
+    // Major and minor are as given in the NT
+    // kernel debugger protocol.
+    // ServicePackString and ServicePackNumber indicate the
+    // system service pack level.  ServicePackNumber is not
+    // available in some sessions where the service pack level
+    // is only expressed as a string.  The service pack information
+    // will be empty if the system does not have a service pack
+    // applied.
+    // The build string is string information identifying the
+    // particular build of the system.  The build string is
+    // empty if the system has no particular identifying
+    // information.
+    STDMETHOD(GetSystemVersion)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
+        ) PURE;
+    // Returns the page size for the currently executing
+    // processor context.  The page size may vary between
+    // processor types.
+    STDMETHOD(GetPageSize)(
+        THIS_
+        _Out_ PULONG Size
+        ) PURE;
+    // Returns S_OK if the current processor context uses
+    // 64-bit addresses, otherwise S_FALSE.
+    STDMETHOD(IsPointer64Bit)(
+        THIS
+        ) PURE;
+    // Reads the bugcheck data area and returns the
+    // current contents.  This method only works
+    // in kernel debugging sessions.
+    STDMETHOD(ReadBugCheckData)(
+        THIS_
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
+        ) PURE;
+
+    // Query all the processor types supported by
+    // the engine.  This is a complete list and is
+    // not related to the machine running the engine
+    // or the debuggee.
+    STDMETHOD(GetNumberSupportedProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetSupportedProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Returns a full, descriptive name and an
+    // abbreviated name for a processor type.
+    STDMETHOD(GetProcessorTypeNames)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    // Gets and sets the type of processor to
+    // use when doing things like setting
+    // breakpoints, accessing registers,
+    // getting stack traces and so on.
+    STDMETHOD(GetEffectiveProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(SetEffectiveProcessorType)(
+        THIS_
+        _In_ ULONG Type
+        ) PURE;
+
+    // Returns information about whether and how
+    // the debuggee is running.  Status will
+    // be GO if the debuggee is running and
+    // BREAK if it isnt.
+    // If no debuggee exists the status is
+    // NO_DEBUGGEE.
+    // This method is reentrant.
+    STDMETHOD(GetExecutionStatus)(
+        THIS_
+        _Out_ PULONG Status
+        ) PURE;
+    // Changes the execution status of the
+    // engine from stopped to running.
+    // Status must be one of the go or step
+    // status values.
+    STDMETHOD(SetExecutionStatus)(
+        THIS_
+        _In_ ULONG Status
+        ) PURE;
+
+    // Controls what code interpretation level the debugger
+    // runs at.  The debugger checks the code level when
+    // deciding whether to step by a source line or
+    // assembly instruction along with other related operations.
+    STDMETHOD(GetCodeLevel)(
+        THIS_
+        _Out_ PULONG Level
+        ) PURE;
+    STDMETHOD(SetCodeLevel)(
+        THIS_
+        _In_ ULONG Level
+        ) PURE;
+
+    // Gets and sets engine control flags.
+    // These methods are reentrant.
+    STDMETHOD(GetEngineOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Gets and sets control values for
+    // handling system error events.
+    // If the system error level is less
+    // than or equal to the given levels
+    // the error may be displayed and
+    // the default break for the event
+    // may be set.
+    STDMETHOD(GetSystemErrorControl)(
+        THIS_
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
+        ) PURE;
+    STDMETHOD(SetSystemErrorControl)(
+        THIS_
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
+        ) PURE;
+
+    // The command processor supports simple
+    // string replacement macros in Evaluate and
+    // Execute.  There are currently ten macro
+    // slots available.  Slots 0-9 map to
+    // the command invocations $u0-$u9.
+    STDMETHOD(GetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
+        ) PURE;
+
+    // Controls the default number radix used
+    // in expressions and commands.
+    STDMETHOD(GetRadix)(
+        THIS_
+        _Out_ PULONG Radix
+        ) PURE;
+    STDMETHOD(SetRadix)(
+        THIS_
+        _In_ ULONG Radix
+        ) PURE;
+
+    // Evaluates the given expression string and
+    // returns the resulting value.
+    // If DesiredType is DEBUG_VALUE_INVALID then
+    // the natural type is used.
+    // RemainderIndex, if provided, is set to the index
+    // of the first character in the input string that was
+    // not used when evaluating the expression.
+    STDMETHOD(Evaluate)(
+        THIS_
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+    // Attempts to convert the input value to a value
+    // of the requested type in the output value.
+    // Conversions can fail if no conversion exists.
+    // Successful conversions may be lossy.
+    STDMETHOD(CoerceValue)(
+        THIS_
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
+        ) PURE;
+    STDMETHOD(CoerceValues)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
+        ) PURE;
+
+    // Executes the given command string.
+    // If the string has multiple commands
+    // Execute will not return until all
+    // of them have been executed.  If this
+    // requires waiting for the debuggee to
+    // execute an internal wait will be done
+    // so Execute can take an arbitrary amount
+    // of time.
+    STDMETHOD(Execute)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    // Executes the given command file by
+    // reading a line at a time and processing
+    // it with Execute.
+    STDMETHOD(ExecuteCommandFile)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Breakpoint interfaces are described
+    // elsewhere in this section.
+    STDMETHOD(GetNumberBreakpoints)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // It is possible for this retrieval function to
+    // fail even with an index within the number of
+    // existing breakpoints if the breakpoint is
+    // a private breakpoint.
+    STDMETHOD(GetBreakpointByIndex)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // If Ids is non-NULL the Count breakpoints
+    // referred to in the Ids array are returned,
+    // otherwise breakpoints from index Start to
+    // Start + Count  1 are returned.
+    STDMETHOD(GetBreakpointParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        ) PURE;
+    // Breakpoints are created empty and disabled.
+    // When their parameters have been set they
+    // should be enabled by setting the ENABLE flag.
+    // If DesiredId is DEBUG_ANY_ID then the
+    // engine picks an unused ID.  If DesiredId
+    // is any other number the engine attempts
+    // to use the given ID for the breakpoint.
+    // If another breakpoint exists with that ID
+    // the call will fail.
+    STDMETHOD(AddBreakpoint)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // Breakpoint interface is invalid after this call.
+    STDMETHOD(RemoveBreakpoint)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT Bp
+        ) PURE;
+
+    // Control and use extension DLLs.
+    STDMETHOD(AddExtension)(
+        THIS_
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(RemoveExtension)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPath)(
+        THIS_
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    // If Handle is zero the extension
+    // chain is walked searching for the
+    // function.
+    STDMETHOD(CallExtension)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
+        ) PURE;
+    // GetExtensionFunction works like
+    // GetProcAddress on extension DLLs
+    // to allow raw function-call-level
+    // interaction with extension DLLs.
+    // Such functions do not need to
+    // follow the standard extension prototype
+    // if they are not going to be called
+    // through the text extension interface.
+    // This function cannot be called remotely.
+    STDMETHOD(GetExtensionFunction)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+    // These methods return alternate
+    // extension interfaces in order to allow
+    // interface-style extension DLLs to mix in
+    // older extension calls.
+    // Structure sizes must be initialized before
+    // the call.
+    // These methods cannot be called remotely.
+    STDMETHOD(GetWindbgExtensionApis32)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
+        ) PURE;
+    STDMETHOD(GetWindbgExtensionApis64)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
+        ) PURE;
+
+    // The engine provides a simple mechanism
+    // to filter common events.  Arbitrarily complicated
+    // filtering can be done by registering event callbacks
+    // but simple event filtering only requires
+    // setting the options of one of the predefined
+    // event filters.
+    // Simple event filters are either for specific
+    // events and therefore have an enumerant or
+    // they are for an exception and are based on
+    // the exceptions code.  Exception filters
+    // are further divided into exceptions specially
+    // handled by the engine, which is a fixed set,
+    // and arbitrary exceptions.
+    // All three groups of filters are indexed together
+    // with the specific filters first, then the specific
+    // exception filters and finally the arbitrary
+    // exception filters.
+    // The first specific exception is the default
+    // exception.  If an exception event occurs for
+    // an exception without settings the default
+    // exception settings are used.
+    STDMETHOD(GetNumberEventFilters)(
+        THIS_
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
+        ) PURE;
+    // Some filters have descriptive text associated with them.
+    STDMETHOD(GetEventFilterText)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // All filters support executing a command when the
+    // event occurs.
+    STDMETHOD(GetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    STDMETHOD(SetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    // Some specific filters have arguments to further
+    // qualify their operation.
+    STDMETHOD(GetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
+        ) PURE;
+    // If Codes is non-NULL Start is ignored.
+    STDMETHOD(GetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // The codes in the parameter data control the application
+    // of the parameter data.  If a code is not already in
+    // the set of filters it is added.  If the ExecutionOption
+    // for a code is REMOVE then the filter is removed.
+    // Specific exception filters cannot be removed.
+    STDMETHOD(SetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // Exception filters support an additional command for
+    // second-chance events.
+    STDMETHOD(GetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+
+    // Yields processing to the engine until
+    // an event occurs.  This method may
+    // only be called by the thread that started
+    // the debug session.
+    // When an event occurs the engine carries
+    // out all event processing such as calling
+    // callbacks.
+    // If the callbacks indicate that execution should
+    // break the wait will return, otherwise it
+    // goes back to waiting for a new event.
+    // If the timeout expires, S_FALSE is returned.
+    // The timeout is not currently supported for
+    // kernel debugging.
+    STDMETHOD(WaitForEvent)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Retrieves information about the last event that occurred.
+    // EventType is one of the event callback mask bits.
+    // ExtraInformation contains additional event-specific
+    // information.  Not all events have additional information.
+    STDMETHOD(GetLastEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    // IDebugControl2.
+
+    STDMETHOD(GetCurrentTimeDate)(
+        THIS_
+        _Out_ PULONG TimeDate
+        ) PURE;
+    // Retrieves the number of seconds since the
+    // machine started running.
+    STDMETHOD(GetCurrentSystemUpTime)(
+        THIS_
+        _Out_ PULONG UpTime
+        ) PURE;
+
+    // If the current session is a dump session,
+    // retrieves any extended format information.
+    STDMETHOD(GetDumpFormatFlags)(
+        THIS_
+        _Out_ PULONG FormatFlags
+        ) PURE;
+
+    // The debugger has been enhanced to allow
+    // arbitrary text replacements in addition
+    // to the simple $u0-$u9 text macros.
+    // Text replacement takes a given source
+    // text in commands and converts it to the
+    // given destination text.  Replacements
+    // are named by their source text so that
+    // only one replacement for a source text
+    // string can exist.
+    STDMETHOD(GetNumberTextReplacements)(
+        THIS_
+        _Out_ PULONG NumRepl
+        ) PURE;
+    // If SrcText is non-NULL the replacement
+    // is looked up by source text, otherwise
+    // Index is used to get the Nth replacement.
+    STDMETHOD(GetTextReplacement)(
+        THIS_
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    // Setting the destination text to
+    // NULL removes the alias.
+    STDMETHOD(SetTextReplacement)(
+        THIS_
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
+        ) PURE;
+    STDMETHOD(RemoveTextReplacements)(
+        THIS
+        ) PURE;
+    // Outputs the complete list of current
+    // replacements.
+    STDMETHOD(OutputTextReplacements)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl3.
+
+    // Control options for assembly and disassembly.
+    STDMETHOD(GetAssemblyOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Control the expression syntax.
+    STDMETHOD(GetExpressionSyntax)(
+        THIS_
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(SetExpressionSyntax)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Look up a syntax by its abbreviated
+    // name and set it.
+    STDMETHOD(SetExpressionSyntaxByName)(
+        THIS_
+        _In_ PCSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetNumberExpressionSyntaxes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNames)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    //
+    // Some debug sessions have only a single
+    // possible event, such as a snapshot dump
+    // file; some have dynamic events, such as
+    // a live debug session; and others may have
+    // multiple events, such as a dump file that
+    // contains snapshots from different points
+    // in time.  The following methods allow
+    // discovery and selection of the available
+    // events for a session.
+    // Sessions with one or more static events
+    // will be able to report all of the events
+    // when queried.  Sessions with dynamic events
+    // will only report a single event representing
+    // the current event.
+    // Switching events constitutes execution and
+    // changing the current event will alter the
+    // execution status to a running state, after
+    // which WaitForEvent must be used to process
+    // the selected event.
+    //
+
+    // GetNumberEvents returns S_OK if this is the
+    // complete set of events possible, such as for
+    // a static session; or S_FALSE if other events
+    // may be possible, such as for a dynamic session.
+    STDMETHOD(GetNumberEvents)(
+        THIS_
+        _Out_ PULONG Events
+        ) PURE;
+    // Sessions may have descriptive information for
+    // the various events available.  The amount of
+    // information varies according to the specific
+    // session and data.
+    STDMETHOD(GetEventIndexDescription)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+    STDMETHOD(GetCurrentEventIndex)(
+        THIS_
+        _Out_ PULONG Index
+        ) PURE;
+    // SetNextEventIndex works like seek in that
+    // it can set an absolute or relative index.
+    // SetNextEventIndex works similarly to SetExecutionStatus
+    // by putting the session into a running state, after
+    // which the caller must call WaitForEvent.  The
+    // current event index only changes when WaitForEvent
+    // is called.
+    STDMETHOD(SetNextEventIndex)(
+        THIS_
+        _In_ ULONG Relation,
+        _In_ ULONG Value,
+        _Out_ PULONG NextIndex
+        ) PURE;
+
+    // IDebugControl4.
+
+    STDMETHOD(GetLogFileWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    STDMETHOD(OpenLogFileWide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ BOOL Append
+        ) PURE;
+
+    STDMETHOD(InputWide)(
+        THIS_
+        _Out_writes_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    STDMETHOD(ReturnInputWide)(
+        THIS_
+        _In_ PCWSTR Buffer
+        ) PURE;
+
+    STDMETHODV(OutputWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaListWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHODV(ControlledOutputWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    STDMETHODV(OutputPromptWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHOD(GetPromptTextWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+
+    STDMETHOD(AssembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCWSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(DisassembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+
+    STDMETHOD(GetProcessorTypeNamesWide)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCWSTR Macro
+        ) PURE;
+
+    STDMETHOD(EvaluateWide)(
+        THIS_
+        _In_ PCWSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+
+    STDMETHOD(ExecuteWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(ExecuteCommandFileWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetBreakpointByIndex2)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById2)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(AddBreakpoint2)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(RemoveBreakpoint2)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT2 Bp
+        ) PURE;
+
+    STDMETHOD(AddExtensionWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPathWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(CallExtensionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR Function,
+        _In_opt_ PCWSTR Arguments
+        ) PURE;
+    STDMETHOD(GetExtensionFunctionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+
+    STDMETHOD(GetEventFilterTextWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    STDMETHOD(GetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Argument
+        ) PURE;
+    STDMETHOD(GetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+
+    STDMETHOD(GetLastEventInformationWide)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    STDMETHOD(GetTextReplacementWide)(
+        THIS_
+        _In_opt_ PCWSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PWSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PWSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    STDMETHOD(SetTextReplacementWide)(
+        THIS_
+        _In_ PCWSTR SrcText,
+        _In_opt_ PCWSTR DstText
+        ) PURE;
+
+    STDMETHOD(SetExpressionSyntaxByNameWide)(
+        THIS_
+        _In_ PCWSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNamesWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetEventIndexDescriptionWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+
+    STDMETHOD(GetLogFile2)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(GetLogFile2Wide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2Wide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // GetSystemVersion always returns the kd
+    // major/minor version numbers, which are
+    // different than the Win32 version numbers.
+    // GetSystemVersionValues can be used
+    // to determine the Win32 version values.
+    STDMETHOD(GetSystemVersionValues)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Win32Major,
+        _Out_ PULONG Win32Minor,
+        _Out_opt_ PULONG KdMajor,
+        _Out_opt_ PULONG KdMinor
+        ) PURE;
+    // Strings are selected with DEBUG_SYSVERSTR_*.
+    STDMETHOD(GetSystemVersionString)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSystemVersionStringWide)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+
+    // Stack tracing with a full initial context
+    // and full context return for each frame.
+    // The FrameContextsSize parameter is the total
+    // byte size of FrameContexts.  FrameContextsEntrySize
+    // gives the byte size of each entry in
+    // FrameContexts.
+    STDMETHOD(GetContextStackTrace)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    STDMETHOD(OutputContextStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Some targets, such as user-mode minidump files,
+    // have separate "event of interest" information
+    // stored within them.  This method allows
+    // access to that information.
+    STDMETHOD(GetStoredEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize,
+        _Out_opt_ PULONG ContextUsed,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed
+        ) PURE;
+
+    // Managed debugging support relies on debugging
+    // functionality provided by the Common Language Runtime.
+    // This method provides feedback on the engine's
+    // use of the runtime debugging APIs.
+    STDMETHOD(GetManagedStatus)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    STDMETHOD(GetManagedStatusWide)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PWSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    // Clears and reinitializes the engine's
+    // managed code debugging support.
+    STDMETHOD(ResetManagedStatus)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl5
+    STDMETHOD(GetStackTraceEx)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetContextStackTraceEx)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputContextStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+        
+    STDMETHOD(GetBreakpointByGuid)(
+        THIS_
+        _In_ LPGUID Guid,
+        _Out_ PDEBUG_BREAKPOINT3* Bp
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugControl6
+DECLARE_INTERFACE_(IDebugControl6, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugControl.
+
+    // Checks for a user interrupt, such a Ctrl-C
+    // or stop button.
+    // This method is reentrant.
+    STDMETHOD(GetInterrupt)(
+        THIS
+        ) PURE;
+    // Registers a user interrupt.
+    // This method is reentrant.
+    STDMETHOD(SetInterrupt)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Interrupting a user-mode process requires
+    // access to some system resources that the
+    // process may hold itself, preventing the
+    // interrupt from occurring.  The engine
+    // will time-out pending interrupt requests
+    // and simulate an interrupt if necessary.
+    // These methods control the interrupt timeout.
+    STDMETHOD(GetInterruptTimeout)(
+        THIS_
+        _Out_ PULONG Seconds
+        ) PURE;
+    STDMETHOD(SetInterruptTimeout)(
+        THIS_
+        _In_ ULONG Seconds
+        ) PURE;
+
+    STDMETHOD(GetLogFile)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    // Opens a log file which collects all
+    // output.  Output from every client except
+    // those that explicitly disable logging
+    // goes into the log.
+    // Opening a log file closes any log file
+    // already open.
+    STDMETHOD(OpenLogFile)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ BOOL Append
+        ) PURE;
+    STDMETHOD(CloseLogFile)(
+        THIS
+        ) PURE;
+    // Controls what output is logged.
+    STDMETHOD(GetLogMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetLogMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+
+    // Input requests input from all clients.
+    // The first input that is returned is used
+    // to satisfy the call.  Other returned
+    // input is discarded.
+    STDMETHOD(Input)(
+        THIS_
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    // This method is used by clients to return
+    // input when it is available.  It will
+    // return S_OK if the input is used to
+    // satisfy an Input call and S_FALSE if
+    // the input is ignored.
+    // This method is reentrant.
+    STDMETHOD(ReturnInput)(
+        THIS_
+        _In_ PCSTR Buffer
+        ) PURE;
+
+    // Sends output through clients
+    // output callbacks if the mask is allowed
+    // by the current output control mask and
+    // according to the output distribution
+    // settings.
+    STDMETHODV(Output)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaList)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // The following methods allow direct control
+    // over the distribution of the given output
+    // for situations where something other than
+    // the default is desired.  These methods require
+    // extra work in the engine so they should
+    // only be used when necessary.
+    STDMETHODV(ControlledOutput)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    // Displays the standard command-line prompt
+    // followed by the given output.  If Format
+    // is NULL no additional output is produced.
+    // Output is produced under the
+    // DEBUG_OUTPUT_PROMPT mask.
+    // This method only outputs the prompt; it
+    // does not get input.
+    STDMETHODV(OutputPrompt)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // Gets the text that would be displayed by OutputPrompt.
+    STDMETHOD(GetPromptText)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // Outputs information about the current
+    // debuggee state such as a register
+    // summary, disassembly at the current PC,
+    // closest symbol and others.
+    // Uses the line prefix.
+    STDMETHOD(OutputCurrentState)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Outputs the debugger and extension version
+    // information.  This method is reentrant.
+    // Uses the line prefix.
+    STDMETHOD(OutputVersionInformation)(
+        THIS_
+        _In_ ULONG OutputControl
+        ) PURE;
+
+    // In user-mode debugging sessions the
+    // engine will set an event when
+    // exceptions are continued.  This can
+    // be used to synchronize other processes
+    // with the debuggers handling of events.
+    // For example, this is used to support
+    // the e argument to ntsd.
+    STDMETHOD(GetNotifyEventHandle)(
+        THIS_
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(SetNotifyEventHandle)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    STDMETHOD(Assemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(Disassemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Returns the value of the effective address
+    // computed for the last Disassemble, if there
+    // was one.
+    STDMETHOD(GetDisassembleEffectiveOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // Uses the line prefix if necessary.
+    STDMETHOD(OutputDisassembly)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Produces multiple lines of disassembly output.
+    // There will be PreviousLines of disassembly before
+    // the given offset if a valid disassembly exists.
+    // In all, there will be TotalLines of output produced.
+    // The first and last line offsets are returned
+    // specially and all lines offsets can be retrieved
+    // through LineOffsets.  LineOffsets will contain
+    // offsets for each line where disassembly started.
+    // When disassembly of a single instruction takes
+    // multiple lines the initial offset will be followed
+    // by DEBUG_INVALID_OFFSET.
+    // Uses the line prefix.
+    STDMETHOD(OutputDisassemblyLines)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
+        ) PURE;
+    // Returns the offset of the start of
+    // the instruction thats the given
+    // delta away from the instruction
+    // at the initial offset.
+    // This routine does not check for
+    // validity of the instruction or
+    // the memory containing it.
+    STDMETHOD(GetNearInstruction)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
+        ) PURE;
+
+    // Offsets can be passed in as zero to use the current
+    // thread state.
+    STDMETHOD(GetStackTrace)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    // Does a simple stack trace to determine
+    // what the current return address is.
+    STDMETHOD(GetReturnOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // If Frames is NULL OutputStackTrace will
+    // use GetStackTrace to get FramesSize frames
+    // and then output them.  The current register
+    // values for frame, stack and instruction offsets
+    // are used.
+    // Uses the line prefix.
+    STDMETHOD(OutputStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Returns information about the debuggee such
+    // as user vs. kernel, dump vs. live, etc.
+    STDMETHOD(GetDebuggeeType)(
+        THIS_
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
+        ) PURE;
+    // Returns the type of physical processors in
+    // the machine.
+    // Returns one of the IMAGE_FILE_MACHINE values.
+    STDMETHOD(GetActualProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Returns the type of processor used in the
+    // current processor context.
+    STDMETHOD(GetExecutingProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Query all the possible processor types that
+    // may be encountered during this debug session.
+    STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetPossibleExecutingProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Get the number of actual processors in
+    // the machine.
+    STDMETHOD(GetNumberProcessors)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // PlatformId is one of the VER_PLATFORM values.
+    // Major and minor are as given in the NT
+    // kernel debugger protocol.
+    // ServicePackString and ServicePackNumber indicate the
+    // system service pack level.  ServicePackNumber is not
+    // available in some sessions where the service pack level
+    // is only expressed as a string.  The service pack information
+    // will be empty if the system does not have a service pack
+    // applied.
+    // The build string is string information identifying the
+    // particular build of the system.  The build string is
+    // empty if the system has no particular identifying
+    // information.
+    STDMETHOD(GetSystemVersion)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
+        ) PURE;
+    // Returns the page size for the currently executing
+    // processor context.  The page size may vary between
+    // processor types.
+    STDMETHOD(GetPageSize)(
+        THIS_
+        _Out_ PULONG Size
+        ) PURE;
+    // Returns S_OK if the current processor context uses
+    // 64-bit addresses, otherwise S_FALSE.
+    STDMETHOD(IsPointer64Bit)(
+        THIS
+        ) PURE;
+    // Reads the bugcheck data area and returns the
+    // current contents.  This method only works
+    // in kernel debugging sessions.
+    STDMETHOD(ReadBugCheckData)(
+        THIS_
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
+        ) PURE;
+
+    // Query all the processor types supported by
+    // the engine.  This is a complete list and is
+    // not related to the machine running the engine
+    // or the debuggee.
+    STDMETHOD(GetNumberSupportedProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetSupportedProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Returns a full, descriptive name and an
+    // abbreviated name for a processor type.
+    STDMETHOD(GetProcessorTypeNames)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    // Gets and sets the type of processor to
+    // use when doing things like setting
+    // breakpoints, accessing registers,
+    // getting stack traces and so on.
+    STDMETHOD(GetEffectiveProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(SetEffectiveProcessorType)(
+        THIS_
+        _In_ ULONG Type
+        ) PURE;
+
+    // Returns information about whether and how
+    // the debuggee is running.  Status will
+    // be GO if the debuggee is running and
+    // BREAK if it isnt.
+    // If no debuggee exists the status is
+    // NO_DEBUGGEE.
+    // This method is reentrant.
+    STDMETHOD(GetExecutionStatus)(
+        THIS_
+        _Out_ PULONG Status
+        ) PURE;
+    // Changes the execution status of the
+    // engine from stopped to running.
+    // Status must be one of the go or step
+    // status values.
+    STDMETHOD(SetExecutionStatus)(
+        THIS_
+        _In_ ULONG Status
+        ) PURE;
+
+    // Controls what code interpretation level the debugger
+    // runs at.  The debugger checks the code level when
+    // deciding whether to step by a source line or
+    // assembly instruction along with other related operations.
+    STDMETHOD(GetCodeLevel)(
+        THIS_
+        _Out_ PULONG Level
+        ) PURE;
+    STDMETHOD(SetCodeLevel)(
+        THIS_
+        _In_ ULONG Level
+        ) PURE;
+
+    // Gets and sets engine control flags.
+    // These methods are reentrant.
+    STDMETHOD(GetEngineOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Gets and sets control values for
+    // handling system error events.
+    // If the system error level is less
+    // than or equal to the given levels
+    // the error may be displayed and
+    // the default break for the event
+    // may be set.
+    STDMETHOD(GetSystemErrorControl)(
+        THIS_
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
+        ) PURE;
+    STDMETHOD(SetSystemErrorControl)(
+        THIS_
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
+        ) PURE;
+
+    // The command processor supports simple
+    // string replacement macros in Evaluate and
+    // Execute.  There are currently ten macro
+    // slots available.  Slots 0-9 map to
+    // the command invocations $u0-$u9.
+    STDMETHOD(GetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
+        ) PURE;
+
+    // Controls the default number radix used
+    // in expressions and commands.
+    STDMETHOD(GetRadix)(
+        THIS_
+        _Out_ PULONG Radix
+        ) PURE;
+    STDMETHOD(SetRadix)(
+        THIS_
+        _In_ ULONG Radix
+        ) PURE;
+
+    // Evaluates the given expression string and
+    // returns the resulting value.
+    // If DesiredType is DEBUG_VALUE_INVALID then
+    // the natural type is used.
+    // RemainderIndex, if provided, is set to the index
+    // of the first character in the input string that was
+    // not used when evaluating the expression.
+    STDMETHOD(Evaluate)(
+        THIS_
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+    // Attempts to convert the input value to a value
+    // of the requested type in the output value.
+    // Conversions can fail if no conversion exists.
+    // Successful conversions may be lossy.
+    STDMETHOD(CoerceValue)(
+        THIS_
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
+        ) PURE;
+    STDMETHOD(CoerceValues)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
+        ) PURE;
+
+    // Executes the given command string.
+    // If the string has multiple commands
+    // Execute will not return until all
+    // of them have been executed.  If this
+    // requires waiting for the debuggee to
+    // execute an internal wait will be done
+    // so Execute can take an arbitrary amount
+    // of time.
+    STDMETHOD(Execute)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    // Executes the given command file by
+    // reading a line at a time and processing
+    // it with Execute.
+    STDMETHOD(ExecuteCommandFile)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Breakpoint interfaces are described
+    // elsewhere in this section.
+    STDMETHOD(GetNumberBreakpoints)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // It is possible for this retrieval function to
+    // fail even with an index within the number of
+    // existing breakpoints if the breakpoint is
+    // a private breakpoint.
+    STDMETHOD(GetBreakpointByIndex)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // If Ids is non-NULL the Count breakpoints
+    // referred to in the Ids array are returned,
+    // otherwise breakpoints from index Start to
+    // Start + Count  1 are returned.
+    STDMETHOD(GetBreakpointParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        ) PURE;
+    // Breakpoints are created empty and disabled.
+    // When their parameters have been set they
+    // should be enabled by setting the ENABLE flag.
+    // If DesiredId is DEBUG_ANY_ID then the
+    // engine picks an unused ID.  If DesiredId
+    // is any other number the engine attempts
+    // to use the given ID for the breakpoint.
+    // If another breakpoint exists with that ID
+    // the call will fail.
+    STDMETHOD(AddBreakpoint)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // Breakpoint interface is invalid after this call.
+    STDMETHOD(RemoveBreakpoint)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT Bp
+        ) PURE;
+
+    // Control and use extension DLLs.
+    STDMETHOD(AddExtension)(
+        THIS_
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(RemoveExtension)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPath)(
+        THIS_
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    // If Handle is zero the extension
+    // chain is walked searching for the
+    // function.
+    STDMETHOD(CallExtension)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
+        ) PURE;
+    // GetExtensionFunction works like
+    // GetProcAddress on extension DLLs
+    // to allow raw function-call-level
+    // interaction with extension DLLs.
+    // Such functions do not need to
+    // follow the standard extension prototype
+    // if they are not going to be called
+    // through the text extension interface.
+    // This function cannot be called remotely.
+    STDMETHOD(GetExtensionFunction)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+    // These methods return alternate
+    // extension interfaces in order to allow
+    // interface-style extension DLLs to mix in
+    // older extension calls.
+    // Structure sizes must be initialized before
+    // the call.
+    // These methods cannot be called remotely.
+    STDMETHOD(GetWindbgExtensionApis32)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
+        ) PURE;
+    STDMETHOD(GetWindbgExtensionApis64)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
+        ) PURE;
+
+    // The engine provides a simple mechanism
+    // to filter common events.  Arbitrarily complicated
+    // filtering can be done by registering event callbacks
+    // but simple event filtering only requires
+    // setting the options of one of the predefined
+    // event filters.
+    // Simple event filters are either for specific
+    // events and therefore have an enumerant or
+    // they are for an exception and are based on
+    // the exceptions code.  Exception filters
+    // are further divided into exceptions specially
+    // handled by the engine, which is a fixed set,
+    // and arbitrary exceptions.
+    // All three groups of filters are indexed together
+    // with the specific filters first, then the specific
+    // exception filters and finally the arbitrary
+    // exception filters.
+    // The first specific exception is the default
+    // exception.  If an exception event occurs for
+    // an exception without settings the default
+    // exception settings are used.
+    STDMETHOD(GetNumberEventFilters)(
+        THIS_
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
+        ) PURE;
+    // Some filters have descriptive text associated with them.
+    STDMETHOD(GetEventFilterText)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // All filters support executing a command when the
+    // event occurs.
+    STDMETHOD(GetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    STDMETHOD(SetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    // Some specific filters have arguments to further
+    // qualify their operation.
+    STDMETHOD(GetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
+        ) PURE;
+    // If Codes is non-NULL Start is ignored.
+    STDMETHOD(GetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // The codes in the parameter data control the application
+    // of the parameter data.  If a code is not already in
+    // the set of filters it is added.  If the ExecutionOption
+    // for a code is REMOVE then the filter is removed.
+    // Specific exception filters cannot be removed.
+    STDMETHOD(SetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // Exception filters support an additional command for
+    // second-chance events.
+    STDMETHOD(GetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+
+    // Yields processing to the engine until
+    // an event occurs.  This method may
+    // only be called by the thread that started
+    // the debug session.
+    // When an event occurs the engine carries
+    // out all event processing such as calling
+    // callbacks.
+    // If the callbacks indicate that execution should
+    // break the wait will return, otherwise it
+    // goes back to waiting for a new event.
+    // If the timeout expires, S_FALSE is returned.
+    // The timeout is not currently supported for
+    // kernel debugging.
+    STDMETHOD(WaitForEvent)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Retrieves information about the last event that occurred.
+    // EventType is one of the event callback mask bits.
+    // ExtraInformation contains additional event-specific
+    // information.  Not all events have additional information.
+    STDMETHOD(GetLastEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    // IDebugControl2.
+
+    STDMETHOD(GetCurrentTimeDate)(
+        THIS_
+        _Out_ PULONG TimeDate
+        ) PURE;
+    // Retrieves the number of seconds since the
+    // machine started running.
+    STDMETHOD(GetCurrentSystemUpTime)(
+        THIS_
+        _Out_ PULONG UpTime
+        ) PURE;
+
+    // If the current session is a dump session,
+    // retrieves any extended format information.
+    STDMETHOD(GetDumpFormatFlags)(
+        THIS_
+        _Out_ PULONG FormatFlags
+        ) PURE;
+
+    // The debugger has been enhanced to allow
+    // arbitrary text replacements in addition
+    // to the simple $u0-$u9 text macros.
+    // Text replacement takes a given source
+    // text in commands and converts it to the
+    // given destination text.  Replacements
+    // are named by their source text so that
+    // only one replacement for a source text
+    // string can exist.
+    STDMETHOD(GetNumberTextReplacements)(
+        THIS_
+        _Out_ PULONG NumRepl
+        ) PURE;
+    // If SrcText is non-NULL the replacement
+    // is looked up by source text, otherwise
+    // Index is used to get the Nth replacement.
+    STDMETHOD(GetTextReplacement)(
+        THIS_
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    // Setting the destination text to
+    // NULL removes the alias.
+    STDMETHOD(SetTextReplacement)(
+        THIS_
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
+        ) PURE;
+    STDMETHOD(RemoveTextReplacements)(
+        THIS
+        ) PURE;
+    // Outputs the complete list of current
+    // replacements.
+    STDMETHOD(OutputTextReplacements)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl3.
+
+    // Control options for assembly and disassembly.
+    STDMETHOD(GetAssemblyOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Control the expression syntax.
+    STDMETHOD(GetExpressionSyntax)(
+        THIS_
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(SetExpressionSyntax)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Look up a syntax by its abbreviated
+    // name and set it.
+    STDMETHOD(SetExpressionSyntaxByName)(
+        THIS_
+        _In_ PCSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetNumberExpressionSyntaxes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNames)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    //
+    // Some debug sessions have only a single
+    // possible event, such as a snapshot dump
+    // file; some have dynamic events, such as
+    // a live debug session; and others may have
+    // multiple events, such as a dump file that
+    // contains snapshots from different points
+    // in time.  The following methods allow
+    // discovery and selection of the available
+    // events for a session.
+    // Sessions with one or more static events
+    // will be able to report all of the events
+    // when queried.  Sessions with dynamic events
+    // will only report a single event representing
+    // the current event.
+    // Switching events constitutes execution and
+    // changing the current event will alter the
+    // execution status to a running state, after
+    // which WaitForEvent must be used to process
+    // the selected event.
+    //
+
+    // GetNumberEvents returns S_OK if this is the
+    // complete set of events possible, such as for
+    // a static session; or S_FALSE if other events
+    // may be possible, such as for a dynamic session.
+    STDMETHOD(GetNumberEvents)(
+        THIS_
+        _Out_ PULONG Events
+        ) PURE;
+    // Sessions may have descriptive information for
+    // the various events available.  The amount of
+    // information varies according to the specific
+    // session and data.
+    STDMETHOD(GetEventIndexDescription)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+    STDMETHOD(GetCurrentEventIndex)(
+        THIS_
+        _Out_ PULONG Index
+        ) PURE;
+    // SetNextEventIndex works like seek in that
+    // it can set an absolute or relative index.
+    // SetNextEventIndex works similarly to SetExecutionStatus
+    // by putting the session into a running state, after
+    // which the caller must call WaitForEvent.  The
+    // current event index only changes when WaitForEvent
+    // is called.
+    STDMETHOD(SetNextEventIndex)(
+        THIS_
+        _In_ ULONG Relation,
+        _In_ ULONG Value,
+        _Out_ PULONG NextIndex
+        ) PURE;
+
+    // IDebugControl4.
+
+    STDMETHOD(GetLogFileWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    STDMETHOD(OpenLogFileWide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ BOOL Append
+        ) PURE;
+
+    STDMETHOD(InputWide)(
+        THIS_
+        _Out_writes_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    STDMETHOD(ReturnInputWide)(
+        THIS_
+        _In_ PCWSTR Buffer
+        ) PURE;
+
+    STDMETHODV(OutputWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaListWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHODV(ControlledOutputWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    STDMETHODV(OutputPromptWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHOD(GetPromptTextWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+
+    STDMETHOD(AssembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCWSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(DisassembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+
+    STDMETHOD(GetProcessorTypeNamesWide)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCWSTR Macro
+        ) PURE;
+
+    STDMETHOD(EvaluateWide)(
+        THIS_
+        _In_ PCWSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+
+    STDMETHOD(ExecuteWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(ExecuteCommandFileWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetBreakpointByIndex2)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById2)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(AddBreakpoint2)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(RemoveBreakpoint2)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT2 Bp
+        ) PURE;
+
+    STDMETHOD(AddExtensionWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPathWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(CallExtensionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR Function,
+        _In_opt_ PCWSTR Arguments
+        ) PURE;
+    STDMETHOD(GetExtensionFunctionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+
+    STDMETHOD(GetEventFilterTextWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    STDMETHOD(GetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Argument
+        ) PURE;
+    STDMETHOD(GetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+
+    STDMETHOD(GetLastEventInformationWide)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    STDMETHOD(GetTextReplacementWide)(
+        THIS_
+        _In_opt_ PCWSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PWSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PWSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    STDMETHOD(SetTextReplacementWide)(
+        THIS_
+        _In_ PCWSTR SrcText,
+        _In_opt_ PCWSTR DstText
+        ) PURE;
+
+    STDMETHOD(SetExpressionSyntaxByNameWide)(
+        THIS_
+        _In_ PCWSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNamesWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetEventIndexDescriptionWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+
+    STDMETHOD(GetLogFile2)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(GetLogFile2Wide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2Wide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // GetSystemVersion always returns the kd
+    // major/minor version numbers, which are
+    // different than the Win32 version numbers.
+    // GetSystemVersionValues can be used
+    // to determine the Win32 version values.
+    STDMETHOD(GetSystemVersionValues)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Win32Major,
+        _Out_ PULONG Win32Minor,
+        _Out_opt_ PULONG KdMajor,
+        _Out_opt_ PULONG KdMinor
+        ) PURE;
+    // Strings are selected with DEBUG_SYSVERSTR_*.
+    STDMETHOD(GetSystemVersionString)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSystemVersionStringWide)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+
+    // Stack tracing with a full initial context
+    // and full context return for each frame.
+    // The FrameContextsSize parameter is the total
+    // byte size of FrameContexts.  FrameContextsEntrySize
+    // gives the byte size of each entry in
+    // FrameContexts.
+    STDMETHOD(GetContextStackTrace)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    STDMETHOD(OutputContextStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Some targets, such as user-mode minidump files,
+    // have separate "event of interest" information
+    // stored within them.  This method allows
+    // access to that information.
+    STDMETHOD(GetStoredEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize,
+        _Out_opt_ PULONG ContextUsed,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed
+        ) PURE;
+
+    // Managed debugging support relies on debugging
+    // functionality provided by the Common Language Runtime.
+    // This method provides feedback on the engine's
+    // use of the runtime debugging APIs.
+    STDMETHOD(GetManagedStatus)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    STDMETHOD(GetManagedStatusWide)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PWSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    // Clears and reinitializes the engine's
+    // managed code debugging support.
+    STDMETHOD(ResetManagedStatus)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl5
+    STDMETHOD(GetStackTraceEx)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetContextStackTraceEx)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputContextStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetBreakpointByGuid)(
+        THIS_
+        _In_ LPGUID Guid,
+        _Out_ PDEBUG_BREAKPOINT3* Bp
+        ) PURE;
+
+    // IDebugControl6
+
+    // Returns additional info states for 
+    STDMETHOD(GetExecutionStatusEx)(
+        THIS_
+        _Out_ PULONG Status
+        ) PURE;
+
+    STDMETHOD(GetSynchronizationStatus)(
+        THIS_
+        _Out_ PULONG SendsAttempted,
+        _Out_ PULONG SecondsSinceLastResponse
+        ) PURE;
+
+};
+
+#define DEBUG_EXEC_FLAGS_NONBLOCK 0x00000001
+
+#undef INTERFACE
+#define INTERFACE IDebugControl7
+DECLARE_INTERFACE_(IDebugControl7, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugControl.
+
+    // Checks for a user interrupt, such a Ctrl-C
+    // or stop button.
+    // This method is reentrant.
+    STDMETHOD(GetInterrupt)(
+        THIS
+        ) PURE;
+    // Registers a user interrupt.
+    // This method is reentrant.
+    STDMETHOD(SetInterrupt)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Interrupting a user-mode process requires
+    // access to some system resources that the
+    // process may hold itself, preventing the
+    // interrupt from occurring.  The engine
+    // will time-out pending interrupt requests
+    // and simulate an interrupt if necessary.
+    // These methods control the interrupt timeout.
+    STDMETHOD(GetInterruptTimeout)(
+        THIS_
+        _Out_ PULONG Seconds
+        ) PURE;
+    STDMETHOD(SetInterruptTimeout)(
+        THIS_
+        _In_ ULONG Seconds
+        ) PURE;
+
+    STDMETHOD(GetLogFile)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    // Opens a log file which collects all
+    // output.  Output from every client except
+    // those that explicitly disable logging
+    // goes into the log.
+    // Opening a log file closes any log file
+    // already open.
+    STDMETHOD(OpenLogFile)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ BOOL Append
+        ) PURE;
+    STDMETHOD(CloseLogFile)(
+        THIS
+        ) PURE;
+    // Controls what output is logged.
+    STDMETHOD(GetLogMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+    STDMETHOD(SetLogMask)(
+        THIS_
+        _In_ ULONG Mask
+        ) PURE;
+
+    // Input requests input from all clients.
+    // The first input that is returned is used
+    // to satisfy the call.  Other returned
+    // input is discarded.
+    STDMETHOD(Input)(
+        THIS_
+        _Out_writes_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    // This method is used by clients to return
+    // input when it is available.  It will
+    // return S_OK if the input is used to
+    // satisfy an Input call and S_FALSE if
+    // the input is ignored.
+    // This method is reentrant.
+    STDMETHOD(ReturnInput)(
+        THIS_
+        _In_ PCSTR Buffer
+        ) PURE;
+
+    // Sends output through clients
+    // output callbacks if the mask is allowed
+    // by the current output control mask and
+    // according to the output distribution
+    // settings.
+    STDMETHODV(Output)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaList)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // The following methods allow direct control
+    // over the distribution of the given output
+    // for situations where something other than
+    // the default is desired.  These methods require
+    // extra work in the engine so they should
+    // only be used when necessary.
+    STDMETHODV(ControlledOutput)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    // Displays the standard command-line prompt
+    // followed by the given output.  If Format
+    // is NULL no additional output is produced.
+    // Output is produced under the
+    // DEBUG_OUTPUT_PROMPT mask.
+    // This method only outputs the prompt; it
+    // does not get input.
+    STDMETHODV(OutputPrompt)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaList)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    // Gets the text that would be displayed by OutputPrompt.
+    STDMETHOD(GetPromptText)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // Outputs information about the current
+    // debuggee state such as a register
+    // summary, disassembly at the current PC,
+    // closest symbol and others.
+    // Uses the line prefix.
+    STDMETHOD(OutputCurrentState)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Outputs the debugger and extension version
+    // information.  This method is reentrant.
+    // Uses the line prefix.
+    STDMETHOD(OutputVersionInformation)(
+        THIS_
+        _In_ ULONG OutputControl
+        ) PURE;
+
+    // In user-mode debugging sessions the
+    // engine will set an event when
+    // exceptions are continued.  This can
+    // be used to synchronize other processes
+    // with the debuggers handling of events.
+    // For example, this is used to support
+    // the e argument to ntsd.
+    STDMETHOD(GetNotifyEventHandle)(
+        THIS_
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(SetNotifyEventHandle)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    STDMETHOD(Assemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(Disassemble)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Returns the value of the effective address
+    // computed for the last Disassemble, if there
+    // was one.
+    STDMETHOD(GetDisassembleEffectiveOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // Uses the line prefix if necessary.
+    STDMETHOD(OutputDisassembly)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    // Produces multiple lines of disassembly output.
+    // There will be PreviousLines of disassembly before
+    // the given offset if a valid disassembly exists.
+    // In all, there will be TotalLines of output produced.
+    // The first and last line offsets are returned
+    // specially and all lines offsets can be retrieved
+    // through LineOffsets.  LineOffsets will contain
+    // offsets for each line where disassembly started.
+    // When disassembly of a single instruction takes
+    // multiple lines the initial offset will be followed
+    // by DEBUG_INVALID_OFFSET.
+    // Uses the line prefix.
+    STDMETHOD(OutputDisassemblyLines)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG PreviousLines,
+        _In_ ULONG TotalLines,
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG OffsetLine,
+        _Out_opt_ PULONG64 StartOffset,
+        _Out_opt_ PULONG64 EndOffset,
+        _Out_writes_opt_(TotalLines) PULONG64 LineOffsets
+        ) PURE;
+    // Returns the offset of the start of
+    // the instruction thats the given
+    // delta away from the instruction
+    // at the initial offset.
+    // This routine does not check for
+    // validity of the instruction or
+    // the memory containing it.
+    STDMETHOD(GetNearInstruction)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_ PULONG64 NearOffset
+        ) PURE;
+
+    // Offsets can be passed in as zero to use the current
+    // thread state.
+    STDMETHOD(GetStackTrace)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    // Does a simple stack trace to determine
+    // what the current return address is.
+    STDMETHOD(GetReturnOffset)(
+        THIS_
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // If Frames is NULL OutputStackTrace will
+    // use GetStackTrace to get FramesSize frames
+    // and then output them.  The current register
+    // values for frame, stack and instruction offsets
+    // are used.
+    // Uses the line prefix.
+    STDMETHOD(OutputStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Returns information about the debuggee such
+    // as user vs. kernel, dump vs. live, etc.
+    STDMETHOD(GetDebuggeeType)(
+        THIS_
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
+        ) PURE;
+    // Returns the type of physical processors in
+    // the machine.
+    // Returns one of the IMAGE_FILE_MACHINE values.
+    STDMETHOD(GetActualProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Returns the type of processor used in the
+    // current processor context.
+    STDMETHOD(GetExecutingProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    // Query all the possible processor types that
+    // may be encountered during this debug session.
+    STDMETHOD(GetNumberPossibleExecutingProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetPossibleExecutingProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Get the number of actual processors in
+    // the machine.
+    STDMETHOD(GetNumberProcessors)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // PlatformId is one of the VER_PLATFORM values.
+    // Major and minor are as given in the NT
+    // kernel debugger protocol.
+    // ServicePackString and ServicePackNumber indicate the
+    // system service pack level.  ServicePackNumber is not
+    // available in some sessions where the service pack level
+    // is only expressed as a string.  The service pack information
+    // will be empty if the system does not have a service pack
+    // applied.
+    // The build string is string information identifying the
+    // particular build of the system.  The build string is
+    // empty if the system has no particular identifying
+    // information.
+    STDMETHOD(GetSystemVersion)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Major,
+        _Out_ PULONG Minor,
+        _Out_writes_opt_(ServicePackStringSize) PSTR ServicePackString,
+        _In_ ULONG ServicePackStringSize,
+        _Out_opt_ PULONG ServicePackStringUsed,
+        _Out_ PULONG ServicePackNumber,
+        _Out_writes_opt_(BuildStringSize) PSTR BuildString,
+        _In_ ULONG BuildStringSize,
+        _Out_opt_ PULONG BuildStringUsed
+        ) PURE;
+    // Returns the page size for the currently executing
+    // processor context.  The page size may vary between
+    // processor types.
+    STDMETHOD(GetPageSize)(
+        THIS_
+        _Out_ PULONG Size
+        ) PURE;
+    // Returns S_OK if the current processor context uses
+    // 64-bit addresses, otherwise S_FALSE.
+    STDMETHOD(IsPointer64Bit)(
+        THIS
+        ) PURE;
+    // Reads the bugcheck data area and returns the
+    // current contents.  This method only works
+    // in kernel debugging sessions.
+    STDMETHOD(ReadBugCheckData)(
+        THIS_
+        _Out_ PULONG Code,
+        _Out_ PULONG64 Arg1,
+        _Out_ PULONG64 Arg2,
+        _Out_ PULONG64 Arg3,
+        _Out_ PULONG64 Arg4
+        ) PURE;
+
+    // Query all the processor types supported by
+    // the engine.  This is a complete list and is
+    // not related to the machine running the engine
+    // or the debuggee.
+    STDMETHOD(GetNumberSupportedProcessorTypes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetSupportedProcessorTypes)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Types
+        ) PURE;
+    // Returns a full, descriptive name and an
+    // abbreviated name for a processor type.
+    STDMETHOD(GetProcessorTypeNames)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    // Gets and sets the type of processor to
+    // use when doing things like setting
+    // breakpoints, accessing registers,
+    // getting stack traces and so on.
+    STDMETHOD(GetEffectiveProcessorType)(
+        THIS_
+        _Out_ PULONG Type
+        ) PURE;
+    STDMETHOD(SetEffectiveProcessorType)(
+        THIS_
+        _In_ ULONG Type
+        ) PURE;
+
+    // Returns information about whether and how
+    // the debuggee is running.  Status will
+    // be GO if the debuggee is running and
+    // BREAK if it isnt.
+    // If no debuggee exists the status is
+    // NO_DEBUGGEE.
+    // This method is reentrant.
+    STDMETHOD(GetExecutionStatus)(
+        THIS_
+        _Out_ PULONG Status
+        ) PURE;
+    // Changes the execution status of the
+    // engine from stopped to running.
+    // Status must be one of the go or step
+    // status values.
+    STDMETHOD(SetExecutionStatus)(
+        THIS_
+        _In_ ULONG Status
+        ) PURE;
+
+    // Controls what code interpretation level the debugger
+    // runs at.  The debugger checks the code level when
+    // deciding whether to step by a source line or
+    // assembly instruction along with other related operations.
+    STDMETHOD(GetCodeLevel)(
+        THIS_
+        _Out_ PULONG Level
+        ) PURE;
+    STDMETHOD(SetCodeLevel)(
+        THIS_
+        _In_ ULONG Level
+        ) PURE;
+
+    // Gets and sets engine control flags.
+    // These methods are reentrant.
+    STDMETHOD(GetEngineOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetEngineOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Gets and sets control values for
+    // handling system error events.
+    // If the system error level is less
+    // than or equal to the given levels
+    // the error may be displayed and
+    // the default break for the event
+    // may be set.
+    STDMETHOD(GetSystemErrorControl)(
+        THIS_
+        _Out_ PULONG OutputLevel,
+        _Out_ PULONG BreakLevel
+        ) PURE;
+    STDMETHOD(SetSystemErrorControl)(
+        THIS_
+        _In_ ULONG OutputLevel,
+        _In_ ULONG BreakLevel
+        ) PURE;
+
+    // The command processor supports simple
+    // string replacement macros in Evaluate and
+    // Execute.  There are currently ten macro
+    // slots available.  Slots 0-9 map to
+    // the command invocations $u0-$u9.
+    STDMETHOD(GetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacro)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCSTR Macro
+        ) PURE;
+
+    // Controls the default number radix used
+    // in expressions and commands.
+    STDMETHOD(GetRadix)(
+        THIS_
+        _Out_ PULONG Radix
+        ) PURE;
+    STDMETHOD(SetRadix)(
+        THIS_
+        _In_ ULONG Radix
+        ) PURE;
+
+    // Evaluates the given expression string and
+    // returns the resulting value.
+    // If DesiredType is DEBUG_VALUE_INVALID then
+    // the natural type is used.
+    // RemainderIndex, if provided, is set to the index
+    // of the first character in the input string that was
+    // not used when evaluating the expression.
+    STDMETHOD(Evaluate)(
+        THIS_
+        _In_ PCSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+    // Attempts to convert the input value to a value
+    // of the requested type in the output value.
+    // Conversions can fail if no conversion exists.
+    // Successful conversions may be lossy.
+    STDMETHOD(CoerceValue)(
+        THIS_
+        _In_ PDEBUG_VALUE In,
+        _In_ ULONG OutType,
+        _Out_ PDEBUG_VALUE Out
+        ) PURE;
+    STDMETHOD(CoerceValues)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_VALUE In,
+        _In_reads_(Count) PULONG OutTypes,
+        _Out_writes_(Count) PDEBUG_VALUE Out
+        ) PURE;
+
+    // Executes the given command string.
+    // If the string has multiple commands
+    // Execute will not return until all
+    // of them have been executed.  If this
+    // requires waiting for the debuggee to
+    // execute an internal wait will be done
+    // so Execute can take an arbitrary amount
+    // of time.
+    STDMETHOD(Execute)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    // Executes the given command file by
+    // reading a line at a time and processing
+    // it with Execute.
+    STDMETHOD(ExecuteCommandFile)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Breakpoint interfaces are described
+    // elsewhere in this section.
+    STDMETHOD(GetNumberBreakpoints)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    // It is possible for this retrieval function to
+    // fail even with an index within the number of
+    // existing breakpoints if the breakpoint is
+    // a private breakpoint.
+    STDMETHOD(GetBreakpointByIndex)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // If Ids is non-NULL the Count breakpoints
+    // referred to in the Ids array are returned,
+    // otherwise breakpoints from index Start to
+    // Start + Count  1 are returned.
+    STDMETHOD(GetBreakpointParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Ids,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_BREAKPOINT_PARAMETERS Params
+        ) PURE;
+    // Breakpoints are created empty and disabled.
+    // When their parameters have been set they
+    // should be enabled by setting the ENABLE flag.
+    // If DesiredId is DEBUG_ANY_ID then the
+    // engine picks an unused ID.  If DesiredId
+    // is any other number the engine attempts
+    // to use the given ID for the breakpoint.
+    // If another breakpoint exists with that ID
+    // the call will fail.
+    STDMETHOD(AddBreakpoint)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT* Bp
+        ) PURE;
+    // Breakpoint interface is invalid after this call.
+    STDMETHOD(RemoveBreakpoint)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT Bp
+        ) PURE;
+
+    // Control and use extension DLLs.
+    STDMETHOD(AddExtension)(
+        THIS_
+        _In_ PCSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(RemoveExtension)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPath)(
+        THIS_
+        _In_ PCSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    // If Handle is zero the extension
+    // chain is walked searching for the
+    // function.
+    STDMETHOD(CallExtension)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR Function,
+        _In_opt_ PCSTR Arguments
+        ) PURE;
+    // GetExtensionFunction works like
+    // GetProcAddress on extension DLLs
+    // to allow raw function-call-level
+    // interaction with extension DLLs.
+    // Such functions do not need to
+    // follow the standard extension prototype
+    // if they are not going to be called
+    // through the text extension interface.
+    // This function cannot be called remotely.
+    STDMETHOD(GetExtensionFunction)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+    // These methods return alternate
+    // extension interfaces in order to allow
+    // interface-style extension DLLs to mix in
+    // older extension calls.
+    // Structure sizes must be initialized before
+    // the call.
+    // These methods cannot be called remotely.
+    STDMETHOD(GetWindbgExtensionApis32)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS32 Api
+        ) PURE;
+    STDMETHOD(GetWindbgExtensionApis64)(
+        THIS_
+        _Inout_ PWINDBG_EXTENSION_APIS64 Api
+        ) PURE;
+
+    // The engine provides a simple mechanism
+    // to filter common events.  Arbitrarily complicated
+    // filtering can be done by registering event callbacks
+    // but simple event filtering only requires
+    // setting the options of one of the predefined
+    // event filters.
+    // Simple event filters are either for specific
+    // events and therefore have an enumerant or
+    // they are for an exception and are based on
+    // the exceptions code.  Exception filters
+    // are further divided into exceptions specially
+    // handled by the engine, which is a fixed set,
+    // and arbitrary exceptions.
+    // All three groups of filters are indexed together
+    // with the specific filters first, then the specific
+    // exception filters and finally the arbitrary
+    // exception filters.
+    // The first specific exception is the default
+    // exception.  If an exception event occurs for
+    // an exception without settings the default
+    // exception settings are used.
+    STDMETHOD(GetNumberEventFilters)(
+        THIS_
+        _Out_ PULONG SpecificEvents,
+        _Out_ PULONG SpecificExceptions,
+        _Out_ PULONG ArbitraryExceptions
+        ) PURE;
+    // Some filters have descriptive text associated with them.
+    STDMETHOD(GetEventFilterText)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    // All filters support executing a command when the
+    // event occurs.
+    STDMETHOD(GetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    STDMETHOD(SetSpecificFilterParameters)(
+        THIS_
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_SPECIFIC_FILTER_PARAMETERS Params
+        ) PURE;
+    // Some specific filters have arguments to further
+    // qualify their operation.
+    STDMETHOD(GetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgument)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Argument
+        ) PURE;
+    // If Codes is non-NULL Start is ignored.
+    STDMETHOD(GetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Codes,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // The codes in the parameter data control the application
+    // of the parameter data.  If a code is not already in
+    // the set of filters it is added.  If the ExecutionOption
+    // for a code is REMOVE then the filter is removed.
+    // Specific exception filters cannot be removed.
+    STDMETHOD(SetExceptionFilterParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_(Count) PDEBUG_EXCEPTION_FILTER_PARAMETERS Params
+        ) PURE;
+    // Exception filters support an additional command for
+    // second-chance events.
+    STDMETHOD(GetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommand)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCSTR Command
+        ) PURE;
+
+    // Yields processing to the engine until
+    // an event occurs.  This method may
+    // only be called by the thread that started
+    // the debug session.
+    // When an event occurs the engine carries
+    // out all event processing such as calling
+    // callbacks.
+    // If the callbacks indicate that execution should
+    // break the wait will return, otherwise it
+    // goes back to waiting for a new event.
+    // If the timeout expires, S_FALSE is returned.
+    // The timeout is not currently supported for
+    // kernel debugging.
+    STDMETHOD(WaitForEvent)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG Timeout
+        ) PURE;
+
+    // Retrieves information about the last event that occurred.
+    // EventType is one of the event callback mask bits.
+    // ExtraInformation contains additional event-specific
+    // information.  Not all events have additional information.
+    STDMETHOD(GetLastEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    // IDebugControl2.
+
+    STDMETHOD(GetCurrentTimeDate)(
+        THIS_
+        _Out_ PULONG TimeDate
+        ) PURE;
+    // Retrieves the number of seconds since the
+    // machine started running.
+    STDMETHOD(GetCurrentSystemUpTime)(
+        THIS_
+        _Out_ PULONG UpTime
+        ) PURE;
+
+    // If the current session is a dump session,
+    // retrieves any extended format information.
+    STDMETHOD(GetDumpFormatFlags)(
+        THIS_
+        _Out_ PULONG FormatFlags
+        ) PURE;
+
+    // The debugger has been enhanced to allow
+    // arbitrary text replacements in addition
+    // to the simple $u0-$u9 text macros.
+    // Text replacement takes a given source
+    // text in commands and converts it to the
+    // given destination text.  Replacements
+    // are named by their source text so that
+    // only one replacement for a source text
+    // string can exist.
+    STDMETHOD(GetNumberTextReplacements)(
+        THIS_
+        _Out_ PULONG NumRepl
+        ) PURE;
+    // If SrcText is non-NULL the replacement
+    // is looked up by source text, otherwise
+    // Index is used to get the Nth replacement.
+    STDMETHOD(GetTextReplacement)(
+        THIS_
+        _In_opt_ PCSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    // Setting the destination text to
+    // NULL removes the alias.
+    STDMETHOD(SetTextReplacement)(
+        THIS_
+        _In_ PCSTR SrcText,
+        _In_opt_ PCSTR DstText
+        ) PURE;
+    STDMETHOD(RemoveTextReplacements)(
+        THIS
+        ) PURE;
+    // Outputs the complete list of current
+    // replacements.
+    STDMETHOD(OutputTextReplacements)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl3.
+
+    // Control options for assembly and disassembly.
+    STDMETHOD(GetAssemblyOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetAssemblyOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // Control the expression syntax.
+    STDMETHOD(GetExpressionSyntax)(
+        THIS_
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(SetExpressionSyntax)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+    // Look up a syntax by its abbreviated
+    // name and set it.
+    STDMETHOD(SetExpressionSyntaxByName)(
+        THIS_
+        _In_ PCSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetNumberExpressionSyntaxes)(
+        THIS_
+        _Out_ PULONG Number
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNames)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    //
+    // Some debug sessions have only a single
+    // possible event, such as a snapshot dump
+    // file; some have dynamic events, such as
+    // a live debug session; and others may have
+    // multiple events, such as a dump file that
+    // contains snapshots from different points
+    // in time.  The following methods allow
+    // discovery and selection of the available
+    // events for a session.
+    // Sessions with one or more static events
+    // will be able to report all of the events
+    // when queried.  Sessions with dynamic events
+    // will only report a single event representing
+    // the current event.
+    // Switching events constitutes execution and
+    // changing the current event will alter the
+    // execution status to a running state, after
+    // which WaitForEvent must be used to process
+    // the selected event.
+    //
+
+    // GetNumberEvents returns S_OK if this is the
+    // complete set of events possible, such as for
+    // a static session; or S_FALSE if other events
+    // may be possible, such as for a dynamic session.
+    STDMETHOD(GetNumberEvents)(
+        THIS_
+        _Out_ PULONG Events
+        ) PURE;
+    // Sessions may have descriptive information for
+    // the various events available.  The amount of
+    // information varies according to the specific
+    // session and data.
+    STDMETHOD(GetEventIndexDescription)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+    STDMETHOD(GetCurrentEventIndex)(
+        THIS_
+        _Out_ PULONG Index
+        ) PURE;
+    // SetNextEventIndex works like seek in that
+    // it can set an absolute or relative index.
+    // SetNextEventIndex works similarly to SetExecutionStatus
+    // by putting the session into a running state, after
+    // which the caller must call WaitForEvent.  The
+    // current event index only changes when WaitForEvent
+    // is called.
+    STDMETHOD(SetNextEventIndex)(
+        THIS_
+        _In_ ULONG Relation,
+        _In_ ULONG Value,
+        _Out_ PULONG NextIndex
+        ) PURE;
+
+    // IDebugControl4.
+
+    STDMETHOD(GetLogFileWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PBOOL Append
+        ) PURE;
+    STDMETHOD(OpenLogFileWide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ BOOL Append
+        ) PURE;
+
+    STDMETHOD(InputWide)(
+        THIS_
+        _Out_writes_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InputSize
+        ) PURE;
+    STDMETHOD(ReturnInputWide)(
+        THIS_
+        _In_ PCWSTR Buffer
+        ) PURE;
+
+    STDMETHODV(OutputWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputVaListWide)(
+        THIS_
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHODV(ControlledOutputWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(ControlledOutputVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Mask,
+        _In_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+
+    STDMETHODV(OutputPromptWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        ...
+        ) PURE;
+    STDMETHOD(OutputPromptVaListWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_opt_ PCWSTR Format,
+        _In_ va_list Args
+        ) PURE;
+    STDMETHOD(GetPromptTextWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+
+    STDMETHOD(AssembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ PCWSTR Instr,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+    STDMETHOD(DisassembleWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DisassemblySize,
+        _Out_ PULONG64 EndOffset
+        ) PURE;
+
+    STDMETHOD(GetProcessorTypeNamesWide)(
+        THIS_
+        _In_ ULONG Type,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MacroSize
+        ) PURE;
+    STDMETHOD(SetTextMacroWide)(
+        THIS_
+        _In_ ULONG Slot,
+        _In_ PCWSTR Macro
+        ) PURE;
+
+    STDMETHOD(EvaluateWide)(
+        THIS_
+        _In_ PCWSTR Expression,
+        _In_ ULONG DesiredType,
+        _Out_ PDEBUG_VALUE Value,
+        _Out_opt_ PULONG RemainderIndex
+        ) PURE;
+
+    STDMETHOD(ExecuteWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR Command,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(ExecuteCommandFileWide)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ PCWSTR CommandFile,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetBreakpointByIndex2)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(GetBreakpointById2)(
+        THIS_
+        _In_ ULONG Id,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(AddBreakpoint2)(
+        THIS_
+        _In_ ULONG Type,
+        _In_ ULONG DesiredId,
+        _Out_ PDEBUG_BREAKPOINT2* Bp
+        ) PURE;
+    STDMETHOD(RemoveBreakpoint2)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT2 Bp
+        ) PURE;
+
+    STDMETHOD(AddExtensionWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _In_ ULONG Flags,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetExtensionByPathWide)(
+        THIS_
+        _In_ PCWSTR Path,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(CallExtensionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR Function,
+        _In_opt_ PCWSTR Arguments
+        ) PURE;
+    STDMETHOD(GetExtensionFunctionWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ PCWSTR FuncName,
+        _Out_ FARPROC* Function
+        ) PURE;
+
+    STDMETHOD(GetEventFilterTextWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TextSize
+        ) PURE;
+    STDMETHOD(GetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetEventFilterCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+    STDMETHOD(GetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ArgumentSize
+        ) PURE;
+    STDMETHOD(SetSpecificFilterArgumentWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Argument
+        ) PURE;
+    STDMETHOD(GetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG CommandSize
+        ) PURE;
+    STDMETHOD(SetExceptionFilterSecondCommandWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ PCWSTR Command
+        ) PURE;
+
+    STDMETHOD(GetLastEventInformationWide)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed,
+        _Out_writes_opt_(DescriptionSize) PWSTR Description,
+        _In_ ULONG DescriptionSize,
+        _Out_opt_ PULONG DescriptionUsed
+        ) PURE;
+
+    STDMETHOD(GetTextReplacementWide)(
+        THIS_
+        _In_opt_ PCWSTR SrcText,
+        _In_ ULONG Index,
+        _Out_writes_opt_(SrcBufferSize) PWSTR SrcBuffer,
+        _In_ ULONG SrcBufferSize,
+        _Out_opt_ PULONG SrcSize,
+        _Out_writes_opt_(DstBufferSize) PWSTR DstBuffer,
+        _In_ ULONG DstBufferSize,
+        _Out_opt_ PULONG DstSize
+        ) PURE;
+    STDMETHOD(SetTextReplacementWide)(
+        THIS_
+        _In_ PCWSTR SrcText,
+        _In_opt_ PCWSTR DstText
+        ) PURE;
+
+    STDMETHOD(SetExpressionSyntaxByNameWide)(
+        THIS_
+        _In_ PCWSTR AbbrevName
+        ) PURE;
+    STDMETHOD(GetExpressionSyntaxNamesWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(FullNameBufferSize) PWSTR FullNameBuffer,
+        _In_ ULONG FullNameBufferSize,
+        _Out_opt_ PULONG FullNameSize,
+        _Out_writes_opt_(AbbrevNameBufferSize) PWSTR AbbrevNameBuffer,
+        _In_ ULONG AbbrevNameBufferSize,
+        _Out_opt_ PULONG AbbrevNameSize
+        ) PURE;
+
+    STDMETHOD(GetEventIndexDescriptionWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG Which,
+        _In_opt_ PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DescSize
+        ) PURE;
+
+    STDMETHOD(GetLogFile2)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2)(
+        THIS_
+        _In_ PCSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(GetLogFile2Wide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_ PULONG Flags
+        ) PURE;
+    STDMETHOD(OpenLogFile2Wide)(
+        THIS_
+        _In_ PCWSTR File,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // GetSystemVersion always returns the kd
+    // major/minor version numbers, which are
+    // different than the Win32 version numbers.
+    // GetSystemVersionValues can be used
+    // to determine the Win32 version values.
+    STDMETHOD(GetSystemVersionValues)(
+        THIS_
+        _Out_ PULONG PlatformId,
+        _Out_ PULONG Win32Major,
+        _Out_ PULONG Win32Minor,
+        _Out_opt_ PULONG KdMajor,
+        _Out_opt_ PULONG KdMinor
+        ) PURE;
+    // Strings are selected with DEBUG_SYSVERSTR_*.
+    STDMETHOD(GetSystemVersionString)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSystemVersionStringWide)(
+        THIS_
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+
+    // Stack tracing with a full initial context
+    // and full context return for each frame.
+    // The FrameContextsSize parameter is the total
+    // byte size of FrameContexts.  FrameContextsEntrySize
+    // gives the byte size of each entry in
+    // FrameContexts.
+    STDMETHOD(GetContextStackTrace)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+    STDMETHOD(OutputContextStackTrace)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Some targets, such as user-mode minidump files,
+    // have separate "event of interest" information
+    // stored within them.  This method allows
+    // access to that information.
+    STDMETHOD(GetStoredEventInformation)(
+        THIS_
+        _Out_ PULONG Type,
+        _Out_ PULONG ProcessId,
+        _Out_ PULONG ThreadId,
+        _Out_writes_bytes_opt_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize,
+        _Out_opt_ PULONG ContextUsed,
+        _Out_writes_bytes_opt_(ExtraInformationSize) PVOID ExtraInformation,
+        _In_ ULONG ExtraInformationSize,
+        _Out_opt_ PULONG ExtraInformationUsed
+        ) PURE;
+
+    // Managed debugging support relies on debugging
+    // functionality provided by the Common Language Runtime.
+    // This method provides feedback on the engine's
+    // use of the runtime debugging APIs.
+    STDMETHOD(GetManagedStatus)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    STDMETHOD(GetManagedStatusWide)(
+        THIS_
+        _Out_opt_ PULONG Flags,
+        _In_ ULONG WhichString,
+        _Out_writes_opt_(StringSize) PWSTR String,
+        _In_ ULONG StringSize,
+        _Out_opt_ PULONG StringNeeded
+        ) PURE;
+    // Clears and reinitializes the engine's
+    // managed code debugging support.
+    STDMETHOD(ResetManagedStatus)(
+        THIS_
+        _In_ ULONG Flags
+        ) PURE;
+
+    // IDebugControl5
+    STDMETHOD(GetStackTraceEx)(
+        THIS_
+        _In_ ULONG64 FrameOffset,
+        _In_ ULONG64 StackOffset,
+        _In_ ULONG64 InstructionOffset,
+        _Out_writes_to_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_opt_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetContextStackTraceEx)(
+        THIS_
+        _In_reads_bytes_opt_(StartContextSize) PVOID StartContext,
+        _In_ ULONG StartContextSize,
+        _Out_writes_to_opt_(FramesSize,*FramesFilled) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _Out_writes_bytes_opt_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _Out_opt_ PULONG FramesFilled
+        ) PURE;
+
+    STDMETHOD(OutputContextStackTraceEx)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_reads_(FramesSize) PDEBUG_STACK_FRAME_EX Frames,
+        _In_ ULONG FramesSize,
+        _In_reads_bytes_(FrameContextsSize) PVOID FrameContexts,
+        _In_ ULONG FrameContextsSize,
+        _In_ ULONG FrameContextsEntrySize,
+        _In_ ULONG Flags
+        ) PURE;
+
+    STDMETHOD(GetBreakpointByGuid)(
+        THIS_
+        _In_ LPGUID Guid,
+        _Out_ PDEBUG_BREAKPOINT3* Bp
+        ) PURE;
+
+    // IDebugControl6
+
+    // Returns additional info states for 
+    STDMETHOD(GetExecutionStatusEx)(
+        THIS_
+        _Out_ PULONG Status
+        ) PURE;
+
+    STDMETHOD(GetSynchronizationStatus)(
+        THIS_
+        _Out_ PULONG SendsAttempted,
+        _Out_ PULONG SecondsSinceLastResponse
+        ) PURE;
+
+    // IDebugControl7
+
+    STDMETHOD(GetDebuggeeType2)(
+        THIS_
+        _In_ ULONG Flags,
+        _Out_ PULONG Class,
+        _Out_ PULONG Qualifier
         ) PURE;
 };
 
@@ -9050,6 +15772,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
 #define DEBUG_DATA_KdPrintBufferSizeAddr                720
 #define DEBUG_DATA_MmBadPagesDetected                   800
 #define DEBUG_DATA_EtwpDebuggerData                     816
+#define DEBUG_DATA_PteBase                              864
 
 #define DEBUG_DATA_PaeEnabled                        100000
 #define DEBUG_DATA_SharedUserData                    100008
@@ -9060,6 +15783,7 @@ DECLARE_INTERFACE_(IDebugControl4, IUnknown)
 #define DEBUG_DATA_DumpWriterVersion                 100048
 #define DEBUG_DATA_DumpPowerState                    100056
 #define DEBUG_DATA_DumpMmStorage                     100064
+#define DEBUG_DATA_DumpAttributes                    100072
 
 //
 // Processor information structures.
@@ -9098,9 +15822,17 @@ typedef struct _DEBUG_PROCESSOR_IDENTIFICATION_X86
 
 typedef struct _DEBUG_PROCESSOR_IDENTIFICATION_ARM
 {
-    ULONG Type;
+    ULONG Model;
     ULONG Revision;
+    CHAR  VendorString[16];
 } DEBUG_PROCESSOR_IDENTIFICATION_ARM, *PDEBUG_PROCESSOR_IDENTIFICATION_ARM;
+
+typedef struct _DEBUG_PROCESSOR_IDENTIFICATION_ARM64
+{
+    ULONG Model;
+    ULONG Revision;
+    CHAR  VendorString[16];
+} DEBUG_PROCESSOR_IDENTIFICATION_ARM64, *PDEBUG_PROCESSOR_IDENTIFICATION_ARM64;
 
 typedef union _DEBUG_PROCESSOR_IDENTIFICATION_ALL
 {
@@ -9109,6 +15841,7 @@ typedef union _DEBUG_PROCESSOR_IDENTIFICATION_ALL
     DEBUG_PROCESSOR_IDENTIFICATION_IA64  Ia64;
     DEBUG_PROCESSOR_IDENTIFICATION_X86   X86;
     DEBUG_PROCESSOR_IDENTIFICATION_ARM   Arm;
+    DEBUG_PROCESSOR_IDENTIFICATION_ARM64 Arm64;
 } DEBUG_PROCESSOR_IDENTIFICATION_ALL, *PDEBUG_PROCESSOR_IDENTIFICATION_ALL;
 
 // Indices for ReadProcessorSystemData.
@@ -9126,8 +15859,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -9139,17 +15872,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
     // IDebugDataSpaces.
     STDMETHOD(ReadVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // SearchVirtual searches the given virtual
     // address range for the given pattern.  PatternSize
@@ -9161,12 +15894,12 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
     // increments.
     STDMETHOD(SearchVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Length,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __in ULONG PatternGranularity,
-        __out PULONG64 MatchOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Length,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _In_ ULONG PatternGranularity,
+        _Out_ PULONG64 MatchOffset
         ) PURE;
     // These methods are identical to Read/WriteVirtual
     // except that they avoid the kernel virtual memory
@@ -9177,17 +15910,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
     // In user-mode they are the same as Read/WriteVirtual.
     STDMETHOD(ReadVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // The following two methods are convenience
     // methods for accessing pointer values.
@@ -9196,115 +15929,115 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
     // These routines stop at the first failure.
     STDMETHOD(ReadPointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __out_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _Out_writes_(Count) PULONG64 Ptrs
         ) PURE;
     STDMETHOD(WritePointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __in_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _In_reads_(Count) PULONG64 Ptrs
         ) PURE;
     // All non-virtual data spaces are only
     // available when kernel debugging.
     STDMETHOD(ReadPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WritePhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadMsr)(
         THIS_
-        __in ULONG Msr,
-        __out PULONG64 Value
+        _In_ ULONG Msr,
+        _Out_ PULONG64 Value
         ) PURE;
     STDMETHOD(WriteMsr)(
         THIS_
-        __in ULONG Msr,
-        __in ULONG64 Value
+        _In_ ULONG Msr,
+        _In_ ULONG64 Value
         ) PURE;
     STDMETHOD(ReadBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(CheckLowMemory)(
         THIS
         ) PURE;
     STDMETHOD(ReadDebuggerData)(
         THIS_
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
     STDMETHOD(ReadProcessorSystemData)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Processor,
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 };
 
@@ -9325,6 +16058,9 @@ DECLARE_INTERFACE_(IDebugDataSpaces, IUnknown)
 #define DEBUG_HANDLE_DATA_TYPE_ALL_HANDLE_OPERATIONS 10
 #define DEBUG_HANDLE_DATA_TYPE_MINI_PROCESS_1        11
 #define DEBUG_HANDLE_DATA_TYPE_MINI_PROCESS_2        12
+#define DEBUG_HANDLE_DATA_TYPE_MINI_EVENT_1          13
+#define DEBUG_HANDLE_DATA_TYPE_MINI_SECTION_1        14
+#define DEBUG_HANDLE_DATA_TYPE_MINI_SEMAPHORE_1      15
 
 typedef struct _DEBUG_HANDLE_DATA_BASIC
 {
@@ -9343,8 +16079,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -9356,17 +16092,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // IDebugDataSpaces.
     STDMETHOD(ReadVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // SearchVirtual searches the given virtual
     // address range for the given pattern.  PatternSize
@@ -9378,12 +16114,12 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // increments.
     STDMETHOD(SearchVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Length,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __in ULONG PatternGranularity,
-        __out PULONG64 MatchOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Length,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _In_ ULONG PatternGranularity,
+        _Out_ PULONG64 MatchOffset
         ) PURE;
     // These methods are identical to Read/WriteVirtual
     // except that they avoid the kernel virtual memory
@@ -9394,17 +16130,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // In user-mode they are the same as Read/WriteVirtual.
     STDMETHOD(ReadVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // The following two methods are convenience
     // methods for accessing pointer values.
@@ -9413,123 +16149,123 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // These routines stop at the first failure.
     STDMETHOD(ReadPointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __out_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _Out_writes_(Count) PULONG64 Ptrs
         ) PURE;
     STDMETHOD(WritePointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __in_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _In_reads_(Count) PULONG64 Ptrs
         ) PURE;
     // All non-virtual data spaces are only
     // available when kernel debugging.
     STDMETHOD(ReadPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WritePhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadMsr)(
         THIS_
-        __in ULONG Msr,
-        __out PULONG64 Value
+        _In_ ULONG Msr,
+        _Out_ PULONG64 Value
         ) PURE;
     STDMETHOD(WriteMsr)(
         THIS_
-        __in ULONG Msr,
-        __in ULONG64 Value
+        _In_ ULONG Msr,
+        _In_ ULONG64 Value
         ) PURE;
     STDMETHOD(ReadBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(CheckLowMemory)(
         THIS
         ) PURE;
     STDMETHOD(ReadDebuggerData)(
         THIS_
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
     STDMETHOD(ReadProcessorSystemData)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Processor,
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // IDebugDataSpaces2.
 
     STDMETHOD(VirtualToPhysical)(
         THIS_
-        __in ULONG64 Virtual,
-        __out PULONG64 Physical
+        _In_ ULONG64 Virtual,
+        _Out_ PULONG64 Physical
         ) PURE;
     // Returns the physical addresses for the
     // N levels of the systems paging structures.
@@ -9545,10 +16281,10 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // translated S_FALSE is returned.
     STDMETHOD(GetVirtualTranslationPhysicalOffsets)(
         THIS_
-        __in ULONG64 Virtual,
-        __out_ecount_opt(OffsetsSize) PULONG64 Offsets,
-        __in ULONG OffsetsSize,
-        __out_opt PULONG Levels
+        _In_ ULONG64 Virtual,
+        _Out_writes_opt_(OffsetsSize) PULONG64 Offsets,
+        _In_ ULONG OffsetsSize,
+        _Out_opt_ PULONG Levels
         ) PURE;
 
     // System handle data is accessible in certain
@@ -9557,30 +16293,30 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // to platform.
     STDMETHOD(ReadHandleData)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG DataType,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG64 Handle,
+        _In_ ULONG DataType,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // Fills memory with the given pattern.
     // The fill stops at the first non-writable byte.
     STDMETHOD(FillVirtual)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
     STDMETHOD(FillPhysical)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
 
     // Queries virtual memory mapping information given
@@ -9589,8 +16325,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces2, IUnknown)
     // This method currently only works for user-mode sessions.
     STDMETHOD(QueryVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out PMEMORY_BASIC_INFORMATION64 Info
+        _In_ ULONG64 Offset,
+        _Out_ PMEMORY_BASIC_INFORMATION64 Info
         ) PURE;
 };
 
@@ -9601,8 +16337,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -9614,17 +16350,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // IDebugDataSpaces.
     STDMETHOD(ReadVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // SearchVirtual searches the given virtual
     // address range for the given pattern.  PatternSize
@@ -9636,12 +16372,12 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // increments.
     STDMETHOD(SearchVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Length,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __in ULONG PatternGranularity,
-        __out PULONG64 MatchOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Length,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _In_ ULONG PatternGranularity,
+        _Out_ PULONG64 MatchOffset
         ) PURE;
     // These methods are identical to Read/WriteVirtual
     // except that they avoid the kernel virtual memory
@@ -9652,17 +16388,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // In user-mode they are the same as Read/WriteVirtual.
     STDMETHOD(ReadVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // The following two methods are convenience
     // methods for accessing pointer values.
@@ -9671,123 +16407,123 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // These routines stop at the first failure.
     STDMETHOD(ReadPointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __out_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _Out_writes_(Count) PULONG64 Ptrs
         ) PURE;
     STDMETHOD(WritePointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __in_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _In_reads_(Count) PULONG64 Ptrs
         ) PURE;
     // All non-virtual data spaces are only
     // available when kernel debugging.
     STDMETHOD(ReadPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WritePhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadMsr)(
         THIS_
-        __in ULONG Msr,
-        __out PULONG64 Value
+        _In_ ULONG Msr,
+        _Out_ PULONG64 Value
         ) PURE;
     STDMETHOD(WriteMsr)(
         THIS_
-        __in ULONG Msr,
-        __in ULONG64 Value
+        _In_ ULONG Msr,
+        _In_ ULONG64 Value
         ) PURE;
     STDMETHOD(ReadBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(CheckLowMemory)(
         THIS
         ) PURE;
     STDMETHOD(ReadDebuggerData)(
         THIS_
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
     STDMETHOD(ReadProcessorSystemData)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Processor,
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // IDebugDataSpaces2.
 
     STDMETHOD(VirtualToPhysical)(
         THIS_
-        __in ULONG64 Virtual,
-        __out PULONG64 Physical
+        _In_ ULONG64 Virtual,
+        _Out_ PULONG64 Physical
         ) PURE;
     // Returns the physical addresses for the
     // N levels of the systems paging structures.
@@ -9803,10 +16539,10 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // translated S_FALSE is returned.
     STDMETHOD(GetVirtualTranslationPhysicalOffsets)(
         THIS_
-        __in ULONG64 Virtual,
-        __out_ecount_opt(OffsetsSize) PULONG64 Offsets,
-        __in ULONG OffsetsSize,
-        __out_opt PULONG Levels
+        _In_ ULONG64 Virtual,
+        _Out_writes_opt_(OffsetsSize) PULONG64 Offsets,
+        _In_ ULONG OffsetsSize,
+        _Out_opt_ PULONG Levels
         ) PURE;
 
     // System handle data is accessible in certain
@@ -9815,30 +16551,30 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // to platform.
     STDMETHOD(ReadHandleData)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG DataType,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG64 Handle,
+        _In_ ULONG DataType,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // Fills memory with the given pattern.
     // The fill stops at the first non-writable byte.
     STDMETHOD(FillVirtual)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
     STDMETHOD(FillPhysical)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
 
     // Queries virtual memory mapping information given
@@ -9847,8 +16583,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // This method currently only works for user-mode sessions.
     STDMETHOD(QueryVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out PMEMORY_BASIC_INFORMATION64 Info
+        _In_ ULONG64 Offset,
+        _Out_ PMEMORY_BASIC_INFORMATION64 Info
         ) PURE;
 
     // IDebugDataSpaces3.
@@ -9865,8 +16601,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // This method will not read ROM headers.
     STDMETHOD(ReadImageNtHeaders)(
         THIS_
-        __in ULONG64 ImageBase,
-        __out PIMAGE_NT_HEADERS64 Headers
+        _In_ ULONG64 ImageBase,
+        _Out_ PIMAGE_NT_HEADERS64 Headers
         ) PURE;
 
     // Some debug sessions have arbitrary additional
@@ -9880,25 +16616,25 @@ DECLARE_INTERFACE_(IDebugDataSpaces3, IUnknown)
     // absent.
     STDMETHOD(ReadTagged)(
         THIS_
-        __in LPGUID Tag,
-        __in ULONG Offset,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TotalSize
+        _In_ LPGUID Tag,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TotalSize
         ) PURE;
     STDMETHOD(StartEnumTagged)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(GetNextTagged)(
         THIS_
-        __in ULONG64 Handle,
-        __out LPGUID Tag,
-        __out PULONG Size
+        _In_ ULONG64 Handle,
+        _Out_ LPGUID Tag,
+        _Out_ PULONG Size
         ) PURE;
     STDMETHOD(EndEnumTagged)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 };
 
@@ -9924,8 +16660,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -9938,17 +16674,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
 
     STDMETHOD(ReadVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // SearchVirtual searches the given virtual
     // address range for the given pattern.  PatternSize
@@ -9960,12 +16696,12 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // increments.
     STDMETHOD(SearchVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Length,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __in ULONG PatternGranularity,
-        __out PULONG64 MatchOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Length,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _In_ ULONG PatternGranularity,
+        _Out_ PULONG64 MatchOffset
         ) PURE;
     // These methods are identical to Read/WriteVirtual
     // except that they avoid the kernel virtual memory
@@ -9976,17 +16712,17 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // In user-mode they are the same as Read/WriteVirtual.
     STDMETHOD(ReadVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteVirtualUncached)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     // The following two methods are convenience
     // methods for accessing pointer values.
@@ -9995,123 +16731,123 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // These routines stop at the first failure.
     STDMETHOD(ReadPointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __out_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _Out_writes_(Count) PULONG64 Ptrs
         ) PURE;
     STDMETHOD(WritePointersVirtual)(
         THIS_
-        __in ULONG Count,
-        __in ULONG64 Offset,
-        __in_ecount(Count) PULONG64 Ptrs
+        _In_ ULONG Count,
+        _In_ ULONG64 Offset,
+        _In_reads_(Count) PULONG64 Ptrs
         ) PURE;
     // All non-virtual data spaces are only
     // available when kernel debugging.
     STDMETHOD(ReadPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WritePhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteControl)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG Processor,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteIo)(
         THIS_
-        __in ULONG InterfaceType,
-        __in ULONG BusNumber,
-        __in ULONG AddressSpace,
-        __in ULONG64 Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG InterfaceType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG AddressSpace,
+        _In_ ULONG64 Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(ReadMsr)(
         THIS_
-        __in ULONG Msr,
-        __out PULONG64 Value
+        _In_ ULONG Msr,
+        _Out_ PULONG64 Value
         ) PURE;
     STDMETHOD(WriteMsr)(
         THIS_
-        __in ULONG Msr,
-        __in ULONG64 Value
+        _In_ ULONG Msr,
+        _In_ ULONG64 Value
         ) PURE;
     STDMETHOD(ReadBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteBusData)(
         THIS_
-        __in ULONG BusDataType,
-        __in ULONG BusNumber,
-        __in ULONG SlotNumber,
-        __in ULONG Offset,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG BusDataType,
+        _In_ ULONG BusNumber,
+        _In_ ULONG SlotNumber,
+        _In_ ULONG Offset,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(CheckLowMemory)(
         THIS
         ) PURE;
     STDMETHOD(ReadDebuggerData)(
         THIS_
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
     STDMETHOD(ReadProcessorSystemData)(
         THIS_
-        __in ULONG Processor,
-        __in ULONG Index,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG Processor,
+        _In_ ULONG Index,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // IDebugDataSpaces2.
 
     STDMETHOD(VirtualToPhysical)(
         THIS_
-        __in ULONG64 Virtual,
-        __out PULONG64 Physical
+        _In_ ULONG64 Virtual,
+        _Out_ PULONG64 Physical
         ) PURE;
     // Returns the physical addresses for the
     // N levels of the systems paging structures.
@@ -10127,10 +16863,10 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // translated S_FALSE is returned.
     STDMETHOD(GetVirtualTranslationPhysicalOffsets)(
         THIS_
-        __in ULONG64 Virtual,
-        __out_ecount_opt(OffsetsSize) PULONG64 Offsets,
-        __in ULONG OffsetsSize,
-        __out_opt PULONG Levels
+        _In_ ULONG64 Virtual,
+        _Out_writes_opt_(OffsetsSize) PULONG64 Offsets,
+        _In_ ULONG OffsetsSize,
+        _Out_opt_ PULONG Levels
         ) PURE;
 
     // System handle data is accessible in certain
@@ -10139,30 +16875,30 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // to platform.
     STDMETHOD(ReadHandleData)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG DataType,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG DataSize
+        _In_ ULONG64 Handle,
+        _In_ ULONG DataType,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG DataSize
         ) PURE;
 
     // Fills memory with the given pattern.
     // The fill stops at the first non-writable byte.
     STDMETHOD(FillVirtual)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
     STDMETHOD(FillPhysical)(
         THIS_
-        __in ULONG64 Start,
-        __in ULONG Size,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __out_opt PULONG Filled
+        _In_ ULONG64 Start,
+        _In_ ULONG Size,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _Out_opt_ PULONG Filled
         ) PURE;
 
     // Queries virtual memory mapping information given
@@ -10171,8 +16907,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // This method currently only works for user-mode sessions.
     STDMETHOD(QueryVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out PMEMORY_BASIC_INFORMATION64 Info
+        _In_ ULONG64 Offset,
+        _Out_ PMEMORY_BASIC_INFORMATION64 Info
         ) PURE;
 
     // IDebugDataSpaces3.
@@ -10189,8 +16925,8 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // This method will not read ROM headers.
     STDMETHOD(ReadImageNtHeaders)(
         THIS_
-        __in ULONG64 ImageBase,
-        __out PIMAGE_NT_HEADERS64 Headers
+        _In_ ULONG64 ImageBase,
+        _Out_ PIMAGE_NT_HEADERS64 Headers
         ) PURE;
 
     // Some debug sessions have arbitrary additional
@@ -10204,25 +16940,25 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // absent.
     STDMETHOD(ReadTagged)(
         THIS_
-        __in LPGUID Tag,
-        __in ULONG Offset,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG TotalSize
+        _In_ LPGUID Tag,
+        _In_ ULONG Offset,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG TotalSize
         ) PURE;
     STDMETHOD(StartEnumTagged)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(GetNextTagged)(
         THIS_
-        __in ULONG64 Handle,
-        __out LPGUID Tag,
-        __out PULONG Size
+        _In_ ULONG64 Handle,
+        _Out_ LPGUID Tag,
+        _Out_ PULONG Size
         ) PURE;
     STDMETHOD(EndEnumTagged)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     // IDebugDataSpaces4.
@@ -10231,12 +16967,12 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // Queries are from DEBUG_OFFSINFO_*.
     STDMETHOD(GetOffsetInformation)(
         THIS_
-        __in ULONG Space,
-        __in ULONG Which,
-        __in ULONG64 Offset,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG InfoSize
+        _In_ ULONG Space,
+        _In_ ULONG Which,
+        _In_ ULONG64 Offset,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG InfoSize
         ) PURE;
 
     // Given a particular address, return the
@@ -10250,29 +16986,29 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // the next region that has different validity.
     STDMETHOD(GetNextDifferentlyValidOffsetVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG64 NextOffset
+        _In_ ULONG64 Offset,
+        _Out_ PULONG64 NextOffset
         ) PURE;
 
     // Given a particular range of virtual addresses,
     // find the first region which is valid memory.
     STDMETHOD(GetValidRegionVirtual)(
         THIS_
-        __in ULONG64 Base,
-        __in ULONG Size,
-        __out PULONG64 ValidBase,
-        __out PULONG ValidSize
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _Out_ PULONG64 ValidBase,
+        _Out_ PULONG ValidSize
         ) PURE;
 
     STDMETHOD(SearchVirtual2)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Length,
-        __in ULONG Flags,
-        __in_bcount(PatternSize) PVOID Pattern,
-        __in ULONG PatternSize,
-        __in ULONG PatternGranularity,
-        __out PULONG64 MatchOffset
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Length,
+        _In_ ULONG Flags,
+        _In_reads_bytes_(PatternSize) PVOID Pattern,
+        _In_ ULONG PatternSize,
+        _In_ ULONG PatternGranularity,
+        _Out_ PULONG64 MatchOffset
         ) PURE;
 
     // Attempts to read a multi-byte string
@@ -10283,56 +17019,56 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
     // be terminated.
     STDMETHOD(ReadMultiByteStringVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG MaxBytes,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringBytes
+        _In_ ULONG64 Offset,
+        _In_ ULONG MaxBytes,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringBytes
         ) PURE;
     // Reads a multi-byte string and converts
     // it to Unicode using the given code page.
     STDMETHOD(ReadMultiByteStringVirtualWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG MaxBytes,
-        __in ULONG CodePage,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringBytes
+        _In_ ULONG64 Offset,
+        _In_ ULONG MaxBytes,
+        _In_ ULONG CodePage,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringBytes
         ) PURE;
     STDMETHOD(ReadUnicodeStringVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG MaxBytes,
-        __in ULONG CodePage,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringBytes
+        _In_ ULONG64 Offset,
+        _In_ ULONG MaxBytes,
+        _In_ ULONG CodePage,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringBytes
         ) PURE;
     STDMETHOD(ReadUnicodeStringVirtualWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG MaxBytes,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringBytes
+        _In_ ULONG64 Offset,
+        _In_ ULONG MaxBytes,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringBytes
         ) PURE;
 
     STDMETHOD(ReadPhysical2)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WritePhysical2)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
 };
 
@@ -10386,6 +17122,27 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
 // space was affected, argument is the data
 // space.  Otherwise it is DEBUG_ANY_ID.
 #define DEBUG_CDS_DATA      0x00000002
+// Inform the GUI clients to refresh debugger windows.
+#define DEBUG_CDS_REFRESH   0x00000004
+
+// DEBUG_CDS_REFRESH IDs
+#define DEBUG_CDS_REFRESH_EVALUATE                  1
+#define DEBUG_CDS_REFRESH_EXECUTE                   2
+#define DEBUG_CDS_REFRESH_EXECUTECOMMANDFILE        3
+#define DEBUG_CDS_REFRESH_ADDBREAKPOINT             4
+#define DEBUG_CDS_REFRESH_REMOVEBREAKPOINT          5
+#define DEBUG_CDS_REFRESH_WRITEVIRTUAL              6
+#define DEBUG_CDS_REFRESH_WRITEVIRTUALUNCACHED      7
+#define DEBUG_CDS_REFRESH_WRITEPHYSICAL             8
+#define DEBUG_CDS_REFRESH_WRITEPHYSICAL2            9
+#define DEBUG_CDS_REFRESH_SETVALUE                 10
+#define DEBUG_CDS_REFRESH_SETVALUE2                11
+#define DEBUG_CDS_REFRESH_SETSCOPE                 12
+#define DEBUG_CDS_REFRESH_SETSCOPEFRAMEBYINDEX     13
+#define DEBUG_CDS_REFRESH_SETSCOPEFROMJITDEBUGINFO 14
+#define DEBUG_CDS_REFRESH_SETSCOPEFROMSTOREDEVENT  15
+#define DEBUG_CDS_REFRESH_INLINESTEP               16
+#define DEBUG_CDS_REFRESH_INLINESTEP_PSEUDO        17
 
 // ChangeEngineState flags.
 // The engine state has changed generally.
@@ -10465,6 +17222,11 @@ DECLARE_INTERFACE_(IDebugDataSpaces4, IUnknown)
 // Type options have changed.  Argument is the new
 // options value.
 #define DEBUG_CSS_TYPE_OPTIONS   0x00000020
+// Inform that the current Scope Symbol format has been changed,
+// so the client needs to update the symbols on Locals/Watch/..
+// and the engine will collapse any expanded child
+#define DEBUG_CSS_COLLAPSE_CHILDREN 0x00000040
+
 
 #undef INTERFACE
 #define INTERFACE IDebugEventCallbacks
@@ -10473,8 +17235,8 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10489,7 +17251,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // the event callbacks are set for a client.
     STDMETHOD(GetInterestMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
 
     // A breakpoint event is generated when
@@ -10500,7 +17262,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // it is done with it.
     STDMETHOD(Breakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         ) PURE;
 
     // Exceptions include breaks which cannot
@@ -10508,8 +17270,8 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // instance.
     STDMETHOD(Exception)(
         THIS_
-        __in PEXCEPTION_RECORD64 Exception,
-        __in ULONG FirstChance
+        _In_ PEXCEPTION_RECORD64 Exception,
+        _In_ ULONG FirstChance
         ) PURE;
 
     // Any of these values can be zero if they
@@ -10518,57 +17280,58 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // or process change events.
     STDMETHOD(CreateThread)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG64 DataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 DataOffset,
+        _In_ ULONG64 StartOffset
         ) PURE;
     STDMETHOD(ExitThread)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         ) PURE;
 
     // Any of these values can be zero if they
     // cannot be provided by the engine.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 Handle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in_opt PCSTR ModuleName,
-        __in_opt PCSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp,
-        __in ULONG64 InitialThreadHandle,
-        __in ULONG64 ThreadDataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCSTR ModuleName,
+        _In_opt_ PCSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_ ULONG64 InitialThreadHandle,
+        _In_ ULONG64 ThreadDataOffset,
+        _In_ ULONG64 StartOffset
         ) PURE;
+    _Analysis_noreturn_
     STDMETHOD(ExitProcess)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         ) PURE;
 
     // Any of these values may be zero.
     STDMETHOD(LoadModule)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in_opt PCSTR ModuleName,
-        __in_opt PCSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCSTR ModuleName,
+        _In_opt_ PCSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp
         ) PURE;
     STDMETHOD(UnloadModule)(
         THIS_
-        __in_opt PCSTR ImageBaseName,
-        __in ULONG64 BaseOffset
+        _In_opt_ PCSTR ImageBaseName,
+        _In_ ULONG64 BaseOffset
         ) PURE;
 
     STDMETHOD(SystemError)(
         THIS_
-        __in ULONG Error,
-        __in ULONG Level
+        _In_ ULONG Error,
+        _In_ ULONG Level
         ) PURE;
 
     // Session status is synchronous like the other
@@ -10584,7 +17347,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // is generated.
     STDMETHOD(SessionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // The following callbacks are informational
@@ -10597,20 +17360,20 @@ DECLARE_INTERFACE_(IDebugEventCallbacks, IUnknown)
     // has changed.
     STDMETHOD(ChangeDebuggeeState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
     // Engine state has changed.
     STDMETHOD(ChangeEngineState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
     // Symbol state has changed.
     STDMETHOD(ChangeSymbolState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
 };
 
@@ -10621,8 +17384,8 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10637,7 +17400,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // the event callbacks are set for a client.
     STDMETHOD(GetInterestMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
 
     // A breakpoint event is generated when
@@ -10648,7 +17411,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // it is done with it.
     STDMETHOD(Breakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT2 Bp
+        _In_ PDEBUG_BREAKPOINT2 Bp
         ) PURE;
 
     // Exceptions include breaks which cannot
@@ -10656,8 +17419,8 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // instance.
     STDMETHOD(Exception)(
         THIS_
-        __in PEXCEPTION_RECORD64 Exception,
-        __in ULONG FirstChance
+        _In_ PEXCEPTION_RECORD64 Exception,
+        _In_ ULONG FirstChance
         ) PURE;
 
     // Any of these values can be zero if they
@@ -10666,57 +17429,58 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // or process change events.
     STDMETHOD(CreateThread)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG64 DataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 DataOffset,
+        _In_ ULONG64 StartOffset
         ) PURE;
+    _Analysis_noreturn_
     STDMETHOD(ExitThread)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         ) PURE;
 
     // Any of these values can be zero if they
     // cannot be provided by the engine.
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 Handle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in_opt PCWSTR ModuleName,
-        __in_opt PCWSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp,
-        __in ULONG64 InitialThreadHandle,
-        __in ULONG64 ThreadDataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCWSTR ModuleName,
+        _In_opt_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_ ULONG64 InitialThreadHandle,
+        _In_ ULONG64 ThreadDataOffset,
+        _In_ ULONG64 StartOffset
         ) PURE;
     STDMETHOD(ExitProcess)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         ) PURE;
 
     // Any of these values may be zero.
     STDMETHOD(LoadModule)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in_opt PCWSTR ModuleName,
-        __in_opt PCWSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCWSTR ModuleName,
+        _In_opt_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp
         ) PURE;
     STDMETHOD(UnloadModule)(
         THIS_
-        __in_opt PCWSTR ImageBaseName,
-        __in ULONG64 BaseOffset
+        _In_opt_ PCWSTR ImageBaseName,
+        _In_ ULONG64 BaseOffset
         ) PURE;
 
     STDMETHOD(SystemError)(
         THIS_
-        __in ULONG Error,
-        __in ULONG Level
+        _In_ ULONG Error,
+        _In_ ULONG Level
         ) PURE;
 
     // Session status is synchronous like the other
@@ -10732,7 +17496,7 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // is generated.
     STDMETHOD(SessionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         ) PURE;
 
     // The following callbacks are informational
@@ -10745,20 +17509,198 @@ DECLARE_INTERFACE_(IDebugEventCallbacksWide, IUnknown)
     // has changed.
     STDMETHOD(ChangeDebuggeeState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
     // Engine state has changed.
     STDMETHOD(ChangeEngineState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
     // Symbol state has changed.
     STDMETHOD(ChangeSymbolState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
+        ) PURE;
+};
+
+typedef struct _DEBUG_EVENT_CONTEXT
+{
+    ULONG Size;
+    ULONG ProcessEngineId;
+    ULONG ThreadEngineId;
+    ULONG FrameEngineId;
+} DEBUG_EVENT_CONTEXT, *PDEBUG_EVENT_CONTEXT;
+
+#undef INTERFACE
+#define INTERFACE IDebugEventContextCallbacks
+DECLARE_INTERFACE_(IDebugEventContextCallbacks, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugEventContextCallbacks.
+
+    // The engine calls GetInterestMask once when
+    // the event callbacks are set for a client.
+    STDMETHOD(GetInterestMask)(
+        THIS_
+        _Out_ PULONG Mask
+        ) PURE;
+
+    // A breakpoint event is generated when
+    // a breakpoint exception is received and
+    // it can be mapped to an existing breakpoint.
+    // The callback method is given a reference
+    // to the breakpoint and should release it when
+    // it is done with it.
+    STDMETHOD(Breakpoint)(
+        THIS_
+        _In_ PDEBUG_BREAKPOINT2 Bp,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // Exceptions include breaks which cannot
+    // be mapped to an existing breakpoint
+    // instance.
+    STDMETHOD(Exception)(
+        THIS_
+        _In_ PEXCEPTION_RECORD64 Exception,
+        _In_ ULONG FirstChance,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // Any of these values can be zero if they
+    // cannot be provided by the engine.
+    // Currently the kernel does not return thread
+    // or process change events.
+    STDMETHOD(CreateThread)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 DataOffset,
+        _In_ ULONG64 StartOffset,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    STDMETHOD(ExitThread)(
+        THIS_
+        _In_ ULONG ExitCode,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // Any of these values can be zero if they
+    // cannot be provided by the engine.
+    STDMETHOD(CreateProcess)(
+        THIS_
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCWSTR ModuleName,
+        _In_opt_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_ ULONG64 InitialThreadHandle,
+        _In_ ULONG64 ThreadDataOffset,
+        _In_ ULONG64 StartOffset,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    STDMETHOD(ExitProcess)(
+        THIS_
+        _In_ ULONG ExitCode,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // Any of these values may be zero.
+    STDMETHOD(LoadModule)(
+        THIS_
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_opt_ PCWSTR ModuleName,
+        _In_opt_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    STDMETHOD(UnloadModule)(
+        THIS_
+        _In_opt_ PCWSTR ImageBaseName,
+        _In_ ULONG64 BaseOffset,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    STDMETHOD(SystemError)(
+        THIS_
+        _In_ ULONG Error,
+        _In_ ULONG Level,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+
+    // Session status is synchronous like the other
+    // wait callbacks but it is called as the state
+    // of the session is changing rather than at
+    // specific events so its return value does not
+    // influence waiting.  Implementations should just
+    // return DEBUG_STATUS_NO_CHANGE.
+    // Also, because some of the status
+    // notifications are very early or very
+    // late in the session lifetime there may not be
+    // current processes or threads when the notification
+    // is generated.
+    STDMETHOD(SessionStatus)(
+        THIS_
+        _In_ ULONG Status
+        ) PURE;
+
+    // The following callbacks are informational
+    // callbacks notifying the provider about
+    // changes in debug state.  The return value
+    // of these callbacks is ignored.  Implementations
+    // can not call back into the engine.
+
+    // Debuggee state, such as registers or data spaces,
+    // has changed.
+    STDMETHOD(ChangeDebuggeeState)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    // Engine state has changed.
+    STDMETHOD(ChangeEngineState)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument,
+        _In_reads_bytes_(ContextSize) PVOID Context,
+        _In_ ULONG ContextSize
+        ) PURE;
+    // Symbol state has changed.
+    STDMETHOD(ChangeSymbolState)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         ) PURE;
 };
 
@@ -10775,8 +17717,8 @@ DECLARE_INTERFACE_(IDebugInputCallbacks, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10796,7 +17738,7 @@ DECLARE_INTERFACE_(IDebugInputCallbacks, IUnknown)
     // The return value is ignored.
     STDMETHOD(StartInput)(
         THIS_
-        __in ULONG BufferSize
+        _In_ ULONG BufferSize
         ) PURE;
     // The return value is ignored.
     STDMETHOD(EndInput)(
@@ -10817,8 +17759,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacks, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10834,8 +17776,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacks, IUnknown)
     // The return value is ignored.
     STDMETHOD(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Text
+        _In_ ULONG Mask,
+        _In_ PCSTR Text
         ) PURE;
 };
 
@@ -10846,8 +17788,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacksWide, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10863,8 +17805,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacksWide, IUnknown)
     // The return value is ignored.
     STDMETHOD(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCWSTR Text
+        _In_ ULONG Mask,
+        _In_ PCWSTR Text
         ) PURE;
 };
 
@@ -10919,8 +17861,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacks2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -10934,8 +17876,8 @@ DECLARE_INTERFACE_(IDebugOutputCallbacks2, IUnknown)
     // This method is not used.
     STDMETHOD(Output)(
         THIS_
-        __in ULONG Mask,
-        __in PCSTR Text
+        _In_ ULONG Mask,
+        _In_ PCSTR Text
         ) PURE;
 
     // IDebugOutputCallbacks2.
@@ -10944,15 +17886,15 @@ DECLARE_INTERFACE_(IDebugOutputCallbacks2, IUnknown)
     // the callbacks are set for a client.
     STDMETHOD(GetInterestMask)(
         THIS_
-        __out PULONG Mask
+        _Out_ PULONG Mask
         ) PURE;
     
     STDMETHOD(Output2)(
         THIS_
-        __in ULONG Which,
-        __in ULONG Flags,
-        __in ULONG64 Arg,
-        __in_opt PCWSTR Text
+        _In_ ULONG Which,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Arg,
+        _In_opt_ PCWSTR Text
         ) PURE;
 };
 
@@ -10996,8 +17938,8 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -11009,26 +17951,26 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // IDebugRegisters.
     STDMETHOD(GetNumberRegisters)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetDescription)(
         THIS_
-        __in ULONG Register,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PDEBUG_REGISTER_DESCRIPTION Desc
+        _In_ ULONG Register,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PDEBUG_REGISTER_DESCRIPTION Desc
         ) PURE;
     STDMETHOD(GetIndexByName)(
         THIS_
-        __in PCSTR Name,
-        __out PULONG Index
+        _In_ PCSTR Name,
+        _Out_ PULONG Index
         ) PURE;
 
     STDMETHOD(GetValue)(
         THIS_
-        __in ULONG Register,
-        __out PDEBUG_VALUE Value
+        _In_ ULONG Register,
+        _Out_ PDEBUG_VALUE Value
         ) PURE;
     // SetValue makes a best effort at coercing
     // the given value into the given registers
@@ -11040,8 +17982,8 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // inserted into the master register.
     STDMETHOD(SetValue)(
         THIS_
-        __in ULONG Register,
-        __in PDEBUG_VALUE Value
+        _In_ ULONG Register,
+        _In_ PDEBUG_VALUE Value
         ) PURE;
     // Gets Count register values.  If Indices is
     // non-NULL it must contain Count register
@@ -11050,17 +17992,17 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // to Start + Count  1 are retrieved.
     STDMETHOD(GetValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_VALUE Values
         ) PURE;
     STDMETHOD(SetValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __in_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _In_reads_(Count) PDEBUG_VALUE Values
         ) PURE;
 
     // Outputs a group of registers in a well-formatted
@@ -11068,8 +18010,8 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputRegisters)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Abstracted pieces of processor information.
@@ -11081,15 +18023,15 @@ DECLARE_INTERFACE_(IDebugRegisters, IUnknown)
     // stack walking.
     STDMETHOD(GetInstructionOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetStackOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetFrameOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
 };
 
@@ -11121,8 +18063,8 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -11135,26 +18077,26 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
 
     STDMETHOD(GetNumberRegisters)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetDescription)(
         THIS_
-        __in ULONG Register,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PDEBUG_REGISTER_DESCRIPTION Desc
+        _In_ ULONG Register,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PDEBUG_REGISTER_DESCRIPTION Desc
         ) PURE;
     STDMETHOD(GetIndexByName)(
         THIS_
-        __in PCSTR Name,
-        __out PULONG Index
+        _In_ PCSTR Name,
+        _Out_ PULONG Index
         ) PURE;
 
     STDMETHOD(GetValue)(
         THIS_
-        __in ULONG Register,
-        __out PDEBUG_VALUE Value
+        _In_ ULONG Register,
+        _Out_ PDEBUG_VALUE Value
         ) PURE;
     // SetValue makes a best effort at coercing
     // the given value into the given registers
@@ -11166,8 +18108,8 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // inserted into the master register.
     STDMETHOD(SetValue)(
         THIS_
-        __in ULONG Register,
-        __in PDEBUG_VALUE Value
+        _In_ ULONG Register,
+        _In_ PDEBUG_VALUE Value
         ) PURE;
     // Gets Count register values.  If Indices is
     // non-NULL it must contain Count register
@@ -11176,17 +18118,17 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // to Start + Count  1 are retrieved.
     STDMETHOD(GetValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_VALUE Values
         ) PURE;
     STDMETHOD(SetValues)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __in_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _In_reads_(Count) PDEBUG_VALUE Values
         ) PURE;
 
     // Outputs a group of registers in a well-formatted
@@ -11194,8 +18136,8 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // Uses the line prefix.
     STDMETHOD(OutputRegisters)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags
         ) PURE;
 
     // Abstracted pieces of processor information.
@@ -11207,31 +18149,31 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // stack walking.
     STDMETHOD(GetInstructionOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetStackOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetFrameOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
 
     // IDebugRegisters2.
 
     STDMETHOD(GetDescriptionWide)(
         THIS_
-        __in ULONG Register,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PDEBUG_REGISTER_DESCRIPTION Desc
+        _In_ ULONG Register,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PDEBUG_REGISTER_DESCRIPTION Desc
         ) PURE;
     STDMETHOD(GetIndexByNameWide)(
         THIS_
-        __in PCWSTR Name,
-        __out PULONG Index
+        _In_ PCWSTR Name,
+        _Out_ PULONG Index
         ) PURE;
 
     // Pseudo-registers are synthetic values derived
@@ -11244,94 +18186,94 @@ DECLARE_INTERFACE_(IDebugRegisters2, IUnknown)
     // types appropriate for their data.
     STDMETHOD(GetNumberPseudoRegisters)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetPseudoDescription)(
         THIS_
-        __in ULONG Register,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 TypeModule,
-        __out_opt PULONG TypeId
+        _In_ ULONG Register,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 TypeModule,
+        _Out_opt_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetPseudoDescriptionWide)(
         THIS_
-        __in ULONG Register,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 TypeModule,
-        __out_opt PULONG TypeId
+        _In_ ULONG Register,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 TypeModule,
+        _Out_opt_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetPseudoIndexByName)(
         THIS_
-        __in PCSTR Name,
-        __out PULONG Index
+        _In_ PCSTR Name,
+        _Out_ PULONG Index
         ) PURE;
     STDMETHOD(GetPseudoIndexByNameWide)(
         THIS_
-        __in PCWSTR Name,
-        __out PULONG Index
+        _In_ PCWSTR Name,
+        _Out_ PULONG Index
         ) PURE;
     // Some pseudo-register values are affected
     // by the register source, others are not.
     STDMETHOD(GetPseudoValues)(
         THIS_
-        __in ULONG Source,
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Source,
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_VALUE Values
         ) PURE;
     // Many pseudo-registers are read-only and cannot be set.
     STDMETHOD(SetPseudoValues)(
         THIS_
-        __in ULONG Source,
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __in_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Source,
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _In_reads_(Count) PDEBUG_VALUE Values
         ) PURE;
 
     // These expanded methods allow selection
     // of the source of register information.
     STDMETHOD(GetValues2)(
         THIS_
-        __in ULONG Source,
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Source,
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_VALUE Values
         ) PURE;
     STDMETHOD(SetValues2)(
         THIS_
-        __in ULONG Source,
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG Indices,
-        __in ULONG Start,
-        __in_ecount(Count) PDEBUG_VALUE Values
+        _In_ ULONG Source,
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG Indices,
+        _In_ ULONG Start,
+        _In_reads_(Count) PDEBUG_VALUE Values
         ) PURE;
     STDMETHOD(OutputRegisters2)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Source,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG Source,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(GetInstructionOffset2)(
         THIS_
-        __in ULONG Source,
-        __out PULONG64 Offset
+        _In_ ULONG Source,
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetStackOffset2)(
         THIS_
-        __in ULONG Source,
-        __out PULONG64 Offset
+        _In_ ULONG Source,
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetFrameOffset2)(
         THIS_
-        __in ULONG Source,
-        __out PULONG64 Offset
+        _In_ ULONG Source,
+        _Out_ PULONG64 Offset
         ) PURE;
 };
 
@@ -11410,8 +18352,8 @@ DECLARE_INTERFACE_(IDebugSymbolGroup, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -11423,59 +18365,59 @@ DECLARE_INTERFACE_(IDebugSymbolGroup, IUnknown)
     // IDebugSymbolGroup.
     STDMETHOD(GetNumberSymbols)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // On input Index indicates the desired insertion
     // index.  On output Index contains the actual index.
     // Use DEBUG_ANY_ID to append a symbol to the end.
     STDMETHOD(AddSymbol)(
         THIS_
-        __in PCSTR Name,
-        __inout PULONG Index
+        _In_ PCSTR Name,
+        _Inout_ PULONG Index
         ) PURE;
     STDMETHOD(RemoveSymbolByName)(
         THIS_
-        __in PCSTR Name
+        _In_ PCSTR Name
         ) PURE;
     STDMETHOD(RemoveSymbolByIndex)(
         THIS_
-        __in ULONG Index
+        _In_ ULONG Index
         ) PURE;
     STDMETHOD(GetSymbolName)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SYMBOL_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SYMBOL_PARAMETERS Params
         ) PURE;
     STDMETHOD(ExpandSymbol)(
         THIS_
-        __in ULONG Index,
-        __in BOOL Expand
+        _In_ ULONG Index,
+        _In_ BOOL Expand
         ) PURE;
     // Uses the line prefix.
     STDMETHOD(OutputSymbols)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in ULONG Start,
-        __in ULONG Count
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG Start,
+        _In_ ULONG Count
         ) PURE;
     STDMETHOD(WriteSymbol)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Value
+        _In_ ULONG Index,
+        _In_ PCSTR Value
         ) PURE;
     STDMETHOD(OutputAsType)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Type
+        _In_ ULONG Index,
+        _In_ PCSTR Type
         ) PURE;
 };
 
@@ -11509,8 +18451,8 @@ DECLARE_INTERFACE_(IDebugSymbolGroup2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -11523,141 +18465,141 @@ DECLARE_INTERFACE_(IDebugSymbolGroup2, IUnknown)
 
     STDMETHOD(GetNumberSymbols)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // On input Index indicates the desired insertion
     // index.  On output Index contains the actual index.
     // Use DEBUG_ANY_ID to append a symbol to the end.
     STDMETHOD(AddSymbol)(
         THIS_
-        __in PCSTR Name,
-        __inout PULONG Index
+        _In_ PCSTR Name,
+        _Inout_ PULONG Index
         ) PURE;
     STDMETHOD(RemoveSymbolByName)(
         THIS_
-        __in PCSTR Name
+        _In_ PCSTR Name
         ) PURE;
     STDMETHOD(RemoveSymbolByIndex)(
         THIS_
-        __in ULONG Index
+        _In_ ULONG Index
         ) PURE;
     STDMETHOD(GetSymbolName)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolParameters)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PDEBUG_SYMBOL_PARAMETERS Params
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PDEBUG_SYMBOL_PARAMETERS Params
         ) PURE;
     STDMETHOD(ExpandSymbol)(
         THIS_
-        __in ULONG Index,
-        __in BOOL Expand
+        _In_ ULONG Index,
+        _In_ BOOL Expand
         ) PURE;
     // Uses the line prefix.
     STDMETHOD(OutputSymbols)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in ULONG Start,
-        __in ULONG Count
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG Start,
+        _In_ ULONG Count
         ) PURE;
     STDMETHOD(WriteSymbol)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Value
+        _In_ ULONG Index,
+        _In_ PCSTR Value
         ) PURE;
     STDMETHOD(OutputAsType)(
         THIS_
-        __in ULONG Index,
-        __in PCSTR Type
+        _In_ ULONG Index,
+        _In_ PCSTR Type
         ) PURE;
 
     // IDebugSymbolGroup2.
 
     STDMETHOD(AddSymbolWide)(
         THIS_
-        __in PCWSTR Name,
-        __inout PULONG Index
+        _In_ PCWSTR Name,
+        _Inout_ PULONG Index
         ) PURE;
     STDMETHOD(RemoveSymbolByNameWide)(
         THIS_
-        __in PCWSTR Name
+        _In_ PCWSTR Name
         ) PURE;
     STDMETHOD(GetSymbolNameWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(WriteSymbolWide)(
         THIS_
-        __in ULONG Index,
-        __in PCWSTR Value
+        _In_ ULONG Index,
+        _In_ PCWSTR Value
         ) PURE;
     STDMETHOD(OutputAsTypeWide)(
         THIS_
-        __in ULONG Index,
-        __in PCWSTR Type
+        _In_ ULONG Index,
+        _In_ PCWSTR Type
         ) PURE;
 
     STDMETHOD(GetSymbolTypeName)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolTypeNameWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolSize)(
         THIS_
-        __in ULONG Index,
-        __out PULONG Size
+        _In_ ULONG Index,
+        _Out_ PULONG Size
         ) PURE;
     // If the symbol has an absolute address
     // this method will retrieve it.
     STDMETHOD(GetSymbolOffset)(
         THIS_
-        __in ULONG Index,
-        __out PULONG64 Offset
+        _In_ ULONG Index,
+        _Out_ PULONG64 Offset
         ) PURE;
     // If the symbol is enregistered this
     // method will return the register index.
     STDMETHOD(GetSymbolRegister)(
         THIS_
-        __in ULONG Index,
-        __out PULONG Register
+        _In_ ULONG Index,
+        _Out_ PULONG Register
         ) PURE;
     STDMETHOD(GetSymbolValueText)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolValueTextWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     STDMETHOD(GetSymbolEntryInformation)(
         THIS_
-        __in ULONG Index,
-        __out PDEBUG_SYMBOL_ENTRY Entry
+        _In_ ULONG Index,
+        _Out_ PDEBUG_SYMBOL_ENTRY Entry
         ) PURE;
 };
 
@@ -11710,12 +18652,18 @@ typedef struct _DEBUG_MODULE_PARAMETERS
 // Scope arguments are function arguments
 // and thus only change when the scope
 // crosses functions.
-#define DEBUG_SCOPE_GROUP_ARGUMENTS 0x00000001
+#define DEBUG_SCOPE_GROUP_ARGUMENTS    0x00000001
 // Scope locals are locals declared in a particular
 // scope and are only defined within that scope.
-#define DEBUG_SCOPE_GROUP_LOCALS    0x00000002
+#define DEBUG_SCOPE_GROUP_LOCALS       0x00000002
 // All symbols in the scope.
-#define DEBUG_SCOPE_GROUP_ALL       0x00000003
+#define DEBUG_SCOPE_GROUP_ALL          0x00000003
+// Get Debug Symbols by using Data Model engine
+#define DEBUG_SCOPE_GROUP_BY_DATAMODEL 0x00000004
+// Valid flags for the set of DEBUG_SCOPE_GROUP
+// If you add a new flag, then please add it to DEBUG_SCOPE_GROUP_VALID_FLAGS
+#define DEBUG_SCOPE_GROUP_VALID_FLAGS (DEBUG_SCOPE_GROUP_ALL | DEBUG_SCOPE_GROUP_BY_DATAMODEL)
+
 
 // Typed data output control flags.
 #define DEBUG_OUTTYPE_DEFAULT              0x00000000
@@ -11741,6 +18689,11 @@ typedef struct _DEBUG_MODULE_PARAMETERS
 #define DEBUG_FIND_SOURCE_NO_SRCSRV    0x00000004
 // Restrict FindSourceFileAndToken to token lookup only.
 #define DEBUG_FIND_SOURCE_TOKEN_LOOKUP 0x00000008
+// Indicates that the FileToken/FileTokenSize arguments refer to the checksum
+// information for the source file obtained from a call to the 
+// GetSourceFileInformation method with the 'Which' parameter
+// set to DEBUG_SRCFILE_SYMBOL_CHECKSUMINFO
+#define DEBUG_FIND_SOURCE_WITH_CHECKSUM 0x00000010
 
 // A special value marking an offset that should not
 // be treated as a valid offset.  This is only used
@@ -11760,8 +18713,8 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -11777,28 +18730,28 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // Uses the same flags as dbghelps SymSetOptions.
     STDMETHOD(GetSymbolOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     STDMETHOD(GetNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     // A symbol name may not be unique, particularly
     // when overloaded functions exist which all
@@ -11812,8 +18765,8 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // perform different disambiguation.
     STDMETHOD(GetOffsetByName)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Offset
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Offset
         ) PURE;
     // GetNearNameByOffset returns symbols
     // located near the symbol closest to
@@ -11829,28 +18782,28 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // reversed for the previous symbol.
     STDMETHOD(GetNearNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
 
     STDMETHOD(GetLineByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_opt PULONG Line,
-        __out_ecount_opt(FileBufferSize) PSTR FileBuffer,
-        __in ULONG FileBufferSize,
-        __out_opt PULONG FileSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     STDMETHOD(GetOffsetByLine)(
         THIS_
-        __in ULONG Line,
-        __in PCSTR File,
-        __out PULONG64 Offset
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _Out_ PULONG64 Offset
         ) PURE;
 
     // Enumerates the engines list of modules
@@ -11866,22 +18819,22 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // modules.
     STDMETHOD(GetNumberModules)(
         THIS_
-        __out PULONG Loaded,
-        __out PULONG Unloaded
+        _Out_ PULONG Loaded,
+        _Out_ PULONG Unloaded
         ) PURE;
     STDMETHOD(GetModuleByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PULONG64 Base
+        _In_ ULONG Index,
+        _Out_ PULONG64 Base
         ) PURE;
     // The module name may not be unique.
     // This method returns the first match.
     STDMETHOD(GetModuleByModuleName)(
         THIS_
-        __in PCSTR Name,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // Offset can be any offset within
     // the module extent.  Extents may
@@ -11890,63 +18843,63 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // first match.
     STDMETHOD(GetModuleByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // If Index is DEBUG_ANY_ID the base address
     // is used to look up the module instead.
     STDMETHOD(GetModuleNames)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(ImageNameBufferSize) PSTR ImageNameBuffer,
-        __in ULONG ImageNameBufferSize,
-        __out_opt PULONG ImageNameSize,
-        __out_ecount_opt(ModuleNameBufferSize) PSTR ModuleNameBuffer,
-        __in ULONG ModuleNameBufferSize,
-        __out_opt PULONG ModuleNameSize,
-        __out_ecount_opt(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
-        __in ULONG LoadedImageNameBufferSize,
-        __out_opt PULONG LoadedImageNameSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(ImageNameBufferSize) PSTR ImageNameBuffer,
+        _In_ ULONG ImageNameBufferSize,
+        _Out_opt_ PULONG ImageNameSize,
+        _Out_writes_opt_(ModuleNameBufferSize) PSTR ModuleNameBuffer,
+        _In_ ULONG ModuleNameBufferSize,
+        _Out_opt_ PULONG ModuleNameSize,
+        _Out_writes_opt_(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
+        _In_ ULONG LoadedImageNameBufferSize,
+        _Out_opt_ PULONG LoadedImageNameSize
         ) PURE;
     STDMETHOD(GetModuleParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG64 Bases,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_MODULE_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG64 Bases,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_MODULE_PARAMETERS Params
         ) PURE;
     // Looks up the module from a <Module>!<Symbol>
     // string.
     STDMETHOD(GetSymbolModule)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Base
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Base
         ) PURE;
 
     // Returns the string name of a type.
     STDMETHOD(GetTypeName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     // Returns the ID for a type name.
     STDMETHOD(GetTypeId)(
         THIS_
-        __in ULONG64 Module,
-        __in PCSTR Name,
-        __out PULONG TypeId
+        _In_ ULONG64 Module,
+        _In_ PCSTR Name,
+        _Out_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetTypeSize)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out PULONG Size
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_ PULONG Size
         ) PURE;
     // Given a type which can contain members
     // this method returns the offset of a
@@ -11956,17 +18909,17 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // to the field of interest.
     STDMETHOD(GetFieldOffset)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in PCSTR Field,
-        __out PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCSTR Field,
+        _Out_ PULONG Offset
         ) PURE;
 
     STDMETHOD(GetSymbolTypeId)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ PCSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
     // As with GetOffsetByName a symbol's
     // name may be ambiguous.  GetOffsetTypeId
@@ -11975,9 +18928,9 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // to avoid ambiguity.
     STDMETHOD(GetOffsetTypeId)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ ULONG64 Offset,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
 
     // Helpers for virtual and physical data
@@ -11985,55 +18938,55 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // the actual operation.
     STDMETHOD(ReadTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataVirtual)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(ReadTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataPhysical)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
 
     // Function arguments and scope block symbols
@@ -12053,10 +19006,10 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // and the current register context is used.
     STDMETHOD(GetScope)(
         THIS_
-        __out_opt PULONG64 InstructionOffset,
-        __out_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __out_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // If ScopeFrame or ScopeContext is non-NULL then
     // InstructionOffset is ignored.
@@ -12070,10 +19023,10 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // blocks, SetScope returns S_FALSE.
     STDMETHOD(SetScope)(
         THIS_
-        __in ULONG64 InstructionOffset,
-        __in_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __in_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // ResetScope clears the scope information
     // for situations where scoped symbols
@@ -12090,15 +19043,15 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // incremental updates when stepping.
     STDMETHOD(GetScopeSymbolGroup)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PDEBUG_SYMBOL_GROUP Update,
-        __out PDEBUG_SYMBOL_GROUP* Symbols
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP Update,
+        _Out_ PDEBUG_SYMBOL_GROUP* Symbols
         ) PURE;
 
     // Create a new symbol group.
     STDMETHOD(CreateSymbolGroup)(
         THIS_
-        __out PDEBUG_SYMBOL_GROUP* Group
+        _Out_ PDEBUG_SYMBOL_GROUP* Group
         ) PURE;
 
     // StartSymbolMatch matches symbol names
@@ -12115,42 +19068,42 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // when the set of loaded symbols changes.
     STDMETHOD(StartSymbolMatch)(
         THIS_
-        __in PCSTR Pattern,
-        __out PULONG64 Handle
+        _In_ PCSTR Pattern,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Buffer is NULL the match does not
     // advance.
     STDMETHOD(GetNextSymbolMatch)(
         THIS_
-        __in ULONG64 Handle,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MatchSize,
-        __out_opt PULONG64 Offset
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
         ) PURE;
     STDMETHOD(EndSymbolMatch)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Reload)(
         THIS_
-        __in PCSTR Module
+        _In_ PCSTR Module
         ) PURE;
 
     STDMETHOD(GetSymbolPath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetSymbolPath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSymbolPath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Manipulate the path for executable images.
@@ -12160,42 +19113,42 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // images.
     STDMETHOD(GetImagePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetImagePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendImagePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Path routines for source file location
     // methods.
     STDMETHOD(GetSourcePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     // Gets the nth part of the source path.
     STDMETHOD(GetSourcePathElement)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ElementSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
         ) PURE;
     STDMETHOD(SetSourcePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSourcePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
     // Uses the given file path and the source path
     // information to try and locate an existing file.
@@ -12210,13 +19163,13 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // the file was found directly and not on the path.
     STDMETHOD(FindSourceFile)(
         THIS_
-        __in ULONG StartElement,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
     // Retrieves all the line offset information
     // for a particular source file.  Buffer is
@@ -12233,10 +19186,10 @@ DECLARE_INTERFACE_(IDebugSymbols, IUnknown)
     // than returning a map of invalid offsets.
     STDMETHOD(GetSourceFileLineOffsets)(
         THIS_
-        __in PCSTR File,
-        __out_ecount_opt(BufferLines) PULONG64 Buffer,
-        __in ULONG BufferLines,
-        __out_opt PULONG FileLines
+        _In_ PCSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
         ) PURE;
 };
 
@@ -12271,8 +19224,8 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -12288,28 +19241,28 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // Uses the same flags as dbghelps SymSetOptions.
     STDMETHOD(GetSymbolOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     STDMETHOD(GetNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     // A symbol name may not be unique, particularly
     // when overloaded functions exist which all
@@ -12323,8 +19276,8 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // perform different disambiguation.
     STDMETHOD(GetOffsetByName)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Offset
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Offset
         ) PURE;
     // GetNearNameByOffset returns symbols
     // located near the symbol closest to
@@ -12340,28 +19293,28 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // reversed for the previous symbol.
     STDMETHOD(GetNearNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
 
     STDMETHOD(GetLineByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_opt PULONG Line,
-        __out_ecount_opt(FileBufferSize) PSTR FileBuffer,
-        __in ULONG FileBufferSize,
-        __out_opt PULONG FileSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     STDMETHOD(GetOffsetByLine)(
         THIS_
-        __in ULONG Line,
-        __in PCSTR File,
-        __out PULONG64 Offset
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _Out_ PULONG64 Offset
         ) PURE;
 
     // Enumerates the engines list of modules
@@ -12377,22 +19330,22 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // modules.
     STDMETHOD(GetNumberModules)(
         THIS_
-        __out PULONG Loaded,
-        __out PULONG Unloaded
+        _Out_ PULONG Loaded,
+        _Out_ PULONG Unloaded
         ) PURE;
     STDMETHOD(GetModuleByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PULONG64 Base
+        _In_ ULONG Index,
+        _Out_ PULONG64 Base
         ) PURE;
     // The module name may not be unique.
     // This method returns the first match.
     STDMETHOD(GetModuleByModuleName)(
         THIS_
-        __in PCSTR Name,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // Offset can be any offset within
     // the module extent.  Extents may
@@ -12401,63 +19354,63 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // first match.
     STDMETHOD(GetModuleByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // If Index is DEBUG_ANY_ID the base address
     // is used to look up the module instead.
     STDMETHOD(GetModuleNames)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(ImageNameBufferSize) PSTR ImageNameBuffer,
-        __in ULONG ImageNameBufferSize,
-        __out_opt PULONG ImageNameSize,
-        __out_ecount_opt(ModuleNameBufferSize) PSTR ModuleNameBuffer,
-        __in ULONG ModuleNameBufferSize,
-        __out_opt PULONG ModuleNameSize,
-        __out_ecount_opt(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
-        __in ULONG LoadedImageNameBufferSize,
-        __out_opt PULONG LoadedImageNameSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(ImageNameBufferSize) PSTR ImageNameBuffer,
+        _In_ ULONG ImageNameBufferSize,
+        _Out_opt_ PULONG ImageNameSize,
+        _Out_writes_opt_(ModuleNameBufferSize) PSTR ModuleNameBuffer,
+        _In_ ULONG ModuleNameBufferSize,
+        _Out_opt_ PULONG ModuleNameSize,
+        _Out_writes_opt_(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
+        _In_ ULONG LoadedImageNameBufferSize,
+        _Out_opt_ PULONG LoadedImageNameSize
         ) PURE;
     STDMETHOD(GetModuleParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG64 Bases,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_MODULE_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG64 Bases,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_MODULE_PARAMETERS Params
         ) PURE;
     // Looks up the module from a <Module>!<Symbol>
     // string.
     STDMETHOD(GetSymbolModule)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Base
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Base
         ) PURE;
 
     // Returns the string name of a type.
     STDMETHOD(GetTypeName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     // Returns the ID for a type name.
     STDMETHOD(GetTypeId)(
         THIS_
-        __in ULONG64 Module,
-        __in PCSTR Name,
-        __out PULONG TypeId
+        _In_ ULONG64 Module,
+        _In_ PCSTR Name,
+        _Out_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetTypeSize)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out PULONG Size
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_ PULONG Size
         ) PURE;
     // Given a type which can contain members
     // this method returns the offset of a
@@ -12467,17 +19420,17 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // to the field of interest.
     STDMETHOD(GetFieldOffset)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in PCSTR Field,
-        __out PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCSTR Field,
+        _Out_ PULONG Offset
         ) PURE;
 
     STDMETHOD(GetSymbolTypeId)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ PCSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
     // As with GetOffsetByName a symbol's
     // name may be ambiguous.  GetOffsetTypeId
@@ -12486,9 +19439,9 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // to avoid ambiguity.
     STDMETHOD(GetOffsetTypeId)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ ULONG64 Offset,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
 
     // Helpers for virtual and physical data
@@ -12496,55 +19449,55 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // the actual operation.
     STDMETHOD(ReadTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataVirtual)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(ReadTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataPhysical)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
 
     // Function arguments and scope block symbols
@@ -12564,10 +19517,10 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // and the current register context is used.
     STDMETHOD(GetScope)(
         THIS_
-        __out_opt PULONG64 InstructionOffset,
-        __out_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __out_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // If ScopeFrame or ScopeContext is non-NULL then
     // InstructionOffset is ignored.
@@ -12581,10 +19534,10 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // blocks, SetScope returns S_FALSE.
     STDMETHOD(SetScope)(
         THIS_
-        __in ULONG64 InstructionOffset,
-        __in_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __in_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // ResetScope clears the scope information
     // for situations where scoped symbols
@@ -12601,15 +19554,15 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // incremental updates when stepping.
     STDMETHOD(GetScopeSymbolGroup)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PDEBUG_SYMBOL_GROUP Update,
-        __out PDEBUG_SYMBOL_GROUP* Symbols
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP Update,
+        _Out_ PDEBUG_SYMBOL_GROUP* Symbols
         ) PURE;
 
     // Create a new symbol group.
     STDMETHOD(CreateSymbolGroup)(
         THIS_
-        __out PDEBUG_SYMBOL_GROUP* Group
+        _Out_ PDEBUG_SYMBOL_GROUP* Group
         ) PURE;
 
     // StartSymbolMatch matches symbol names
@@ -12626,42 +19579,42 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // when the set of loaded symbols changes.
     STDMETHOD(StartSymbolMatch)(
         THIS_
-        __in PCSTR Pattern,
-        __out PULONG64 Handle
+        _In_ PCSTR Pattern,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Buffer is NULL the match does not
     // advance.
     STDMETHOD(GetNextSymbolMatch)(
         THIS_
-        __in ULONG64 Handle,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MatchSize,
-        __out_opt PULONG64 Offset
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
         ) PURE;
     STDMETHOD(EndSymbolMatch)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Reload)(
         THIS_
-        __in PCSTR Module
+        _In_ PCSTR Module
         ) PURE;
 
     STDMETHOD(GetSymbolPath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetSymbolPath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSymbolPath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Manipulate the path for executable images.
@@ -12671,42 +19624,42 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // images.
     STDMETHOD(GetImagePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetImagePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendImagePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Path routines for source file location
     // methods.
     STDMETHOD(GetSourcePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     // Gets the nth part of the source path.
     STDMETHOD(GetSourcePathElement)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ElementSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
         ) PURE;
     STDMETHOD(SetSourcePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSourcePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
     // Uses the given file path and the source path
     // information to try and locate an existing file.
@@ -12721,13 +19674,13 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // the file was found directly and not on the path.
     STDMETHOD(FindSourceFile)(
         THIS_
-        __in ULONG StartElement,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
     // Retrieves all the line offset information
     // for a particular source file.  Buffer is
@@ -12744,10 +19697,10 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // than returning a map of invalid offsets.
     STDMETHOD(GetSourceFileLineOffsets)(
         THIS_
-        __in PCSTR File,
-        __out_ecount_opt(BufferLines) PULONG64 Buffer,
-        __in ULONG BufferLines,
-        __out_opt PULONG FileLines
+        _In_ PCSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
         ) PURE;
 
     // IDebugSymbols2.
@@ -12760,12 +19713,12 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // not be available in all debug sessions.
     STDMETHOD(GetModuleVersionInformation)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __in PCSTR Item,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG VerInfoSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
         ) PURE;
     // Retrieves any available module name string
     // such as module name or symbol file name.
@@ -12777,53 +19730,53 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
     // no information exists.
     STDMETHOD(GetModuleNameString)(
         THIS_
-        __in ULONG Which,
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Returns the string name of a constant type.
     STDMETHOD(GetConstantName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG64 Value,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Gets name of a field in a struct
     // FieldNumber is 0 based index of field in a struct
     STDMETHOD(GetFieldName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG FieldIndex,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Control options for typed values.
     STDMETHOD(GetTypeOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 };
 
@@ -12841,8 +19794,8 @@ DECLARE_INTERFACE_(IDebugSymbols2, IUnknown)
 //
 // AddSyntheticModule flags.
 //
-
-#define DEBUG_ADDSYNTHMOD_DEFAULT 0x00000000
+#define DEBUG_ADDSYNTHMOD_DEFAULT  0x00000000
+#define DEBUG_ADDSYNTHMOD_ZEROBASE 0x00000001
 
 //
 // AddSyntheticSymbol flags.
@@ -12894,6 +19847,8 @@ typedef struct _DEBUG_MODULE_AND_ID
 #define DEBUG_GSEL_ALLOW_HIGHER    0x00000004
 // Only return the nearest hits.
 #define DEBUG_GSEL_NEAREST_ONLY    0x00000008
+// Only return caller sites of the inline function
+#define DEBUG_GSEL_INLINE_CALLSITE 0x00000010
 
 typedef struct _DEBUG_SYMBOL_SOURCE_ENTRY
 {
@@ -12922,8 +19877,8 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -12939,28 +19894,28 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // Uses the same flags as dbghelps SymSetOptions.
     STDMETHOD(GetSymbolOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetSymbolOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     STDMETHOD(GetNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     // A symbol name may not be unique, particularly
     // when overloaded functions exist which all
@@ -12974,8 +19929,8 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // perform different disambiguation.
     STDMETHOD(GetOffsetByName)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Offset
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Offset
         ) PURE;
     // GetNearNameByOffset returns symbols
     // located near the symbol closest to
@@ -12991,28 +19946,28 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // reversed for the previous symbol.
     STDMETHOD(GetNearNameByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
 
     STDMETHOD(GetLineByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out_opt PULONG Line,
-        __out_ecount_opt(FileBufferSize) PSTR FileBuffer,
-        __in ULONG FileBufferSize,
-        __out_opt PULONG FileSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     STDMETHOD(GetOffsetByLine)(
         THIS_
-        __in ULONG Line,
-        __in PCSTR File,
-        __out PULONG64 Offset
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _Out_ PULONG64 Offset
         ) PURE;
 
     // Enumerates the engines list of modules
@@ -13028,22 +19983,22 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // modules.
     STDMETHOD(GetNumberModules)(
         THIS_
-        __out PULONG Loaded,
-        __out PULONG Unloaded
+        _Out_ PULONG Loaded,
+        _Out_ PULONG Unloaded
         ) PURE;
     STDMETHOD(GetModuleByIndex)(
         THIS_
-        __in ULONG Index,
-        __out PULONG64 Base
+        _In_ ULONG Index,
+        _Out_ PULONG64 Base
         ) PURE;
     // The module name may not be unique.
     // This method returns the first match.
     STDMETHOD(GetModuleByModuleName)(
         THIS_
-        __in PCSTR Name,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // Offset can be any offset within
     // the module extent.  Extents may
@@ -13052,63 +20007,63 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // first match.
     STDMETHOD(GetModuleByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // If Index is DEBUG_ANY_ID the base address
     // is used to look up the module instead.
     STDMETHOD(GetModuleNames)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(ImageNameBufferSize) PSTR ImageNameBuffer,
-        __in ULONG ImageNameBufferSize,
-        __out_opt PULONG ImageNameSize,
-        __out_ecount_opt(ModuleNameBufferSize) PSTR ModuleNameBuffer,
-        __in ULONG ModuleNameBufferSize,
-        __out_opt PULONG ModuleNameSize,
-        __out_ecount_opt(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
-        __in ULONG LoadedImageNameBufferSize,
-        __out_opt PULONG LoadedImageNameSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(ImageNameBufferSize) PSTR ImageNameBuffer,
+        _In_ ULONG ImageNameBufferSize,
+        _Out_opt_ PULONG ImageNameSize,
+        _Out_writes_opt_(ModuleNameBufferSize) PSTR ModuleNameBuffer,
+        _In_ ULONG ModuleNameBufferSize,
+        _Out_opt_ PULONG ModuleNameSize,
+        _Out_writes_opt_(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
+        _In_ ULONG LoadedImageNameBufferSize,
+        _Out_opt_ PULONG LoadedImageNameSize
         ) PURE;
     STDMETHOD(GetModuleParameters)(
         THIS_
-        __in ULONG Count,
-        __in_ecount_opt(Count) PULONG64 Bases,
-        __in ULONG Start,
-        __out_ecount(Count) PDEBUG_MODULE_PARAMETERS Params
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG64 Bases,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_MODULE_PARAMETERS Params
         ) PURE;
     // Looks up the module from a <Module>!<Symbol>
     // string.
     STDMETHOD(GetSymbolModule)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG64 Base
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Base
         ) PURE;
 
     // Returns the string name of a type.
     STDMETHOD(GetTypeName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     // Returns the ID for a type name.
     STDMETHOD(GetTypeId)(
         THIS_
-        __in ULONG64 Module,
-        __in PCSTR Name,
-        __out PULONG TypeId
+        _In_ ULONG64 Module,
+        _In_ PCSTR Name,
+        _Out_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetTypeSize)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out PULONG Size
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_ PULONG Size
         ) PURE;
     // Given a type which can contain members
     // this method returns the offset of a
@@ -13118,17 +20073,17 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // to the field of interest.
     STDMETHOD(GetFieldOffset)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in PCSTR Field,
-        __out PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCSTR Field,
+        _Out_ PULONG Offset
         ) PURE;
 
     STDMETHOD(GetSymbolTypeId)(
         THIS_
-        __in PCSTR Symbol,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ PCSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
     // As with GetOffsetByName a symbol's
     // name may be ambiguous.  GetOffsetTypeId
@@ -13137,9 +20092,9 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // to avoid ambiguity.
     STDMETHOD(GetOffsetTypeId)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ ULONG64 Offset,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
 
     // Helpers for virtual and physical data
@@ -13147,55 +20102,55 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // the actual operation.
     STDMETHOD(ReadTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataVirtual)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataVirtual)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(ReadTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesRead
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
         ) PURE;
     STDMETHOD(WriteTypedDataPhysical)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in_bcount(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BytesWritten
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
         ) PURE;
     STDMETHOD(OutputTypedDataPhysical)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 Offset,
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG Flags
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
         ) PURE;
 
     // Function arguments and scope block symbols
@@ -13215,10 +20170,10 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // and the current register context is used.
     STDMETHOD(GetScope)(
         THIS_
-        __out_opt PULONG64 InstructionOffset,
-        __out_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __out_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // If ScopeFrame or ScopeContext is non-NULL then
     // InstructionOffset is ignored.
@@ -13232,10 +20187,10 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // blocks, SetScope returns S_FALSE.
     STDMETHOD(SetScope)(
         THIS_
-        __in ULONG64 InstructionOffset,
-        __in_opt PDEBUG_STACK_FRAME ScopeFrame,
-        __in_bcount_opt(ScopeContextSize) PVOID ScopeContext,
-        __in ULONG ScopeContextSize
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
         ) PURE;
     // ResetScope clears the scope information
     // for situations where scoped symbols
@@ -13252,15 +20207,15 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // incremental updates when stepping.
     STDMETHOD(GetScopeSymbolGroup)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PDEBUG_SYMBOL_GROUP Update,
-        __out PDEBUG_SYMBOL_GROUP* Symbols
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP Update,
+        _Out_ PDEBUG_SYMBOL_GROUP* Symbols
         ) PURE;
 
     // Create a new symbol group.
     STDMETHOD(CreateSymbolGroup)(
         THIS_
-        __out PDEBUG_SYMBOL_GROUP* Group
+        _Out_ PDEBUG_SYMBOL_GROUP* Group
         ) PURE;
 
     // StartSymbolMatch matches symbol names
@@ -13277,42 +20232,42 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // when the set of loaded symbols changes.
     STDMETHOD(StartSymbolMatch)(
         THIS_
-        __in PCSTR Pattern,
-        __out PULONG64 Handle
+        _In_ PCSTR Pattern,
+        _Out_ PULONG64 Handle
         ) PURE;
     // If Buffer is NULL the match does not
     // advance.
     STDMETHOD(GetNextSymbolMatch)(
         THIS_
-        __in ULONG64 Handle,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MatchSize,
-        __out_opt PULONG64 Offset
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
         ) PURE;
     STDMETHOD(EndSymbolMatch)(
         THIS_
-        __in ULONG64 Handle
+        _In_ ULONG64 Handle
         ) PURE;
 
     STDMETHOD(Reload)(
         THIS_
-        __in PCSTR Module
+        _In_ PCSTR Module
         ) PURE;
 
     STDMETHOD(GetSymbolPath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetSymbolPath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSymbolPath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Manipulate the path for executable images.
@@ -13322,42 +20277,42 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // images.
     STDMETHOD(GetImagePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetImagePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendImagePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
 
     // Path routines for source file location
     // methods.
     STDMETHOD(GetSourcePath)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     // Gets the nth part of the source path.
     STDMETHOD(GetSourcePathElement)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ElementSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
         ) PURE;
     STDMETHOD(SetSourcePath)(
         THIS_
-        __in PCSTR Path
+        _In_ PCSTR Path
         ) PURE;
     STDMETHOD(AppendSourcePath)(
         THIS_
-        __in PCSTR Addition
+        _In_ PCSTR Addition
         ) PURE;
     // Uses the given file path and the source path
     // information to try and locate an existing file.
@@ -13372,13 +20327,13 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // the file was found directly and not on the path.
     STDMETHOD(FindSourceFile)(
         THIS_
-        __in ULONG StartElement,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
     // Retrieves all the line offset information
     // for a particular source file.  Buffer is
@@ -13395,10 +20350,10 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // than returning a map of invalid offsets.
     STDMETHOD(GetSourceFileLineOffsets)(
         THIS_
-        __in PCSTR File,
-        __out_ecount_opt(BufferLines) PULONG64 Buffer,
-        __in ULONG BufferLines,
-        __out_opt PULONG FileLines
+        _In_ PCSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
         ) PURE;
 
     // IDebugSymbols2.
@@ -13411,12 +20366,12 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // not be available in all debug sessions.
     STDMETHOD(GetModuleVersionInformation)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __in PCSTR Item,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG VerInfoSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
         ) PURE;
     // Retrieves any available module name string
     // such as module name or symbol file name.
@@ -13428,276 +20383,276 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // no information exists.
     STDMETHOD(GetModuleNameString)(
         THIS_
-        __in ULONG Which,
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Returns the string name of a constant type.
     STDMETHOD(GetConstantName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG64 Value,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Gets name of a field in a struct
     // FieldNumber is 0 based index of field in a struct
     STDMETHOD(GetFieldName)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG FieldIndex,
-        __out_ecount_opt(NameBufferSize) PSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Control options for typed values.
     STDMETHOD(GetTypeOptions)(
         THIS_
-        __out PULONG Options
+        _Out_ PULONG Options
         ) PURE;
     STDMETHOD(AddTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(RemoveTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
     STDMETHOD(SetTypeOptions)(
         THIS_
-        __in ULONG Options
+        _In_ ULONG Options
         ) PURE;
 
     // IDebugSymbols3.
 
     STDMETHOD(GetNameByOffsetWide)(
         THIS_
-        __in ULONG64 Offset,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     STDMETHOD(GetOffsetByNameWide)(
         THIS_
-        __in PCWSTR Symbol,
-        __out PULONG64 Offset
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(GetNearNameByOffsetWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in LONG Delta,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
 
     STDMETHOD(GetLineByOffsetWide)(
         THIS_
-        __in ULONG64 Offset,
-        __out_opt PULONG Line,
-        __out_ecount_opt(FileBufferSize) PWSTR FileBuffer,
-        __in ULONG FileBufferSize,
-        __out_opt PULONG FileSize,
-        __out_opt PULONG64 Displacement
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PWSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
         ) PURE;
     STDMETHOD(GetOffsetByLineWide)(
         THIS_
-        __in ULONG Line,
-        __in PCWSTR File,
-        __out PULONG64 Offset
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _Out_ PULONG64 Offset
         ) PURE;
 
     STDMETHOD(GetModuleByModuleNameWide)(
         THIS_
-        __in PCWSTR Name,
-        __in ULONG StartIndex,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     STDMETHOD(GetSymbolModuleWide)(
         THIS_
-        __in PCWSTR Symbol,
-        __out PULONG64 Base
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Base
         ) PURE;
 
     STDMETHOD(GetTypeNameWide)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
     // Returns the ID for a type name.
     STDMETHOD(GetTypeIdWide)(
         THIS_
-        __in ULONG64 Module,
-        __in PCWSTR Name,
-        __out PULONG TypeId
+        _In_ ULONG64 Module,
+        _In_ PCWSTR Name,
+        _Out_ PULONG TypeId
         ) PURE;
     STDMETHOD(GetFieldOffsetWide)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in PCWSTR Field,
-        __out PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCWSTR Field,
+        _Out_ PULONG Offset
         ) PURE;
 
     STDMETHOD(GetSymbolTypeIdWide)(
         THIS_
-        __in PCWSTR Symbol,
-        __out PULONG TypeId,
-        __out_opt PULONG64 Module
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
         ) PURE;
 
     STDMETHOD(GetScopeSymbolGroup2)(
         THIS_
-        __in ULONG Flags,
-        __in_opt PDEBUG_SYMBOL_GROUP2 Update,
-        __out PDEBUG_SYMBOL_GROUP2* Symbols
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP2 Update,
+        _Out_ PDEBUG_SYMBOL_GROUP2* Symbols
         ) PURE;
 
     STDMETHOD(CreateSymbolGroup2)(
         THIS_
-        __out PDEBUG_SYMBOL_GROUP2* Group
+        _Out_ PDEBUG_SYMBOL_GROUP2* Group
         ) PURE;
 
     STDMETHOD(StartSymbolMatchWide)(
         THIS_
-        __in PCWSTR Pattern,
-        __out PULONG64 Handle
+        _In_ PCWSTR Pattern,
+        _Out_ PULONG64 Handle
         ) PURE;
     STDMETHOD(GetNextSymbolMatchWide)(
         THIS_
-        __in ULONG64 Handle,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG MatchSize,
-        __out_opt PULONG64 Offset
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
         ) PURE;
 
     STDMETHOD(ReloadWide)(
         THIS_
-        __in PCWSTR Module
+        _In_ PCWSTR Module
         ) PURE;
 
     STDMETHOD(GetSymbolPathWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetSymbolPathWide)(
         THIS_
-        __in PCWSTR Path
+        _In_ PCWSTR Path
         ) PURE;
     STDMETHOD(AppendSymbolPathWide)(
         THIS_
-        __in PCWSTR Addition
+        _In_ PCWSTR Addition
         ) PURE;
 
     STDMETHOD(GetImagePathWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(SetImagePathWide)(
         THIS_
-        __in PCWSTR Path
+        _In_ PCWSTR Path
         ) PURE;
     STDMETHOD(AppendImagePathWide)(
         THIS_
-        __in PCWSTR Addition
+        _In_ PCWSTR Addition
         ) PURE;
 
     STDMETHOD(GetSourcePathWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG PathSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
         ) PURE;
     STDMETHOD(GetSourcePathElementWide)(
         THIS_
-        __in ULONG Index,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ElementSize
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
         ) PURE;
     STDMETHOD(SetSourcePathWide)(
         THIS_
-        __in PCWSTR Path
+        _In_ PCWSTR Path
         ) PURE;
     STDMETHOD(AppendSourcePathWide)(
         THIS_
-        __in PCWSTR Addition
+        _In_ PCWSTR Addition
         ) PURE;
     STDMETHOD(FindSourceFileWide)(
         THIS_
-        __in ULONG StartElement,
-        __in PCWSTR File,
-        __in ULONG Flags,
-        __out_opt PULONG FoundElement,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG FoundSize
+        _In_ ULONG StartElement,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
         ) PURE;
     STDMETHOD(GetSourceFileLineOffsetsWide)(
         THIS_
-        __in PCWSTR File,
-        __out_ecount_opt(BufferLines) PULONG64 Buffer,
-        __in ULONG BufferLines,
-        __out_opt PULONG FileLines
+        _In_ PCWSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
         ) PURE;
 
     STDMETHOD(GetModuleVersionInformationWide)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __in PCWSTR Item,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG VerInfoSize
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCWSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
         ) PURE;
     STDMETHOD(GetModuleNameStringWide)(
         THIS_
-        __in ULONG Which,
-        __in ULONG Index,
-        __in ULONG64 Base,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     STDMETHOD(GetConstantNameWide)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG64 Value,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     STDMETHOD(GetFieldNameWide)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG TypeId,
-        __in ULONG FieldIndex,
-        __out_ecount_opt(NameBufferSize) PWSTR NameBuffer,
-        __in ULONG NameBufferSize,
-        __out_opt PULONG NameSize
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // Returns S_OK if the engine is using managed
@@ -13706,27 +20661,27 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // to check.
     STDMETHOD(IsManagedModule)(
         THIS_
-        __in ULONG Index,
-        __in ULONG64 Base
+        _In_ ULONG Index,
+        _In_ ULONG64 Base
         ) PURE;
 
     // The module name may not be unique.
     // This method returns the first match.
     STDMETHOD(GetModuleByModuleName2)(
         THIS_
-        __in PCSTR Name,
-        __in ULONG StartIndex,
-        __in ULONG Flags,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     STDMETHOD(GetModuleByModuleName2Wide)(
         THIS_
-        __in PCWSTR Name,
-        __in ULONG StartIndex,
-        __in ULONG Flags,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
     // Offset can be any offset within
     // the module extent.  Extents may
@@ -13735,11 +20690,11 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // first match.
     STDMETHOD(GetModuleByOffset2)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG StartIndex,
-        __in ULONG Flags,
-        __out_opt PULONG Index,
-        __out_opt PULONG64 Base
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
         ) PURE;
 
     // A caller can create artificial loaded modules in
@@ -13754,34 +20709,34 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // A general reload will discard any synthetic modules.
     STDMETHOD(AddSyntheticModule)(
         THIS_
-        __in ULONG64 Base,
-        __in ULONG Size,
-        __in PCSTR ImagePath,
-        __in PCSTR ModuleName,
-        __in ULONG Flags
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCSTR ImagePath,
+        _In_ PCSTR ModuleName,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(AddSyntheticModuleWide)(
         THIS_
-        __in ULONG64 Base,
-        __in ULONG Size,
-        __in PCWSTR ImagePath,
-        __in PCWSTR ModuleName,
-        __in ULONG Flags
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCWSTR ImagePath,
+        _In_ PCWSTR ModuleName,
+        _In_ ULONG Flags
         ) PURE;
     STDMETHOD(RemoveSyntheticModule)(
         THIS_
-        __in ULONG64 Base
+        _In_ ULONG64 Base
         ) PURE;
 
     // Modify the current frame used for scoping.
     // This is equivalent to the '.frame' command.
     STDMETHOD(GetCurrentScopeFrameIndex)(
         THIS_
-        __out PULONG Index
+        _Out_ PULONG Index
         ) PURE;
     STDMETHOD(SetScopeFrameByIndex)(
         THIS_
-        __in ULONG Index
+        _In_ ULONG Index
         ) PURE;
 
     // Recovers JIT_DEBUG_INFO information at the given
@@ -13790,8 +20745,8 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // Equivalent to '.jdinfo' command.
     STDMETHOD(SetScopeFromJitDebugInfo)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG64 InfoOffset
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 InfoOffset
         ) PURE;
 
     // Switches the current debugger scope to
@@ -13805,9 +20760,9 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // Controlled with DEBUG_OUTSYM_* flags.
     STDMETHOD(OutputSymbolByOffset)(
         THIS_
-        __in ULONG OutputControl,
-        __in ULONG Flags,
-        __in ULONG64 Offset
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Offset
         ) PURE;
 
     // Function entry information for a particular
@@ -13815,11 +20770,11 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // The actual data returned is system-dependent.
     STDMETHOD(GetFunctionEntryByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_bcount_opt(BufferSize) PVOID Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG BufferNeeded
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BufferNeeded
         ) PURE;
 
     // Given a type which can contain members
@@ -13829,19 +20784,19 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // to the field of interest.
     STDMETHOD(GetFieldTypeAndOffset)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG ContainerTypeId,
-        __in PCSTR Field,
-        __out_opt PULONG FieldTypeId,
-        __out_opt PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
         ) PURE;
     STDMETHOD(GetFieldTypeAndOffsetWide)(
         THIS_
-        __in ULONG64 Module,
-        __in ULONG ContainerTypeId,
-        __in PCWSTR Field,
-        __out_opt PULONG FieldTypeId,
-        __out_opt PULONG Offset
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCWSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
         ) PURE;
 
     // Artificial symbols can be created in any
@@ -13852,23 +20807,23 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // for all address regions reloaded.
     STDMETHOD(AddSyntheticSymbol)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Size,
-        __in PCSTR Name,
-        __in ULONG Flags,
-        __out_opt PDEBUG_MODULE_AND_ID Id
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
         ) PURE;
     STDMETHOD(AddSyntheticSymbolWide)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Size,
-        __in PCWSTR Name,
-        __in ULONG Flags,
-        __out_opt PDEBUG_MODULE_AND_ID Id
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCWSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
         ) PURE;
     STDMETHOD(RemoveSyntheticSymbol)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID Id
+        _In_ PDEBUG_MODULE_AND_ID Id
         ) PURE;
 
     // The following methods can return multiple
@@ -13876,58 +20831,58 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // possible hits to be returned.
     STDMETHOD(GetSymbolEntriesByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(IdsCount) PDEBUG_MODULE_AND_ID Ids,
-        __out_ecount_opt(IdsCount) PULONG64 Displacements,
-        __in ULONG IdsCount,
-        __out_opt PULONG Entries
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _Out_writes_opt_(IdsCount) PULONG64 Displacements,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
         ) PURE;
     STDMETHOD(GetSymbolEntriesByName)(
         THIS_
-        __in PCSTR Symbol,
-        __in ULONG Flags,
-        __out_ecount_opt(IdsCount) PDEBUG_MODULE_AND_ID Ids,
-        __in ULONG IdsCount,
-        __out_opt PULONG Entries
+        _In_ PCSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
         ) PURE;
     STDMETHOD(GetSymbolEntriesByNameWide)(
         THIS_
-        __in PCWSTR Symbol,
-        __in ULONG Flags,
-        __out_ecount_opt(IdsCount) PDEBUG_MODULE_AND_ID Ids,
-        __in ULONG IdsCount,
-        __out_opt PULONG Entries
+        _In_ PCWSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
         ) PURE;
     // Symbol lookup by managed metadata token.
     STDMETHOD(GetSymbolEntryByToken)(
         THIS_
-        __in ULONG64 ModuleBase,
-        __in ULONG Token,
-        __out PDEBUG_MODULE_AND_ID Id
+        _In_ ULONG64 ModuleBase,
+        _In_ ULONG Token,
+        _Out_ PDEBUG_MODULE_AND_ID Id
         ) PURE;
 
     // Retrieves full symbol entry information from an ID.
     STDMETHOD(GetSymbolEntryInformation)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID Id,
-        __out PDEBUG_SYMBOL_ENTRY Info
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _Out_ PDEBUG_SYMBOL_ENTRY Info
         ) PURE;
     STDMETHOD(GetSymbolEntryString)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID Id,
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
     STDMETHOD(GetSymbolEntryStringWide)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID Id,
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
     // Returns all known memory regions associated
     // with the given symbol.  Simple symbols will
@@ -13939,20 +20894,20 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // dependent on the symbolic information availble.
     STDMETHOD(GetSymbolEntryOffsetRegions)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID Id,
-        __in ULONG Flags,
-        __out_ecount_opt(RegionsCount) PDEBUG_OFFSET_REGION Regions,
-        __in ULONG RegionsCount,
-        __out_opt PULONG RegionsAvail
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
         ) PURE;
 
     // This method allows navigating within the
     // symbol entry hierarchy.
     STDMETHOD(GetSymbolEntryBySymbolEntry)(
         THIS_
-        __in PDEBUG_MODULE_AND_ID FromId,
-        __in ULONG Flags,
-        __out PDEBUG_MODULE_AND_ID ToId
+        _In_ PDEBUG_MODULE_AND_ID FromId,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_MODULE_AND_ID ToId
         ) PURE;
 
     // The following methods can return multiple
@@ -13960,46 +20915,46 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // possible hits to be returned.
     STDMETHOD(GetSourceEntriesByOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __in ULONG Flags,
-        __out_ecount_opt(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
-        __in ULONG EntriesCount,
-        __out_opt PULONG EntriesAvail
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
         ) PURE;
     STDMETHOD(GetSourceEntriesByLine)(
         THIS_
-        __in ULONG Line,
-        __in PCSTR File,
-        __in ULONG Flags,
-        __out_ecount_opt(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
-        __in ULONG EntriesCount,
-        __out_opt PULONG EntriesAvail
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
         ) PURE;
     STDMETHOD(GetSourceEntriesByLineWide)(
         THIS_
-        __in ULONG Line,
-        __in PCWSTR File,
-        __in ULONG Flags,
-        __out_ecount_opt(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
-        __in ULONG EntriesCount,
-        __out_opt PULONG EntriesAvail
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
         ) PURE;
 
     STDMETHOD(GetSourceEntryString)(
         THIS_
-        __in PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
     STDMETHOD(GetSourceEntryStringWide)(
         THIS_
-        __in PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
-        __in ULONG Which,
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG StringSize
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
         ) PURE;
     // Returns all known memory regions associated
     // with the given source entry.  As with
@@ -14007,20 +20962,2387 @@ DECLARE_INTERFACE_(IDebugSymbols3, IUnknown)
     // are variable.
     STDMETHOD(GetSourceEntryOffsetRegions)(
         THIS_
-        __in PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
-        __in ULONG Flags,
-        __out_ecount_opt(RegionsCount) PDEBUG_OFFSET_REGION Regions,
-        __in ULONG RegionsCount,
-        __out_opt PULONG RegionsAvail
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
         ) PURE;
 
     // This method allows navigating within the
     // source entries.
     STDMETHOD(GetSourceEntryBySourceEntry)(
         THIS_
-        __in PDEBUG_SYMBOL_SOURCE_ENTRY FromEntry,
-        __in ULONG Flags,
-        __out PDEBUG_SYMBOL_SOURCE_ENTRY ToEntry
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY FromEntry,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_SYMBOL_SOURCE_ENTRY ToEntry
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDebugSymbols4
+DECLARE_INTERFACE_(IDebugSymbols4, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugSymbols.
+
+    // Controls the symbol options used during
+    // symbol operations.
+    // Uses the same flags as dbghelps SymSetOptions.
+    STDMETHOD(GetSymbolOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    STDMETHOD(GetNameByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    // A symbol name may not be unique, particularly
+    // when overloaded functions exist which all
+    // have the same name.  If GetOffsetByName
+    // finds multiple matches for the name it
+    // can return any one of them.  In that
+    // case it will return S_FALSE to indicate
+    // that ambiguity was arbitrarily resolved.
+    // A caller can then use SearchSymbols to
+    // find all of the matches if it wishes to
+    // perform different disambiguation.
+    STDMETHOD(GetOffsetByName)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // GetNearNameByOffset returns symbols
+    // located near the symbol closest to
+    // to the offset, such as the previous
+    // or next symbol.  If Delta is zero it
+    // operates identically to GetNameByOffset.
+    // If Delta is nonzero and such a symbol
+    // does not exist an error is returned.
+    // The next symbol, if one exists, will
+    // always have a higher offset than the
+    // input offset so the displacement is
+    // always negative.  The situation is
+    // reversed for the previous symbol.
+    STDMETHOD(GetNearNameByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByLine)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _Out_ PULONG64 Offset
+        ) PURE;
+
+    // Enumerates the engines list of modules
+    // loaded for the current process.  This may
+    // or may not match the system module list
+    // for the process.  Reload can be used to
+    // synchronize the engines list with the system
+    // if necessary.
+    // Some sessions also track recently unloaded
+    // code modules for help in analyzing failures
+    // where an attempt is made to call unloaded code.
+    // These modules are indexed after the loaded
+    // modules.
+    STDMETHOD(GetNumberModules)(
+        THIS_
+        _Out_ PULONG Loaded,
+        _Out_ PULONG Unloaded
+        ) PURE;
+    STDMETHOD(GetModuleByIndex)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PULONG64 Base
+        ) PURE;
+    // The module name may not be unique.
+    // This method returns the first match.
+    STDMETHOD(GetModuleByModuleName)(
+        THIS_
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // Offset can be any offset within
+    // the module extent.  Extents may
+    // not be unique when including unloaded
+    // drivers.  This method returns the
+    // first match.
+    STDMETHOD(GetModuleByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    STDMETHOD(GetModuleNames)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(ImageNameBufferSize) PSTR ImageNameBuffer,
+        _In_ ULONG ImageNameBufferSize,
+        _Out_opt_ PULONG ImageNameSize,
+        _Out_writes_opt_(ModuleNameBufferSize) PSTR ModuleNameBuffer,
+        _In_ ULONG ModuleNameBufferSize,
+        _Out_opt_ PULONG ModuleNameSize,
+        _Out_writes_opt_(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
+        _In_ ULONG LoadedImageNameBufferSize,
+        _Out_opt_ PULONG LoadedImageNameSize
+        ) PURE;
+    STDMETHOD(GetModuleParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG64 Bases,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_MODULE_PARAMETERS Params
+        ) PURE;
+    // Looks up the module from a <Module>!<Symbol>
+    // string.
+    STDMETHOD(GetSymbolModule)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Base
+        ) PURE;
+
+    // Returns the string name of a type.
+    STDMETHOD(GetTypeName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+    // Returns the ID for a type name.
+    STDMETHOD(GetTypeId)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ PCSTR Name,
+        _Out_ PULONG TypeId
+        ) PURE;
+    STDMETHOD(GetTypeSize)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_ PULONG Size
+        ) PURE;
+    // Given a type which can contain members
+    // this method returns the offset of a
+    // particular member within the type.
+    // TypeId should give the container type ID
+    // and Field gives the dot-separated path
+    // to the field of interest.
+    STDMETHOD(GetFieldOffset)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCSTR Field,
+        _Out_ PULONG Offset
+        ) PURE;
+
+    STDMETHOD(GetSymbolTypeId)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+    // As with GetOffsetByName a symbol's
+    // name may be ambiguous.  GetOffsetTypeId
+    // returns the type for the symbol closest
+    // to the given offset and can be used
+    // to avoid ambiguity.
+    STDMETHOD(GetOffsetTypeId)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+
+    // Helpers for virtual and physical data
+    // which combine creation of a location with
+    // the actual operation.
+    STDMETHOD(ReadTypedDataVirtual)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
+        ) PURE;
+    STDMETHOD(WriteTypedDataVirtual)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
+        ) PURE;
+    STDMETHOD(OutputTypedDataVirtual)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(ReadTypedDataPhysical)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
+        ) PURE;
+    STDMETHOD(WriteTypedDataPhysical)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
+        ) PURE;
+    STDMETHOD(OutputTypedDataPhysical)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Function arguments and scope block symbols
+    // can be retrieved relative to currently
+    // executing code.  A caller can provide just
+    // a code offset for scoping purposes and look
+    // up names or the caller can provide a full frame
+    // and look up actual values.  The values for
+    // scoped symbols are best-guess and may or may not
+    // be accurate depending on program optimizations,
+    // the machine architecture, the current point
+    // in the programs execution and so on.
+    // A caller can also provide a complete register
+    // context for setting a scope to a previous
+    // machine state such as a context saved for
+    // an exception.  Usually this isnt necessary
+    // and the current register context is used.
+    STDMETHOD(GetScope)(
+        THIS_
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+    // If ScopeFrame or ScopeContext is non-NULL then
+    // InstructionOffset is ignored.
+    // If ScopeContext is NULL the current
+    // register context is used.
+    // If the scope identified by the given
+    // information is the same as before
+    // SetScope returns S_OK.  If the scope
+    // information changes, such as when the
+    // scope moves between functions or scope
+    // blocks, SetScope returns S_FALSE.
+    STDMETHOD(SetScope)(
+        THIS_
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+    // ResetScope clears the scope information
+    // for situations where scoped symbols
+    // mask global symbols or when resetting
+    // from explicit information to the current
+    // information.
+    STDMETHOD(ResetScope)(
+        THIS
+        ) PURE;
+    // A scope symbol is tied to its particular
+    // scope and only is meaningful within the scope.
+    // The returned group can be updated by passing it back
+    // into the method for lower-cost
+    // incremental updates when stepping.
+    STDMETHOD(GetScopeSymbolGroup)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP Update,
+        _Out_ PDEBUG_SYMBOL_GROUP* Symbols
+        ) PURE;
+
+    // Create a new symbol group.
+    STDMETHOD(CreateSymbolGroup)(
+        THIS_
+        _Out_ PDEBUG_SYMBOL_GROUP* Group
+        ) PURE;
+
+    // StartSymbolMatch matches symbol names
+    // against the given pattern using simple
+    // regular expressions.  The search results
+    // are iterated through using GetNextSymbolMatch.
+    // When the caller is done examining results
+    // the match should be freed via EndSymbolMatch.
+    // If the match pattern contains a module name
+    // the search is restricted to a single module.
+    // Pattern matching is only done on symbol names,
+    // not module names.
+    // All active symbol match handles are invalidated
+    // when the set of loaded symbols changes.
+    STDMETHOD(StartSymbolMatch)(
+        THIS_
+        _In_ PCSTR Pattern,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    // If Buffer is NULL the match does not
+    // advance.
+    STDMETHOD(GetNextSymbolMatch)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
+        ) PURE;
+    STDMETHOD(EndSymbolMatch)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    STDMETHOD(Reload)(
+        THIS_
+        _In_ PCSTR Module
+        ) PURE;
+
+    STDMETHOD(GetSymbolPath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetSymbolPath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendSymbolPath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+
+    // Manipulate the path for executable images.
+    // Some dump files need to load executable images
+    // in order to resolve dump information.  This
+    // path controls where the engine looks for
+    // images.
+    STDMETHOD(GetImagePath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetImagePath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendImagePath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+
+    // Path routines for source file location
+    // methods.
+    STDMETHOD(GetSourcePath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    // Gets the nth part of the source path.
+    STDMETHOD(GetSourcePathElement)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
+        ) PURE;
+    STDMETHOD(SetSourcePath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendSourcePath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+    // Uses the given file path and the source path
+    // information to try and locate an existing file.
+    // The given file path is merged with elements
+    // of the source path and checked for existence.
+    // If a match is found the element used is returned.
+    // A starting element can be specified to restrict
+    // the search to a subset of the path elements;
+    // this can be useful when checking for multiple
+    // matches along the source path.
+    // The returned element can be 1, indicating
+    // the file was found directly and not on the path.
+    STDMETHOD(FindSourceFile)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+    // Retrieves all the line offset information
+    // for a particular source file.  Buffer is
+    // first intialized to DEBUG_INVALID_OFFSET for
+    // every entry.  Then for each piece of line
+    // symbol information Buffer[Line] set to
+    // Lines offset.  This produces a per-line
+    // map of the offsets for the lines of the
+    // given file.  Line numbers are decremented
+    // for the map so Buffer[0] contains the offset
+    // for line number 1.
+    // If there is no line information at all for
+    // the given file the method fails rather
+    // than returning a map of invalid offsets.
+    STDMETHOD(GetSourceFileLineOffsets)(
+        THIS_
+        _In_ PCSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
+        ) PURE;
+
+    // IDebugSymbols2.
+
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    // Item is specified as in VerQueryValue.
+    // Module version information is only
+    // available for loaded modules and may
+    // not be available in all debug sessions.
+    STDMETHOD(GetModuleVersionInformation)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
+        ) PURE;
+    // Retrieves any available module name string
+    // such as module name or symbol file name.
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    // If symbols are deferred an error will
+    // be returned.
+    // E_NOINTERFACE may be returned, indicating
+    // no information exists.
+    STDMETHOD(GetModuleNameString)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Returns the string name of a constant type.
+    STDMETHOD(GetConstantName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Gets name of a field in a struct
+    // FieldNumber is 0 based index of field in a struct
+    STDMETHOD(GetFieldName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Control options for typed values.
+    STDMETHOD(GetTypeOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // IDebugSymbols3.
+
+    STDMETHOD(GetNameByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByNameWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Offset
+        ) PURE;
+    STDMETHOD(GetNearNameByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PWSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByLineWide)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _Out_ PULONG64 Offset
+        ) PURE;
+
+    STDMETHOD(GetModuleByModuleNameWide)(
+        THIS_
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    STDMETHOD(GetSymbolModuleWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Base
+        ) PURE;
+
+    STDMETHOD(GetTypeNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+    // Returns the ID for a type name.
+    STDMETHOD(GetTypeIdWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ PCWSTR Name,
+        _Out_ PULONG TypeId
+        ) PURE;
+    STDMETHOD(GetFieldOffsetWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCWSTR Field,
+        _Out_ PULONG Offset
+        ) PURE;
+
+    STDMETHOD(GetSymbolTypeIdWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+
+    STDMETHOD(GetScopeSymbolGroup2)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP2 Update,
+        _Out_ PDEBUG_SYMBOL_GROUP2* Symbols
+        ) PURE;
+
+    STDMETHOD(CreateSymbolGroup2)(
+        THIS_
+        _Out_ PDEBUG_SYMBOL_GROUP2* Group
+        ) PURE;
+
+    STDMETHOD(StartSymbolMatchWide)(
+        THIS_
+        _In_ PCWSTR Pattern,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetNextSymbolMatchWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
+        ) PURE;
+
+    STDMETHOD(ReloadWide)(
+        THIS_
+        _In_ PCWSTR Module
+        ) PURE;
+
+    STDMETHOD(GetSymbolPathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetSymbolPathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendSymbolPathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+
+    STDMETHOD(GetImagePathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetImagePathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendImagePathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+
+    STDMETHOD(GetSourcePathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(GetSourcePathElementWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
+        ) PURE;
+    STDMETHOD(SetSourcePathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendSourcePathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+    STDMETHOD(FindSourceFileWide)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+    STDMETHOD(GetSourceFileLineOffsetsWide)(
+        THIS_
+        _In_ PCWSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
+        ) PURE;
+
+    STDMETHOD(GetModuleVersionInformationWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCWSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
+        ) PURE;
+    STDMETHOD(GetModuleNameStringWide)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    STDMETHOD(GetConstantNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    STDMETHOD(GetFieldNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Returns S_OK if the engine is using managed
+    // debugging support when retriving information
+    // for the given module.  This can be expensive
+    // to check.
+    STDMETHOD(IsManagedModule)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base
+        ) PURE;
+
+    // The module name may not be unique.
+    // This method returns the first match.
+    STDMETHOD(GetModuleByModuleName2)(
+        THIS_
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    STDMETHOD(GetModuleByModuleName2Wide)(
+        THIS_
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // Offset can be any offset within
+    // the module extent.  Extents may
+    // not be unique when including unloaded
+    // drivers.  This method returns the
+    // first match.
+    STDMETHOD(GetModuleByOffset2)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+
+    // A caller can create artificial loaded modules in
+    // the engine's module list if desired.
+    // These modules only serve as names for
+    // a region of addresses.  They cannot have
+    // real symbols loaded for them; if that
+    // is desired Reload can be used with explicit
+    // parameters to create a true module entry.
+    // The region must not be in use by any other
+    // module.
+    // A general reload will discard any synthetic modules.
+    STDMETHOD(AddSyntheticModule)(
+        THIS_
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCSTR ImagePath,
+        _In_ PCSTR ModuleName,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(AddSyntheticModuleWide)(
+        THIS_
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCWSTR ImagePath,
+        _In_ PCWSTR ModuleName,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(RemoveSyntheticModule)(
+        THIS_
+        _In_ ULONG64 Base
+        ) PURE;
+
+    // Modify the current frame used for scoping.
+    // This is equivalent to the '.frame' command.
+    STDMETHOD(GetCurrentScopeFrameIndex)(
+        THIS_
+        _Out_ PULONG Index
+        ) PURE;
+    STDMETHOD(SetScopeFrameByIndex)(
+        THIS_
+        _In_ ULONG Index
+        ) PURE;
+
+    // Recovers JIT_DEBUG_INFO information at the given
+    // address from the debuggee and sets current
+    // debugger scope context from it.
+    // Equivalent to '.jdinfo' command.
+    STDMETHOD(SetScopeFromJitDebugInfo)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 InfoOffset
+        ) PURE;
+
+    // Switches the current debugger scope to
+    // the stored event information.
+    // Equivalent to the '.ecxr' command.
+    STDMETHOD(SetScopeFromStoredEvent)(
+        THIS
+        ) PURE;
+
+    // Takes the first symbol hit and outputs it.
+    // Controlled with DEBUG_OUTSYM_* flags.
+    STDMETHOD(OutputSymbolByOffset)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Offset
+        ) PURE;
+
+    // Function entry information for a particular
+    // piece of code can be retrieved by this method.
+    // The actual data returned is system-dependent.
+    STDMETHOD(GetFunctionEntryByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BufferNeeded
+        ) PURE;
+
+    // Given a type which can contain members
+    // this method returns the type ID and offset of a
+    // particular member within the type.
+    // Field gives the dot-separated path
+    // to the field of interest.
+    STDMETHOD(GetFieldTypeAndOffset)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
+        ) PURE;
+    STDMETHOD(GetFieldTypeAndOffsetWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCWSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
+        ) PURE;
+
+    // Artificial symbols can be created in any
+    // existing module as a way to name an address.
+    // The address must not already have symbol
+    // information.
+    // A reload will discard synthetic symbols
+    // for all address regions reloaded.
+    STDMETHOD(AddSyntheticSymbol)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+    STDMETHOD(AddSyntheticSymbolWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCWSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+    STDMETHOD(RemoveSyntheticSymbol)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+
+    // The following methods can return multiple
+    // hits for symbol lookups to allow for all
+    // possible hits to be returned.
+    STDMETHOD(GetSymbolEntriesByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _Out_writes_opt_(IdsCount) PULONG64 Displacements,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    STDMETHOD(GetSymbolEntriesByName)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    STDMETHOD(GetSymbolEntriesByNameWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    // Symbol lookup by managed metadata token.
+    STDMETHOD(GetSymbolEntryByToken)(
+        THIS_
+        _In_ ULONG64 ModuleBase,
+        _In_ ULONG Token,
+        _Out_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+
+    // Retrieves full symbol entry information from an ID.
+    STDMETHOD(GetSymbolEntryInformation)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _Out_ PDEBUG_SYMBOL_ENTRY Info
+        ) PURE;
+    STDMETHOD(GetSymbolEntryString)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSymbolEntryStringWide)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    // Returns all known memory regions associated
+    // with the given symbol.  Simple symbols will
+    // have a single region starting from their base.
+    // More complicated regions, such as functions
+    // with multiple code areas, can have an arbitrarily
+    // large number of regions.
+    // The quality of information returned is highly
+    // dependent on the symbolic information availble.
+    STDMETHOD(GetSymbolEntryOffsetRegions)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
+        ) PURE;
+
+    // This method allows navigating within the
+    // symbol entry hierarchy.
+    STDMETHOD(GetSymbolEntryBySymbolEntry)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID FromId,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_MODULE_AND_ID ToId
+        ) PURE;
+
+    // The following methods can return multiple
+    // hits for source lookups to allow for all
+    // possible hits to be returned.
+    STDMETHOD(GetSourceEntriesByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+    STDMETHOD(GetSourceEntriesByLine)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+    STDMETHOD(GetSourceEntriesByLineWide)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+
+    STDMETHOD(GetSourceEntryString)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSourceEntryStringWide)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    // Returns all known memory regions associated
+    // with the given source entry.  As with
+    // GetSymbolEntryOffsetRegions the regions available
+    // are variable.
+    STDMETHOD(GetSourceEntryOffsetRegions)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
+        ) PURE;
+
+    // This method allows navigating within the
+    // source entries.
+    STDMETHOD(GetSourceEntryBySourceEntry)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY FromEntry,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_SYMBOL_SOURCE_ENTRY ToEntry
+        ) PURE;
+
+    // IDebugSymbols4
+    STDMETHOD(GetScopeEx)(
+        THIS_
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME_EX ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+
+    STDMETHOD(SetScopeEx)(
+        THIS_
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME_EX ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+
+    STDMETHOD(GetNameByInlineContext)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetNameByInlineContextWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByInlineContext)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByInlineContextWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PWSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(OutputSymbolByInlineContext)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext
+        ) PURE;
+};
+
+#define DEBUG_FRAME_DEFAULT                0
+#define DEBUG_FRAME_IGNORE_INLINE 0x00000001
+
+#undef INTERFACE
+#define INTERFACE IDebugSymbols5
+DECLARE_INTERFACE_(IDebugSymbols5, IUnknown)
+{
+    // IUnknown.
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    // IDebugSymbols.
+
+    // Controls the symbol options used during
+    // symbol operations.
+    // Uses the same flags as dbghelps SymSetOptions.
+    STDMETHOD(GetSymbolOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetSymbolOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    STDMETHOD(GetNameByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    // A symbol name may not be unique, particularly
+    // when overloaded functions exist which all
+    // have the same name.  If GetOffsetByName
+    // finds multiple matches for the name it
+    // can return any one of them.  In that
+    // case it will return S_FALSE to indicate
+    // that ambiguity was arbitrarily resolved.
+    // A caller can then use SearchSymbols to
+    // find all of the matches if it wishes to
+    // perform different disambiguation.
+    STDMETHOD(GetOffsetByName)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Offset
+        ) PURE;
+    // GetNearNameByOffset returns symbols
+    // located near the symbol closest to
+    // to the offset, such as the previous
+    // or next symbol.  If Delta is zero it
+    // operates identically to GetNameByOffset.
+    // If Delta is nonzero and such a symbol
+    // does not exist an error is returned.
+    // The next symbol, if one exists, will
+    // always have a higher offset than the
+    // input offset so the displacement is
+    // always negative.  The situation is
+    // reversed for the previous symbol.
+    STDMETHOD(GetNearNameByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByLine)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _Out_ PULONG64 Offset
+        ) PURE;
+
+    // Enumerates the engines list of modules
+    // loaded for the current process.  This may
+    // or may not match the system module list
+    // for the process.  Reload can be used to
+    // synchronize the engines list with the system
+    // if necessary.
+    // Some sessions also track recently unloaded
+    // code modules for help in analyzing failures
+    // where an attempt is made to call unloaded code.
+    // These modules are indexed after the loaded
+    // modules.
+    STDMETHOD(GetNumberModules)(
+        THIS_
+        _Out_ PULONG Loaded,
+        _Out_ PULONG Unloaded
+        ) PURE;
+    STDMETHOD(GetModuleByIndex)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_ PULONG64 Base
+        ) PURE;
+    // The module name may not be unique.
+    // This method returns the first match.
+    STDMETHOD(GetModuleByModuleName)(
+        THIS_
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // Offset can be any offset within
+    // the module extent.  Extents may
+    // not be unique when including unloaded
+    // drivers.  This method returns the
+    // first match.
+    STDMETHOD(GetModuleByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    STDMETHOD(GetModuleNames)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(ImageNameBufferSize) PSTR ImageNameBuffer,
+        _In_ ULONG ImageNameBufferSize,
+        _Out_opt_ PULONG ImageNameSize,
+        _Out_writes_opt_(ModuleNameBufferSize) PSTR ModuleNameBuffer,
+        _In_ ULONG ModuleNameBufferSize,
+        _Out_opt_ PULONG ModuleNameSize,
+        _Out_writes_opt_(LoadedImageNameBufferSize) PSTR LoadedImageNameBuffer,
+        _In_ ULONG LoadedImageNameBufferSize,
+        _Out_opt_ PULONG LoadedImageNameSize
+        ) PURE;
+    STDMETHOD(GetModuleParameters)(
+        THIS_
+        _In_ ULONG Count,
+        _In_reads_opt_(Count) PULONG64 Bases,
+        _In_ ULONG Start,
+        _Out_writes_(Count) PDEBUG_MODULE_PARAMETERS Params
+        ) PURE;
+    // Looks up the module from a <Module>!<Symbol>
+    // string.
+    STDMETHOD(GetSymbolModule)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG64 Base
+        ) PURE;
+
+    // Returns the string name of a type.
+    STDMETHOD(GetTypeName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+    // Returns the ID for a type name.
+    STDMETHOD(GetTypeId)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ PCSTR Name,
+        _Out_ PULONG TypeId
+        ) PURE;
+    STDMETHOD(GetTypeSize)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_ PULONG Size
+        ) PURE;
+    // Given a type which can contain members
+    // this method returns the offset of a
+    // particular member within the type.
+    // TypeId should give the container type ID
+    // and Field gives the dot-separated path
+    // to the field of interest.
+    STDMETHOD(GetFieldOffset)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCSTR Field,
+        _Out_ PULONG Offset
+        ) PURE;
+
+    STDMETHOD(GetSymbolTypeId)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+    // As with GetOffsetByName a symbol's
+    // name may be ambiguous.  GetOffsetTypeId
+    // returns the type for the symbol closest
+    // to the given offset and can be used
+    // to avoid ambiguity.
+    STDMETHOD(GetOffsetTypeId)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+
+    // Helpers for virtual and physical data
+    // which combine creation of a location with
+    // the actual operation.
+    STDMETHOD(ReadTypedDataVirtual)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
+        ) PURE;
+    STDMETHOD(WriteTypedDataVirtual)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
+        ) PURE;
+    STDMETHOD(OutputTypedDataVirtual)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(ReadTypedDataPhysical)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesRead
+        ) PURE;
+    STDMETHOD(WriteTypedDataPhysical)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_reads_bytes_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BytesWritten
+        ) PURE;
+    STDMETHOD(OutputTypedDataPhysical)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 Offset,
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG Flags
+        ) PURE;
+
+    // Function arguments and scope block symbols
+    // can be retrieved relative to currently
+    // executing code.  A caller can provide just
+    // a code offset for scoping purposes and look
+    // up names or the caller can provide a full frame
+    // and look up actual values.  The values for
+    // scoped symbols are best-guess and may or may not
+    // be accurate depending on program optimizations,
+    // the machine architecture, the current point
+    // in the programs execution and so on.
+    // A caller can also provide a complete register
+    // context for setting a scope to a previous
+    // machine state such as a context saved for
+    // an exception.  Usually this isnt necessary
+    // and the current register context is used.
+    STDMETHOD(GetScope)(
+        THIS_
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+    // If ScopeFrame or ScopeContext is non-NULL then
+    // InstructionOffset is ignored.
+    // If ScopeContext is NULL the current
+    // register context is used.
+    // If the scope identified by the given
+    // information is the same as before
+    // SetScope returns S_OK.  If the scope
+    // information changes, such as when the
+    // scope moves between functions or scope
+    // blocks, SetScope returns S_FALSE.
+    STDMETHOD(SetScope)(
+        THIS_
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+    // ResetScope clears the scope information
+    // for situations where scoped symbols
+    // mask global symbols or when resetting
+    // from explicit information to the current
+    // information.
+    STDMETHOD(ResetScope)(
+        THIS
+        ) PURE;
+    // A scope symbol is tied to its particular
+    // scope and only is meaningful within the scope.
+    // The returned group can be updated by passing it back
+    // into the method for lower-cost
+    // incremental updates when stepping.
+    STDMETHOD(GetScopeSymbolGroup)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP Update,
+        _Out_ PDEBUG_SYMBOL_GROUP* Symbols
+        ) PURE;
+
+    // Create a new symbol group.
+    STDMETHOD(CreateSymbolGroup)(
+        THIS_
+        _Out_ PDEBUG_SYMBOL_GROUP* Group
+        ) PURE;
+
+    // StartSymbolMatch matches symbol names
+    // against the given pattern using simple
+    // regular expressions.  The search results
+    // are iterated through using GetNextSymbolMatch.
+    // When the caller is done examining results
+    // the match should be freed via EndSymbolMatch.
+    // If the match pattern contains a module name
+    // the search is restricted to a single module.
+    // Pattern matching is only done on symbol names,
+    // not module names.
+    // All active symbol match handles are invalidated
+    // when the set of loaded symbols changes.
+    STDMETHOD(StartSymbolMatch)(
+        THIS_
+        _In_ PCSTR Pattern,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    // If Buffer is NULL the match does not
+    // advance.
+    STDMETHOD(GetNextSymbolMatch)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
+        ) PURE;
+    STDMETHOD(EndSymbolMatch)(
+        THIS_
+        _In_ ULONG64 Handle
+        ) PURE;
+
+    STDMETHOD(Reload)(
+        THIS_
+        _In_ PCSTR Module
+        ) PURE;
+
+    STDMETHOD(GetSymbolPath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetSymbolPath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendSymbolPath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+
+    // Manipulate the path for executable images.
+    // Some dump files need to load executable images
+    // in order to resolve dump information.  This
+    // path controls where the engine looks for
+    // images.
+    STDMETHOD(GetImagePath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetImagePath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendImagePath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+
+    // Path routines for source file location
+    // methods.
+    STDMETHOD(GetSourcePath)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    // Gets the nth part of the source path.
+    STDMETHOD(GetSourcePathElement)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
+        ) PURE;
+    STDMETHOD(SetSourcePath)(
+        THIS_
+        _In_ PCSTR Path
+        ) PURE;
+    STDMETHOD(AppendSourcePath)(
+        THIS_
+        _In_ PCSTR Addition
+        ) PURE;
+    // Uses the given file path and the source path
+    // information to try and locate an existing file.
+    // The given file path is merged with elements
+    // of the source path and checked for existence.
+    // If a match is found the element used is returned.
+    // A starting element can be specified to restrict
+    // the search to a subset of the path elements;
+    // this can be useful when checking for multiple
+    // matches along the source path.
+    // The returned element can be 1, indicating
+    // the file was found directly and not on the path.
+    STDMETHOD(FindSourceFile)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+    // Retrieves all the line offset information
+    // for a particular source file.  Buffer is
+    // first intialized to DEBUG_INVALID_OFFSET for
+    // every entry.  Then for each piece of line
+    // symbol information Buffer[Line] set to
+    // Lines offset.  This produces a per-line
+    // map of the offsets for the lines of the
+    // given file.  Line numbers are decremented
+    // for the map so Buffer[0] contains the offset
+    // for line number 1.
+    // If there is no line information at all for
+    // the given file the method fails rather
+    // than returning a map of invalid offsets.
+    STDMETHOD(GetSourceFileLineOffsets)(
+        THIS_
+        _In_ PCSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
+        ) PURE;
+
+    // IDebugSymbols2.
+
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    // Item is specified as in VerQueryValue.
+    // Module version information is only
+    // available for loaded modules and may
+    // not be available in all debug sessions.
+    STDMETHOD(GetModuleVersionInformation)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
+        ) PURE;
+    // Retrieves any available module name string
+    // such as module name or symbol file name.
+    // If Index is DEBUG_ANY_ID the base address
+    // is used to look up the module instead.
+    // If symbols are deferred an error will
+    // be returned.
+    // E_NOINTERFACE may be returned, indicating
+    // no information exists.
+    STDMETHOD(GetModuleNameString)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Returns the string name of a constant type.
+    STDMETHOD(GetConstantName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Gets name of a field in a struct
+    // FieldNumber is 0 based index of field in a struct
+    STDMETHOD(GetFieldName)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Control options for typed values.
+    STDMETHOD(GetTypeOptions)(
+        THIS_
+        _Out_ PULONG Options
+        ) PURE;
+    STDMETHOD(AddTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(RemoveTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+    STDMETHOD(SetTypeOptions)(
+        THIS_
+        _In_ ULONG Options
+        ) PURE;
+
+    // IDebugSymbols3.
+
+    STDMETHOD(GetNameByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByNameWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Offset
+        ) PURE;
+    STDMETHOD(GetNearNameByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ LONG Delta,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByOffsetWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PWSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+    STDMETHOD(GetOffsetByLineWide)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _Out_ PULONG64 Offset
+        ) PURE;
+
+    STDMETHOD(GetModuleByModuleNameWide)(
+        THIS_
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    STDMETHOD(GetSymbolModuleWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG64 Base
+        ) PURE;
+
+    STDMETHOD(GetTypeNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+    // Returns the ID for a type name.
+    STDMETHOD(GetTypeIdWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ PCWSTR Name,
+        _Out_ PULONG TypeId
+        ) PURE;
+    STDMETHOD(GetFieldOffsetWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ PCWSTR Field,
+        _Out_ PULONG Offset
+        ) PURE;
+
+    STDMETHOD(GetSymbolTypeIdWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _Out_ PULONG TypeId,
+        _Out_opt_ PULONG64 Module
+        ) PURE;
+
+    STDMETHOD(GetScopeSymbolGroup2)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_opt_ PDEBUG_SYMBOL_GROUP2 Update,
+        _Out_ PDEBUG_SYMBOL_GROUP2* Symbols
+        ) PURE;
+
+    STDMETHOD(CreateSymbolGroup2)(
+        THIS_
+        _Out_ PDEBUG_SYMBOL_GROUP2* Group
+        ) PURE;
+
+    STDMETHOD(StartSymbolMatchWide)(
+        THIS_
+        _In_ PCWSTR Pattern,
+        _Out_ PULONG64 Handle
+        ) PURE;
+    STDMETHOD(GetNextSymbolMatchWide)(
+        THIS_
+        _In_ ULONG64 Handle,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG MatchSize,
+        _Out_opt_ PULONG64 Offset
+        ) PURE;
+
+    STDMETHOD(ReloadWide)(
+        THIS_
+        _In_ PCWSTR Module
+        ) PURE;
+
+    STDMETHOD(GetSymbolPathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetSymbolPathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendSymbolPathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+
+    STDMETHOD(GetImagePathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(SetImagePathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendImagePathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+
+    STDMETHOD(GetSourcePathWide)(
+        THIS_
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG PathSize
+        ) PURE;
+    STDMETHOD(GetSourcePathElementWide)(
+        THIS_
+        _In_ ULONG Index,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ElementSize
+        ) PURE;
+    STDMETHOD(SetSourcePathWide)(
+        THIS_
+        _In_ PCWSTR Path
+        ) PURE;
+    STDMETHOD(AppendSourcePathWide)(
+        THIS_
+        _In_ PCWSTR Addition
+        ) PURE;
+    STDMETHOD(FindSourceFileWide)(
+        THIS_
+        _In_ ULONG StartElement,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG FoundElement,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG FoundSize
+        ) PURE;
+    STDMETHOD(GetSourceFileLineOffsetsWide)(
+        THIS_
+        _In_ PCWSTR File,
+        _Out_writes_opt_(BufferLines) PULONG64 Buffer,
+        _In_ ULONG BufferLines,
+        _Out_opt_ PULONG FileLines
+        ) PURE;
+
+    STDMETHOD(GetModuleVersionInformationWide)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _In_ PCWSTR Item,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG VerInfoSize
+        ) PURE;
+    STDMETHOD(GetModuleNameStringWide)(
+        THIS_
+        _In_ ULONG Which,
+        _In_ ULONG Index,
+        _In_ ULONG64 Base,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    STDMETHOD(GetConstantNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG64 Value,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    STDMETHOD(GetFieldNameWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG TypeId,
+        _In_ ULONG FieldIndex,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize
+        ) PURE;
+
+    // Returns S_OK if the engine is using managed
+    // debugging support when retriving information
+    // for the given module.  This can be expensive
+    // to check.
+    STDMETHOD(IsManagedModule)(
+        THIS_
+        _In_ ULONG Index,
+        _In_ ULONG64 Base
+        ) PURE;
+
+    // The module name may not be unique.
+    // This method returns the first match.
+    STDMETHOD(GetModuleByModuleName2)(
+        THIS_
+        _In_ PCSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    STDMETHOD(GetModuleByModuleName2Wide)(
+        THIS_
+        _In_ PCWSTR Name,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+    // Offset can be any offset within
+    // the module extent.  Extents may
+    // not be unique when including unloaded
+    // drivers.  This method returns the
+    // first match.
+    STDMETHOD(GetModuleByOffset2)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG StartIndex,
+        _In_ ULONG Flags,
+        _Out_opt_ PULONG Index,
+        _Out_opt_ PULONG64 Base
+        ) PURE;
+
+    // A caller can create artificial loaded modules in
+    // the engine's module list if desired.
+    // These modules only serve as names for
+    // a region of addresses.  They cannot have
+    // real symbols loaded for them; if that
+    // is desired Reload can be used with explicit
+    // parameters to create a true module entry.
+    // The region must not be in use by any other
+    // module.
+    // A general reload will discard any synthetic modules.
+    STDMETHOD(AddSyntheticModule)(
+        THIS_
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCSTR ImagePath,
+        _In_ PCSTR ModuleName,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(AddSyntheticModuleWide)(
+        THIS_
+        _In_ ULONG64 Base,
+        _In_ ULONG Size,
+        _In_ PCWSTR ImagePath,
+        _In_ PCWSTR ModuleName,
+        _In_ ULONG Flags
+        ) PURE;
+    STDMETHOD(RemoveSyntheticModule)(
+        THIS_
+        _In_ ULONG64 Base
+        ) PURE;
+
+    // Modify the current frame used for scoping.
+    // This is equivalent to the '.frame' command.
+    STDMETHOD(GetCurrentScopeFrameIndex)(
+        THIS_
+        _Out_ PULONG Index
+        ) PURE;
+    STDMETHOD(SetScopeFrameByIndex)(
+        THIS_
+        _In_ ULONG Index
+        ) PURE;
+
+    // Recovers JIT_DEBUG_INFO information at the given
+    // address from the debuggee and sets current
+    // debugger scope context from it.
+    // Equivalent to '.jdinfo' command.
+    STDMETHOD(SetScopeFromJitDebugInfo)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG64 InfoOffset
+        ) PURE;
+
+    // Switches the current debugger scope to
+    // the stored event information.
+    // Equivalent to the '.ecxr' command.
+    STDMETHOD(SetScopeFromStoredEvent)(
+        THIS
+        ) PURE;
+
+    // Takes the first symbol hit and outputs it.
+    // Controlled with DEBUG_OUTSYM_* flags.
+    STDMETHOD(OutputSymbolByOffset)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Offset
+        ) PURE;
+
+    // Function entry information for a particular
+    // piece of code can be retrieved by this method.
+    // The actual data returned is system-dependent.
+    STDMETHOD(GetFunctionEntryByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG BufferNeeded
+        ) PURE;
+
+    // Given a type which can contain members
+    // this method returns the type ID and offset of a
+    // particular member within the type.
+    // Field gives the dot-separated path
+    // to the field of interest.
+    STDMETHOD(GetFieldTypeAndOffset)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
+        ) PURE;
+    STDMETHOD(GetFieldTypeAndOffsetWide)(
+        THIS_
+        _In_ ULONG64 Module,
+        _In_ ULONG ContainerTypeId,
+        _In_ PCWSTR Field,
+        _Out_opt_ PULONG FieldTypeId,
+        _Out_opt_ PULONG Offset
+        ) PURE;
+
+    // Artificial symbols can be created in any
+    // existing module as a way to name an address.
+    // The address must not already have symbol
+    // information.
+    // A reload will discard synthetic symbols
+    // for all address regions reloaded.
+    STDMETHOD(AddSyntheticSymbol)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+    STDMETHOD(AddSyntheticSymbolWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Size,
+        _In_ PCWSTR Name,
+        _In_ ULONG Flags,
+        _Out_opt_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+    STDMETHOD(RemoveSyntheticSymbol)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+
+    // The following methods can return multiple
+    // hits for symbol lookups to allow for all
+    // possible hits to be returned.
+    STDMETHOD(GetSymbolEntriesByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _Out_writes_opt_(IdsCount) PULONG64 Displacements,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    STDMETHOD(GetSymbolEntriesByName)(
+        THIS_
+        _In_ PCSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    STDMETHOD(GetSymbolEntriesByNameWide)(
+        THIS_
+        _In_ PCWSTR Symbol,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(IdsCount) PDEBUG_MODULE_AND_ID Ids,
+        _In_ ULONG IdsCount,
+        _Out_opt_ PULONG Entries
+        ) PURE;
+    // Symbol lookup by managed metadata token.
+    STDMETHOD(GetSymbolEntryByToken)(
+        THIS_
+        _In_ ULONG64 ModuleBase,
+        _In_ ULONG Token,
+        _Out_ PDEBUG_MODULE_AND_ID Id
+        ) PURE;
+
+    // Retrieves full symbol entry information from an ID.
+    STDMETHOD(GetSymbolEntryInformation)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _Out_ PDEBUG_SYMBOL_ENTRY Info
+        ) PURE;
+    STDMETHOD(GetSymbolEntryString)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSymbolEntryStringWide)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    // Returns all known memory regions associated
+    // with the given symbol.  Simple symbols will
+    // have a single region starting from their base.
+    // More complicated regions, such as functions
+    // with multiple code areas, can have an arbitrarily
+    // large number of regions.
+    // The quality of information returned is highly
+    // dependent on the symbolic information availble.
+    STDMETHOD(GetSymbolEntryOffsetRegions)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID Id,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
+        ) PURE;
+
+    // This method allows navigating within the
+    // symbol entry hierarchy.
+    STDMETHOD(GetSymbolEntryBySymbolEntry)(
+        THIS_
+        _In_ PDEBUG_MODULE_AND_ID FromId,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_MODULE_AND_ID ToId
+        ) PURE;
+
+    // The following methods can return multiple
+    // hits for source lookups to allow for all
+    // possible hits to be returned.
+    STDMETHOD(GetSourceEntriesByOffset)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+    STDMETHOD(GetSourceEntriesByLine)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+    STDMETHOD(GetSourceEntriesByLineWide)(
+        THIS_
+        _In_ ULONG Line,
+        _In_ PCWSTR File,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(EntriesCount) PDEBUG_SYMBOL_SOURCE_ENTRY Entries,
+        _In_ ULONG EntriesCount,
+        _Out_opt_ PULONG EntriesAvail
+        ) PURE;
+
+    STDMETHOD(GetSourceEntryString)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    STDMETHOD(GetSourceEntryStringWide)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Which,
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG StringSize
+        ) PURE;
+    // Returns all known memory regions associated
+    // with the given source entry.  As with
+    // GetSymbolEntryOffsetRegions the regions available
+    // are variable.
+    STDMETHOD(GetSourceEntryOffsetRegions)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY Entry,
+        _In_ ULONG Flags,
+        _Out_writes_opt_(RegionsCount) PDEBUG_OFFSET_REGION Regions,
+        _In_ ULONG RegionsCount,
+        _Out_opt_ PULONG RegionsAvail
+        ) PURE;
+
+    // This method allows navigating within the
+    // source entries.
+    STDMETHOD(GetSourceEntryBySourceEntry)(
+        THIS_
+        _In_ PDEBUG_SYMBOL_SOURCE_ENTRY FromEntry,
+        _In_ ULONG Flags,
+        _Out_ PDEBUG_SYMBOL_SOURCE_ENTRY ToEntry
+        ) PURE;
+
+    // IDebugSymbols4
+    STDMETHOD(GetScopeEx)(
+        THIS_
+        _Out_opt_ PULONG64 InstructionOffset,
+        _Out_opt_ PDEBUG_STACK_FRAME_EX ScopeFrame,
+        _Out_writes_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+
+    STDMETHOD(SetScopeEx)(
+        THIS_
+        _In_ ULONG64 InstructionOffset,
+        _In_opt_ PDEBUG_STACK_FRAME_EX ScopeFrame,
+        _In_reads_bytes_opt_(ScopeContextSize) PVOID ScopeContext,
+        _In_ ULONG ScopeContextSize
+        ) PURE;
+
+    STDMETHOD(GetNameByInlineContext)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_writes_opt_(NameBufferSize) PSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetNameByInlineContextWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_writes_opt_(NameBufferSize) PWSTR NameBuffer,
+        _In_ ULONG NameBufferSize,
+        _Out_opt_ PULONG NameSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByInlineContext)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(GetLineByInlineContextWide)(
+        THIS_
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext,
+        _Out_opt_ PULONG Line,
+        _Out_writes_opt_(FileBufferSize) PWSTR FileBuffer,
+        _In_ ULONG FileBufferSize,
+        _Out_opt_ PULONG FileSize,
+        _Out_opt_ PULONG64 Displacement
+        ) PURE;
+
+    STDMETHOD(OutputSymbolByInlineContext)(
+        THIS_
+        _In_ ULONG OutputControl,
+        _In_ ULONG Flags,
+        _In_ ULONG64 Offset,
+        _In_ ULONG InlineContext
+        ) PURE;
+
+    // IDebugSymbols5
+    STDMETHOD(GetCurrentScopeFrameIndexEx)(
+        THIS_
+        _In_ ULONG Flags,
+        _Out_ PULONG Index
+        ) PURE;
+    STDMETHOD(SetScopeFrameByIndexEx)(
+        THIS_
+        _In_ ULONG Flags,
+        _In_ ULONG Index
         ) PURE;
 };
 
@@ -14037,8 +23359,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -14066,11 +23388,11 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // the last event occurred.
     STDMETHOD(GetEventThread)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetEventProcess)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     // Controls implicit thread used by the
@@ -14086,44 +23408,44 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // related to system thread IDs.
     STDMETHOD(GetCurrentThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentThreadId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
     // The current process is the process
     // that owns the current thread.
     STDMETHOD(GetCurrentProcessId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Setting the current process automatically
     // sets the current thread to the thread that
     // was last current in that process.
     STDMETHOD(SetCurrentProcessId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     // Gets the number of threads in the current process.
     STDMETHOD(GetNumberThreads)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // Gets thread count information for all processes
     // and the largest number of threads in a single process.
     STDMETHOD(GetTotalNumberThreads)(
         THIS_
-        __out PULONG Total,
-        __out PULONG LargestProcess
+        _Out_ PULONG Total,
+        _Out_ PULONG LargestProcess
         ) PURE;
     STDMETHOD(GetThreadIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Gets the debugger ID for the thread
     // currently running on the given
@@ -14131,8 +23453,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // debugging.
     STDMETHOD(GetThreadIdByProcessor)(
         THIS_
-        __in ULONG Processor,
-        __out PULONG Id
+        _In_ ULONG Processor,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // system data structure.  When kernel debugging
@@ -14141,7 +23463,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // of the current TEB.
     STDMETHOD(GetCurrentThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread data structure.
@@ -14149,29 +23471,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // TEB.  In user mode this is equivalent to
     // the threads data offset.
     STDMETHOD(GetCurrentThreadTeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given TEB.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByTeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current thread.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentThreadSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread ID.
@@ -14179,8 +23501,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current thread.
     // In kernel mode the value returned is the
@@ -14188,29 +23510,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // executing on plus one.
     STDMETHOD(GetCurrentThreadHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger thread ID for the given handle.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
 
     // Currently kernel mode sessions will only have
     // a single process representing kernel space.
     STDMETHOD(GetNumberProcesses)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetProcessIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Returns the offset of the current processs
     // system data structure.  When kernel debugging
@@ -14220,43 +23542,43 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // of the current PEB.
     STDMETHOD(GetCurrentProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process data structure.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current processs
     // PEB.  In user mode this is equivalent to
     // the processs data offset.
     STDMETHOD(GetCurrentProcessPeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given PEB.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByPeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current process.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentProcessSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process ID.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current process.
     // In kernel mode this is the kernel processs
@@ -14264,22 +23586,22 @@ DECLARE_INTERFACE_(IDebugSystemObjects, IUnknown)
     // and so can only be used with dbghelp APIs.
     STDMETHOD(GetCurrentProcessHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger process ID for the given handle.
     STDMETHOD(GetProcessIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
     // Retrieve the name of the executable loaded
     // in the process.  This may fail if no executable
     // was identified.
     STDMETHOD(GetCurrentProcessExecutableName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExeSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExeSize
         ) PURE;
 };
 
@@ -14290,8 +23612,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -14319,11 +23641,11 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // the last event occurred.
     STDMETHOD(GetEventThread)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetEventProcess)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     // Controls implicit thread used by the
@@ -14339,44 +23661,44 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // related to system thread IDs.
     STDMETHOD(GetCurrentThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentThreadId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
     // The current process is the process
     // that owns the current thread.
     STDMETHOD(GetCurrentProcessId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Setting the current process automatically
     // sets the current thread to the thread that
     // was last current in that process.
     STDMETHOD(SetCurrentProcessId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     // Gets the number of threads in the current process.
     STDMETHOD(GetNumberThreads)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // Gets thread count information for all processes
     // and the largest number of threads in a single process.
     STDMETHOD(GetTotalNumberThreads)(
         THIS_
-        __out PULONG Total,
-        __out PULONG LargestProcess
+        _Out_ PULONG Total,
+        _Out_ PULONG LargestProcess
         ) PURE;
     STDMETHOD(GetThreadIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Gets the debugger ID for the thread
     // currently running on the given
@@ -14384,8 +23706,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // debugging.
     STDMETHOD(GetThreadIdByProcessor)(
         THIS_
-        __in ULONG Processor,
-        __out PULONG Id
+        _In_ ULONG Processor,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // system data structure.  When kernel debugging
@@ -14394,7 +23716,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // of the current TEB.
     STDMETHOD(GetCurrentThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread data structure.
@@ -14402,29 +23724,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // TEB.  In user mode this is equivalent to
     // the threads data offset.
     STDMETHOD(GetCurrentThreadTeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given TEB.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByTeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current thread.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentThreadSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread ID.
@@ -14432,8 +23754,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current thread.
     // In kernel mode the value returned is the
@@ -14441,29 +23763,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // executing on plus one.
     STDMETHOD(GetCurrentThreadHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger thread ID for the given handle.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
 
     // Currently kernel mode sessions will only have
     // a single process representing kernel space.
     STDMETHOD(GetNumberProcesses)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetProcessIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Returns the offset of the current processs
     // system data structure.  When kernel debugging
@@ -14473,43 +23795,43 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // of the current PEB.
     STDMETHOD(GetCurrentProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process data structure.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current processs
     // PEB.  In user mode this is equivalent to
     // the processs data offset.
     STDMETHOD(GetCurrentProcessPeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given PEB.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByPeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current process.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentProcessSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process ID.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current process.
     // In kernel mode this is the kernel processs
@@ -14517,22 +23839,22 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // and so can only be used with dbghelp APIs.
     STDMETHOD(GetCurrentProcessHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger process ID for the given handle.
     STDMETHOD(GetProcessIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
     // Retrieve the name of the executable loaded
     // in the process.  This may fail if no executable
     // was identified.
     STDMETHOD(GetCurrentProcessExecutableName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExeSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExeSize
         ) PURE;
 
     // IDebugSystemObjects2.
@@ -14541,7 +23863,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // process has been running.
     STDMETHOD(GetCurrentProcessUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // During kernel sessions the debugger retrieves
@@ -14566,19 +23888,19 @@ DECLARE_INTERFACE_(IDebugSystemObjects2, IUnknown)
     // default value.
     STDMETHOD(GetImplicitThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitThreadDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
     STDMETHOD(GetImplicitProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitProcessDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
 };
 
@@ -14589,8 +23911,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -14618,11 +23940,11 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // the last event occurred.
     STDMETHOD(GetEventThread)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetEventProcess)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     // Controls implicit thread used by the
@@ -14638,44 +23960,44 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // related to system thread IDs.
     STDMETHOD(GetCurrentThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentThreadId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
     // The current process is the process
     // that owns the current thread.
     STDMETHOD(GetCurrentProcessId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Setting the current process automatically
     // sets the current thread to the thread that
     // was last current in that process.
     STDMETHOD(SetCurrentProcessId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     // Gets the number of threads in the current process.
     STDMETHOD(GetNumberThreads)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // Gets thread count information for all processes
     // and the largest number of threads in a single process.
     STDMETHOD(GetTotalNumberThreads)(
         THIS_
-        __out PULONG Total,
-        __out PULONG LargestProcess
+        _Out_ PULONG Total,
+        _Out_ PULONG LargestProcess
         ) PURE;
     STDMETHOD(GetThreadIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Gets the debugger ID for the thread
     // currently running on the given
@@ -14683,8 +24005,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // debugging.
     STDMETHOD(GetThreadIdByProcessor)(
         THIS_
-        __in ULONG Processor,
-        __out PULONG Id
+        _In_ ULONG Processor,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // system data structure.  When kernel debugging
@@ -14693,7 +24015,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // of the current TEB.
     STDMETHOD(GetCurrentThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread data structure.
@@ -14701,29 +24023,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // TEB.  In user mode this is equivalent to
     // the threads data offset.
     STDMETHOD(GetCurrentThreadTeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given TEB.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByTeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current thread.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentThreadSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread ID.
@@ -14731,8 +24053,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current thread.
     // In kernel mode the value returned is the
@@ -14740,29 +24062,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // executing on plus one.
     STDMETHOD(GetCurrentThreadHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger thread ID for the given handle.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
 
     // Currently kernel mode sessions will only have
     // a single process representing kernel space.
     STDMETHOD(GetNumberProcesses)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetProcessIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Returns the offset of the current processs
     // system data structure.  When kernel debugging
@@ -14772,43 +24094,43 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // of the current PEB.
     STDMETHOD(GetCurrentProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process data structure.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current processs
     // PEB.  In user mode this is equivalent to
     // the processs data offset.
     STDMETHOD(GetCurrentProcessPeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given PEB.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByPeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current process.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentProcessSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process ID.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current process.
     // In kernel mode this is the kernel processs
@@ -14816,22 +24138,22 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // and so can only be used with dbghelp APIs.
     STDMETHOD(GetCurrentProcessHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger process ID for the given handle.
     STDMETHOD(GetProcessIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
     // Retrieve the name of the executable loaded
     // in the process.  This may fail if no executable
     // was identified.
     STDMETHOD(GetCurrentProcessExecutableName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExeSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExeSize
         ) PURE;
 
     // IDebugSystemObjects2.
@@ -14840,7 +24162,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // process has been running.
     STDMETHOD(GetCurrentProcessUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // During kernel sessions the debugger retrieves
@@ -14865,69 +24187,69 @@ DECLARE_INTERFACE_(IDebugSystemObjects3, IUnknown)
     // default value.
     STDMETHOD(GetImplicitThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitThreadDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
     STDMETHOD(GetImplicitProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitProcessDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
 
     // IDebugSystemObjects3.
 
     STDMETHOD(GetEventSystem)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     STDMETHOD(GetCurrentSystemId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentSystemId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     STDMETHOD(GetNumberSystems)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSystemIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Ids
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Ids
         ) PURE;
     STDMETHOD(GetTotalNumberThreadsAndProcesses)(
         THIS_
-        __out PULONG TotalThreads,
-        __out PULONG TotalProcesses,
-        __out PULONG LargestProcessThreads,
-        __out PULONG LargestSystemThreads,
-        __out PULONG LargestSystemProcesses
+        _Out_ PULONG TotalThreads,
+        _Out_ PULONG TotalProcesses,
+        _Out_ PULONG LargestProcessThreads,
+        _Out_ PULONG LargestSystemThreads,
+        _Out_ PULONG LargestSystemProcesses
         ) PURE;
     STDMETHOD(GetCurrentSystemServer)(
         THIS_
-        __out PULONG64 Server
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(GetSystemByServer)(
         THIS_
-        __in ULONG64 Server,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetCurrentSystemServerName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 };
 
@@ -14938,8 +24260,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         ) PURE;
     STDMETHOD_(ULONG, AddRef)(
         THIS
@@ -14967,11 +24289,11 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // the last event occurred.
     STDMETHOD(GetEventThread)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetEventProcess)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     // Controls implicit thread used by the
@@ -14987,44 +24309,44 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // related to system thread IDs.
     STDMETHOD(GetCurrentThreadId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentThreadId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
     // The current process is the process
     // that owns the current thread.
     STDMETHOD(GetCurrentProcessId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     // Setting the current process automatically
     // sets the current thread to the thread that
     // was last current in that process.
     STDMETHOD(SetCurrentProcessId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     // Gets the number of threads in the current process.
     STDMETHOD(GetNumberThreads)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     // Gets thread count information for all processes
     // and the largest number of threads in a single process.
     STDMETHOD(GetTotalNumberThreads)(
         THIS_
-        __out PULONG Total,
-        __out PULONG LargestProcess
+        _Out_ PULONG Total,
+        _Out_ PULONG LargestProcess
         ) PURE;
     STDMETHOD(GetThreadIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Gets the debugger ID for the thread
     // currently running on the given
@@ -15032,8 +24354,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // debugging.
     STDMETHOD(GetThreadIdByProcessor)(
         THIS_
-        __in ULONG Processor,
-        __out PULONG Id
+        _In_ ULONG Processor,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // system data structure.  When kernel debugging
@@ -15042,7 +24364,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // of the current TEB.
     STDMETHOD(GetCurrentThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread data structure.
@@ -15050,29 +24372,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current threads
     // TEB.  In user mode this is equivalent to
     // the threads data offset.
     STDMETHOD(GetCurrentThreadTeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger thread ID for the given TEB.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByTeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current thread.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentThreadSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger thread ID for the given
     // system thread ID.
@@ -15080,8 +24402,8 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current thread.
     // In kernel mode the value returned is the
@@ -15089,29 +24411,29 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // executing on plus one.
     STDMETHOD(GetCurrentThreadHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger thread ID for the given handle.
     // Currently when kernel debugging this will fail
     // if the thread is not executing on a processor.
     STDMETHOD(GetThreadIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
 
     // Currently kernel mode sessions will only have
     // a single process representing kernel space.
     STDMETHOD(GetNumberProcesses)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetProcessIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount_opt(Count) PULONG Ids,
-        __out_ecount_opt(Count) PULONG SysIds
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_opt_(Count) PULONG Ids,
+        _Out_writes_opt_(Count) PULONG SysIds
         ) PURE;
     // Returns the offset of the current processs
     // system data structure.  When kernel debugging
@@ -15121,43 +24443,43 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // of the current PEB.
     STDMETHOD(GetCurrentProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process data structure.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByDataOffset)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the offset of the current processs
     // PEB.  In user mode this is equivalent to
     // the processs data offset.
     STDMETHOD(GetCurrentProcessPeb)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     // Looks up a debugger process ID for the given PEB.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdByPeb)(
         THIS_
-        __in ULONG64 Offset,
-        __out PULONG Id
+        _In_ ULONG64 Offset,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the system unique ID for the current process.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetCurrentProcessSystemId)(
         THIS_
-        __out PULONG SysId
+        _Out_ PULONG SysId
         ) PURE;
     // Looks up a debugger process ID for the given
     // system process ID.
     // Not currently supported when kernel debugging.
     STDMETHOD(GetProcessIdBySystemId)(
         THIS_
-        __in ULONG SysId,
-        __out PULONG Id
+        _In_ ULONG SysId,
+        _Out_ PULONG Id
         ) PURE;
     // Returns the handle of the current process.
     // In kernel mode this is the kernel processs
@@ -15165,22 +24487,22 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // and so can only be used with dbghelp APIs.
     STDMETHOD(GetCurrentProcessHandle)(
         THIS_
-        __out PULONG64 Handle
+        _Out_ PULONG64 Handle
         ) PURE;
     // Looks up a debugger process ID for the given handle.
     STDMETHOD(GetProcessIdByHandle)(
         THIS_
-        __in ULONG64 Handle,
-        __out PULONG Id
+        _In_ ULONG64 Handle,
+        _Out_ PULONG Id
         ) PURE;
     // Retrieve the name of the executable loaded
     // in the process.  This may fail if no executable
     // was identified.
     STDMETHOD(GetCurrentProcessExecutableName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExeSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExeSize
         ) PURE;
 
     // IDebugSystemObjects2.
@@ -15189,7 +24511,7 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // process has been running.
     STDMETHOD(GetCurrentProcessUpTime)(
         THIS_
-        __out PULONG UpTime
+        _Out_ PULONG UpTime
         ) PURE;
 
     // During kernel sessions the debugger retrieves
@@ -15214,85 +24536,85 @@ DECLARE_INTERFACE_(IDebugSystemObjects4, IUnknown)
     // default value.
     STDMETHOD(GetImplicitThreadDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitThreadDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
     STDMETHOD(GetImplicitProcessDataOffset)(
         THIS_
-        __out PULONG64 Offset
+        _Out_ PULONG64 Offset
         ) PURE;
     STDMETHOD(SetImplicitProcessDataOffset)(
         THIS_
-        __in ULONG64 Offset
+        _In_ ULONG64 Offset
         ) PURE;
 
     // IDebugSystemObjects3.
 
     STDMETHOD(GetEventSystem)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
 
     STDMETHOD(GetCurrentSystemId)(
         THIS_
-        __out PULONG Id
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(SetCurrentSystemId)(
         THIS_
-        __in ULONG Id
+        _In_ ULONG Id
         ) PURE;
 
     STDMETHOD(GetNumberSystems)(
         THIS_
-        __out PULONG Number
+        _Out_ PULONG Number
         ) PURE;
     STDMETHOD(GetSystemIdsByIndex)(
         THIS_
-        __in ULONG Start,
-        __in ULONG Count,
-        __out_ecount(Count) PULONG Ids
+        _In_ ULONG Start,
+        _In_ ULONG Count,
+        _Out_writes_(Count) PULONG Ids
         ) PURE;
     STDMETHOD(GetTotalNumberThreadsAndProcesses)(
         THIS_
-        __out PULONG TotalThreads,
-        __out PULONG TotalProcesses,
-        __out PULONG LargestProcessThreads,
-        __out PULONG LargestSystemThreads,
-        __out PULONG LargestSystemProcesses
+        _Out_ PULONG TotalThreads,
+        _Out_ PULONG TotalProcesses,
+        _Out_ PULONG LargestProcessThreads,
+        _Out_ PULONG LargestSystemThreads,
+        _Out_ PULONG LargestSystemProcesses
         ) PURE;
     STDMETHOD(GetCurrentSystemServer)(
         THIS_
-        __out PULONG64 Server
+        _Out_ PULONG64 Server
         ) PURE;
     STDMETHOD(GetSystemByServer)(
         THIS_
-        __in ULONG64 Server,
-        __out PULONG Id
+        _In_ ULONG64 Server,
+        _Out_ PULONG Id
         ) PURE;
     STDMETHOD(GetCurrentSystemServerName)(
         THIS_
-        __out_ecount_opt(BufferSize) PSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _Out_writes_opt_(BufferSize) PSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 
     // IDebugSystemObjects4.
 
     STDMETHOD(GetCurrentProcessExecutableNameWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG ExeSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG ExeSize
         ) PURE;
 
     STDMETHOD(GetCurrentSystemServerNameWide)(
         THIS_
-        __out_ecount_opt(BufferSize) PWSTR Buffer,
-        __in ULONG BufferSize,
-        __out_opt PULONG NameSize
+        _Out_writes_opt_(BufferSize) PWSTR Buffer,
+        _In_ ULONG BufferSize,
+        _Out_opt_ PULONG NameSize
         ) PURE;
 };
 
@@ -15373,11 +24695,34 @@ DebugCommandException(ULONG Command, ULONG ArgSize, PVOID Arg)
 // is loaded so initialization routines should not expect
 // to be able to query session information.
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_INITIALIZE)
-    (__out PULONG Version, __out PULONG Flags);
-// Exit routine.  Called once just before the extension DLL is
-// unloaded.  As with initialization, a session may or
-// may not be active at the time of the call.
+    (_Out_ PULONG Version, _Out_ PULONG Flags);
+// Exit routine.  Called once just before attempting to unload
+// the extension DLL.  If DebugExtensionCanUnload is present,
+// it will be called between the return of this callback and
+// an actual unload of the DLL.  If not, the extension DLL 
+// will be unloaded upon return of this method.  As with 
+// initialization, a session may or may not be active at the 
+// time of the call.
 typedef void (CALLBACK* PDEBUG_EXTENSION_UNINITIALIZE)
+    (void);
+// Routine to check if a debug extension can unload after
+// the uninitialization call.  If present, this is called
+// between the uninitialize callback and actual unload of
+// the DLL.  The extension should return either S_OK (if no
+// objects are present which would prevent unload of the
+// extension) or S_FALSE (if there are still outstanding 
+// references to model objects in the debugger extension)
+// 
+// This is the debugger's equivalent of DllCanUnloadNow
+// for extensions which manipulate the debugger's object
+// model.
+typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_CANUNLOAD)
+    (void);
+// Unload routine.  If and only if DebugExtensionCanUnload
+// is presnt in the debugger extension, this will be called
+// after a successful CanUnload call immediately before the 
+// debugger actually unloads the extension DLL.
+typedef void (CALLBACK* PDEBUG_EXTENSION_UNLOAD)
     (void);
 
 // A debuggee has been discovered for the session.  It
@@ -15391,7 +24736,7 @@ typedef void (CALLBACK* PDEBUG_EXTENSION_UNINITIALIZE)
 #define DEBUG_NOTIFY_SESSION_INACCESSIBLE 0x00000003
 
 typedef void (CALLBACK* PDEBUG_EXTENSION_NOTIFY)
-    (__in ULONG Notify, __in ULONG64 Argument);
+    (_In_ ULONG Notify, _In_ ULONG64 Argument);
 
 // A PDEBUG_EXTENSION_CALL function can return this code
 // to indicate that it was unable to handle the request
@@ -15412,7 +24757,7 @@ typedef void (CALLBACK* PDEBUG_EXTENSION_NOTIFY)
 // The extension may be called from multiple clients so it
 // should not cache the client value between calls.
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_CALL)
-    (__in PDEBUG_CLIENT Client, __in_opt PCSTR Args);
+    (_In_ PDEBUG_CLIENT Client, _In_opt_ PCSTR Args);
 
 //
 // KnownStructOutput[Ex] flags
@@ -15429,18 +24774,18 @@ typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_CALL)
 // are well known to them.  The engine calls this to inject extension
 // output into dt's struct dump.
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_KNOWN_STRUCT)
-    (__in ULONG Flags,
-     __in ULONG64 Offset,
-     __in_opt PSTR TypeName,
-     __out_ecount_opt(*BufferChars) PSTR Buffer,
-     __inout_opt PULONG BufferChars);
+    (_In_ ULONG Flags,
+     _In_ ULONG64 Offset,
+     _In_opt_ PSTR TypeName,
+     _Out_writes_opt_(*BufferChars) PSTR Buffer,
+     _Inout_opt_ PULONG BufferChars);
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_KNOWN_STRUCT_EX)
-    (__in PDEBUG_CLIENT Client,
-     __in ULONG Flags,
-     __in ULONG64 Offset,
-     __in_opt PCSTR TypeName,
-     __out_ecount_opt(*BufferChars) PSTR Buffer,
-     __inout_opt PULONG BufferChars);
+    (_In_ PDEBUG_CLIENT Client,
+     _In_ ULONG Flags,
+     _In_ ULONG64 Offset,
+     _In_opt_ PCSTR TypeName,
+     _Out_writes_opt_(*BufferChars) PSTR Buffer,
+     _Inout_opt_ PULONG BufferChars);
 
 // Backwards compatibility with old, incorrect name.
 typedef PDEBUG_EXTENSION_KNOWN_STRUCT PDEBUG_ENTENSION_KNOWNSTRUCT;
@@ -15453,11 +24798,11 @@ typedef PDEBUG_EXTENSION_KNOWN_STRUCT PDEBUG_ENTENSION_KNOWNSTRUCT;
 #define DEBUG_EXT_QVALUE_DEFAULT 0x00000000
 
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_QUERY_VALUE_NAMES)
-    (__in PDEBUG_CLIENT Client,
-     __in ULONG Flags,
-     __out_ecount(BufferChars) PWSTR Buffer,
-     __in ULONG BufferChars,
-     __out PULONG BufferNeeded);
+    (_In_ PDEBUG_CLIENT Client,
+     _In_ ULONG Flags,
+     _Out_writes_(BufferChars) PWSTR Buffer,
+     _In_ ULONG BufferChars,
+     _Out_ PULONG BufferNeeded);
 
 #define DEBUG_EXT_PVALUE_DEFAULT 0x00000000
 
@@ -15465,13 +24810,13 @@ typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_QUERY_VALUE_NAMES)
 #define DEBUG_EXT_PVTYPE_IS_POINTER 0x00000001
 
 typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_PROVIDE_VALUE)
-    (__in PDEBUG_CLIENT Client,
-     __in ULONG Flags,
-     __in PCWSTR Name,
-     __out PULONG64 Value,
-     __out PULONG64 TypeModBase,
-     __out PULONG TypeId,
-     __out PULONG TypeFlags);
+    (_In_ PDEBUG_CLIENT Client,
+     _In_ ULONG Flags,
+     _In_ PCWSTR Name,
+     _Out_ PULONG64 Value,
+     _Out_ PULONG64 TypeModBase,
+     _Out_ PULONG TypeId,
+     _Out_ PULONG TypeFlags);
 
 //----------------------------------------------------------------------------
 //
@@ -15504,6 +24849,49 @@ typedef HRESULT (CALLBACK* PDEBUG_EXTENSION_PROVIDE_VALUE)
 
 //----------------------------------------------------------------------------
 //
+// Dump stack provider callbacks
+//
+//----------------------------------------------------------------------------
+
+// If a specific dump stream type is present,
+// dbgeng will pass the stream to dump stack
+// provider prior to thread enumeration.
+// Implemented by dump stack provider
+// BeginThreadStackReconstruction
+typedef HRESULT (CALLBACK* PDEBUG_STACK_PROVIDER_BEGINTHREADSTACKRECONSTRUCTION)
+    (
+    _In_ ULONG StreamType,
+    _In_reads_(BufferSize) PVOID MiniDumpStreamBuffer,
+    _In_ ULONG BufferSize); 
+
+// Queries dump stream provider per-thread
+// Stack frames and symbolic data are returned
+// New inline frames may be provided
+// stackdmpprovider must be enabled
+// ReconstructStack
+typedef HRESULT (CALLBACK* PDEBUG_STACK_PROVIDER_RECONSTRUCTSTACK)
+    (
+    _In_ ULONG SystemThreadId,
+    _In_reads_(CountNativeFrames) PDEBUG_STACK_FRAME_EX NativeFrames,
+    _In_ ULONG CountNativeFrames,
+    _Outptr_result_buffer_(*StackSymFramesFilled) PSTACK_SYM_FRAME_INFO *StackSymFrames,
+    _Out_ PULONG StackSymFramesFilled); 
+
+//After ReconstructStack is called and used dbgeng will call the stack provider to free memory
+// FreeStackSymFrames
+typedef HRESULT (CALLBACK* PDEBUG_STACK_PROVIDER_FREESTACKSYMFRAMES)
+    (
+    _In_opt_ PSTACK_SYM_FRAME_INFO StackSymFrames); 
+
+// Dbgeng is done with thread stack reconstruction
+// Dump stack provider may clean up state
+// EndThreadStackReconstruction
+typedef HRESULT (CALLBACK* PDEBUG_STACK_PROVIDER_ENDTHREADSTACKRECONSTRUCTION)
+    (void); 
+
+
+//----------------------------------------------------------------------------
+//
 // C++ implementation helper classes.
 //
 //----------------------------------------------------------------------------
@@ -15523,8 +24911,8 @@ public:
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         )
     {
         *Interface = NULL;
@@ -15551,7 +24939,7 @@ public:
 
     STDMETHOD(Breakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT Bp
+        _In_ PDEBUG_BREAKPOINT Bp
         )
     {
         UNREFERENCED_PARAMETER(Bp);
@@ -15559,8 +24947,8 @@ public:
     }
     STDMETHOD(Exception)(
         THIS_
-        __in PEXCEPTION_RECORD64 Exception,
-        __in ULONG FirstChance
+        _In_ PEXCEPTION_RECORD64 Exception,
+        _In_ ULONG FirstChance
         )
     {
         UNREFERENCED_PARAMETER(Exception);
@@ -15569,9 +24957,9 @@ public:
     }
     STDMETHOD(CreateThread)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG64 DataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 DataOffset,
+        _In_ ULONG64 StartOffset
         )
     {
         UNREFERENCED_PARAMETER(Handle);
@@ -15581,7 +24969,7 @@ public:
     }
     STDMETHOD(ExitThread)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         )
     {
         UNREFERENCED_PARAMETER(ExitCode);
@@ -15589,17 +24977,17 @@ public:
     }
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 Handle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in PCSTR ModuleName,
-        __in PCSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp,
-        __in ULONG64 InitialThreadHandle,
-        __in ULONG64 ThreadDataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_ PCSTR ModuleName,
+        _In_ PCSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_ ULONG64 InitialThreadHandle,
+        _In_ ULONG64 ThreadDataOffset,
+        _In_ ULONG64 StartOffset
         )
     {
         UNREFERENCED_PARAMETER(ImageFileHandle);
@@ -15617,7 +25005,7 @@ public:
     }
     STDMETHOD(ExitProcess)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         )
     {
         UNREFERENCED_PARAMETER(ExitCode);
@@ -15625,13 +25013,13 @@ public:
     }
     STDMETHOD(LoadModule)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in PCSTR ModuleName,
-        __in PCSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_ PCSTR ModuleName,
+        _In_ PCSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp
         )
     {
         UNREFERENCED_PARAMETER(ImageFileHandle);
@@ -15645,8 +25033,8 @@ public:
     }
     STDMETHOD(UnloadModule)(
         THIS_
-        __in PCSTR ImageBaseName,
-        __in ULONG64 BaseOffset
+        _In_ PCSTR ImageBaseName,
+        _In_ ULONG64 BaseOffset
         )
     {
         UNREFERENCED_PARAMETER(ImageBaseName);
@@ -15655,8 +25043,8 @@ public:
     }
     STDMETHOD(SystemError)(
         THIS_
-        __in ULONG Error,
-        __in ULONG Level
+        _In_ ULONG Error,
+        _In_ ULONG Level
         )
     {
         UNREFERENCED_PARAMETER(Error);
@@ -15665,7 +25053,7 @@ public:
     }
     STDMETHOD(SessionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         )
     {
         UNREFERENCED_PARAMETER(Status);
@@ -15673,8 +25061,8 @@ public:
     }
     STDMETHOD(ChangeDebuggeeState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15683,8 +25071,8 @@ public:
     }
     STDMETHOD(ChangeEngineState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15693,8 +25081,8 @@ public:
     }
     STDMETHOD(ChangeSymbolState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15709,8 +25097,8 @@ public:
     // IUnknown.
     STDMETHOD(QueryInterface)(
         THIS_
-        __in REFIID InterfaceId,
-        __out PVOID* Interface
+        _In_ REFIID InterfaceId,
+        _Out_ PVOID* Interface
         )
     {
         *Interface = NULL;
@@ -15737,7 +25125,7 @@ public:
 
     STDMETHOD(Breakpoint)(
         THIS_
-        __in PDEBUG_BREAKPOINT2 Bp
+        _In_ PDEBUG_BREAKPOINT2 Bp
         )
     {
         UNREFERENCED_PARAMETER(Bp);
@@ -15745,8 +25133,8 @@ public:
     }
     STDMETHOD(Exception)(
         THIS_
-        __in PEXCEPTION_RECORD64 Exception,
-        __in ULONG FirstChance
+        _In_ PEXCEPTION_RECORD64 Exception,
+        _In_ ULONG FirstChance
         )
     {
         UNREFERENCED_PARAMETER(Exception);
@@ -15755,9 +25143,9 @@ public:
     }
     STDMETHOD(CreateThread)(
         THIS_
-        __in ULONG64 Handle,
-        __in ULONG64 DataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 DataOffset,
+        _In_ ULONG64 StartOffset
         )
     {
         UNREFERENCED_PARAMETER(Handle);
@@ -15767,7 +25155,7 @@ public:
     }
     STDMETHOD(ExitThread)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         )
     {
         UNREFERENCED_PARAMETER(ExitCode);
@@ -15775,17 +25163,17 @@ public:
     }
     STDMETHOD(CreateProcess)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 Handle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in PCWSTR ModuleName,
-        __in PCWSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp,
-        __in ULONG64 InitialThreadHandle,
-        __in ULONG64 ThreadDataOffset,
-        __in ULONG64 StartOffset
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 Handle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_ PCWSTR ModuleName,
+        _In_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp,
+        _In_ ULONG64 InitialThreadHandle,
+        _In_ ULONG64 ThreadDataOffset,
+        _In_ ULONG64 StartOffset
         )
     {
         UNREFERENCED_PARAMETER(ImageFileHandle);
@@ -15803,7 +25191,7 @@ public:
     }
     STDMETHOD(ExitProcess)(
         THIS_
-        __in ULONG ExitCode
+        _In_ ULONG ExitCode
         )
     {
         UNREFERENCED_PARAMETER(ExitCode);
@@ -15811,13 +25199,13 @@ public:
     }
     STDMETHOD(LoadModule)(
         THIS_
-        __in ULONG64 ImageFileHandle,
-        __in ULONG64 BaseOffset,
-        __in ULONG ModuleSize,
-        __in PCWSTR ModuleName,
-        __in PCWSTR ImageName,
-        __in ULONG CheckSum,
-        __in ULONG TimeDateStamp
+        _In_ ULONG64 ImageFileHandle,
+        _In_ ULONG64 BaseOffset,
+        _In_ ULONG ModuleSize,
+        _In_ PCWSTR ModuleName,
+        _In_ PCWSTR ImageName,
+        _In_ ULONG CheckSum,
+        _In_ ULONG TimeDateStamp
         )
     {
         UNREFERENCED_PARAMETER(ImageFileHandle);
@@ -15831,8 +25219,8 @@ public:
     }
     STDMETHOD(UnloadModule)(
         THIS_
-        __in PCWSTR ImageBaseName,
-        __in ULONG64 BaseOffset
+        _In_ PCWSTR ImageBaseName,
+        _In_ ULONG64 BaseOffset
         )
     {
         UNREFERENCED_PARAMETER(ImageBaseName);
@@ -15841,8 +25229,8 @@ public:
     }
     STDMETHOD(SystemError)(
         THIS_
-        __in ULONG Error,
-        __in ULONG Level
+        _In_ ULONG Error,
+        _In_ ULONG Level
         )
     {
         UNREFERENCED_PARAMETER(Error);
@@ -15851,7 +25239,7 @@ public:
     }
     STDMETHOD(SessionStatus)(
         THIS_
-        __in ULONG Status
+        _In_ ULONG Status
         )
     {
         UNREFERENCED_PARAMETER(Status);
@@ -15859,8 +25247,8 @@ public:
     }
     STDMETHOD(ChangeDebuggeeState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15869,8 +25257,8 @@ public:
     }
     STDMETHOD(ChangeEngineState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15879,8 +25267,8 @@ public:
     }
     STDMETHOD(ChangeSymbolState)(
         THIS_
-        __in ULONG Flags,
-        __in ULONG64 Argument
+        _In_ ULONG Flags,
+        _In_ ULONG64 Argument
         )
     {
         UNREFERENCED_PARAMETER(Flags);
@@ -15905,6 +25293,7 @@ public:
 #define GetSourceFileInformationT GetSourceFileInformationWide
 #define FindSourceFileAndTokenT FindSourceFileAndTokenWide
 #define GetSymbolInformationT GetSymbolInformationWide
+#define GetSymbolInformationExT GetSymbolInformationWideEx
 #define GetCommandT GetCommandWide
 #define SetCommandT SetCommandWide
 #define GetOffsetExpressionT GetOffsetExpressionWide
@@ -15988,9 +25377,11 @@ public:
 #define GetSymbolTypeNameT GetSymbolTypeNameWide
 #define GetSymbolValueTextT GetSymbolValueTextWide
 #define GetNameByOffsetT GetNameByOffsetWide
+#define GetNameByInlineContextT GetNameByInlineContextWide
 #define GetOffsetByNameT GetOffsetByNameWide
 #define GetNearNameByOffsetT GetNearNameByOffsetWide
 #define GetLineByOffsetT GetLineByOffsetWide
+#define GetLineByInlineContextT GetLineByInlineContextWide
 #define GetOffsetByLineT GetOffsetByLineWide
 #define GetModuleByModuleNameT GetModuleByModuleNameWide
 #define GetModuleByModuleName2T GetModuleByModuleName2Wide
@@ -16121,9 +25512,11 @@ public:
 #define GetSymbolTypeNameT GetSymbolTypeName
 #define GetSymbolValueTextT GetSymbolValueText
 #define GetNameByOffsetT GetNameByOffset
+#define GetNameByInlineContextT GetNameByInlineContext
 #define GetOffsetByNameT GetOffsetByName
 #define GetNearNameByOffsetT GetNearNameByOffset
 #define GetLineByOffsetT GetLineByOffset
+#define GetLineByInlineContextT GetLineByInlineContext
 #define GetOffsetByLineT GetOffsetByLine
 #define GetModuleByModuleNameT GetModuleByModuleName
 #define GetModuleByModuleName2T GetModuleByModuleName2
@@ -16165,4 +25558,8 @@ public:
 
 #endif // #ifdef __cplusplus
 
+#endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP | WINAPI_PARTITION_PKG_WER) */
+#pragma endregion
+
 #endif // #ifndef __DBGENG_H__
+

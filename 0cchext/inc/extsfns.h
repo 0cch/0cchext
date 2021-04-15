@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2006  Microsoft Corporation
+Copyright (c) Microsoft Corporation
 
 Module Name:
 
@@ -26,6 +26,8 @@ Environment:
 Revision History:
 
 --*/
+
+#pragma once
 
 #ifndef _EXTFNS_H
 #define _EXTFNS_H
@@ -85,6 +87,34 @@ typedef HRESULT
     IN PDEBUG_CLIENT Client,
     IN ULONG64 DriverObject,
     OUT PDEBUG_DRIVER_OBJECT_INFO pDrvObjInfo);
+
+
+// GetProcessCommit
+
+typedef struct _PROCESS_COMMIT_USAGE {
+    UCHAR ImageFileName[16];
+    ULONG64 ClientId;
+    ULONG64 ProcessAddress;
+    ULONG64 CommitCharge;
+    ULONG64 SharedCommitCharge;
+    ULONG64 ReleasedCommitDebt;
+    ULONG64 Reserved;
+} PROCESS_COMMIT_USAGE, *PPROCESS_COMMIT_USAGE;
+
+typedef HRESULT
+(WINAPI *PGET_PROCESS_COMMIT)(
+    PDEBUG_CLIENT Client,
+    PULONG64 TotalCommitCharge,
+    PULONG   NumberOfProcesses,
+    PPROCESS_COMMIT_USAGE *CommitData
+    );
+
+typedef HRESULT
+(WINAPI *PGET_FULL_IMAGE_NAME)(
+    PDEBUG_CLIENT Client,
+    ULONG64 Process,
+    LPSTR *FullImageName
+    );
 
 //
 // dump.cpp
@@ -211,6 +241,13 @@ typedef HRESULT
 //
 // pool.c
 //
+#if defined(_MSC_VER)
+#if _MSC_VER >= 1200
+#pragma warning(push)
+#endif
+#pragma warning(disable:4201) /* nonstandard extension used : nameless struct/union */
+#endif // defined(_MSC_VER)
+
 typedef struct _DEBUG_POOL_DATA {
     ULONG   SizeofStruct;
     ULONG64 PoolBlock;
@@ -236,6 +273,11 @@ typedef struct _DEBUG_POOL_DATA {
     CHAR    PoolTagDescription[64];
 } DEBUG_POOL_DATA, *PDEBUG_POOL_DATA;
 
+#if defined(_MSC_VER)
+#if _MSC_VER >= 1200
+#pragma warning(pop)
+#endif
+#endif // defined(_MSC_VER)
 
 // GetPoolData
 typedef HRESULT
@@ -250,7 +292,6 @@ typedef enum _DEBUG_POOL_REGION {
     DbgPoolRegionSpecial,
     DbgPoolRegionPaged,
     DbgPoolRegionNonPaged,
-    DbgPoolRegionCode,
     DbgPoolRegionNonPagedExpansion,
     DbgPoolRegionSessionPaged,
     DbgPoolRegionMax,
@@ -278,6 +319,100 @@ typedef HRESULT
 (WINAPI *PFIND_MATCHING_THREAD)(
     PDEBUG_CLIENT Client,
     PKDEXT_THREAD_FIND_PARAMS ThreadInfo
+    );
+
+//
+// Proces.c: FindMatchingProcess
+//
+typedef struct _KDEXT_PROCESS_FIND_PARAMS {
+    ULONG    SizeofStruct;
+    ULONG    Pid;
+    ULONG    Session;
+    PCHAR    ImageName;
+} KDEXT_PROCESS_FIND_PARAMS, *PKDEXT_PROCESS_FIND_PARAMS;
+
+typedef HRESULT
+(WINAPI *PFIND_MATCHING_PROCESS)(
+    _In_ PDEBUG_CLIENT Client,
+    _In_ PKDEXT_PROCESS_FIND_PARAMS ProcessInfo,
+    _Out_ PULONG64 Process
+    );
+
+//
+// EnumerateJobProcesses
+//     Enumerate Processes within a job tree.
+//
+
+typedef BOOLEAN
+(WINAPI *EXTS_JOB_PROCESS_CALLBACK)(
+    _In_ ULONG64 Job,
+    _In_ ULONG64 Process,
+    _Inout_opt_ PVOID Context
+    );
+
+typedef HRESULT
+(WINAPI *PENUMERATE_JOB_PROCESSES)(
+    _In_ PDEBUG_CLIENT Client,
+    _In_ ULONG64 Job,
+    _In_ EXTS_JOB_PROCESS_CALLBACK Callback,
+    _In_opt_ PVOID Context
+    );
+
+//
+// EnumerateHashTable
+//     Enumerate _RTL_DYNAMIC_HASH_TABLE entries.
+//
+
+typedef BOOLEAN
+(WINAPI *EXTS_TABLE_ENTRY_CALLBACK)(
+    _In_ ULONG64 Entry,
+    _Inout_opt_ PVOID Context
+    );
+
+typedef HRESULT
+(WINAPI *PENUMERATE_HASH_TABLE)(
+    _In_ PDEBUG_CLIENT Client,
+    _In_ ULONG64 HashTable,
+    _In_ EXTS_TABLE_ENTRY_CALLBACK Callback,
+    _Inout_opt_ PVOID Context
+    );
+
+//
+// EnumerateHandles
+//     Enumerte Ob handle table entries.
+//
+
+typedef struct _KDEXT_HANDLE_INFORMATION {
+    ULONG64 HandleTableEntry;
+    ULONG64 Handle;
+    ULONG64 Object;
+    ULONG64 ObjectBody;
+    ULONG64 GrantedAccess;
+    ULONG   HandleAttributes;
+    BOOLEAN PagedOut;
+} KDEXT_HANDLE_INFORMATION, *PKDEXT_HANDLE_INFORMATION;
+
+typedef
+BOOLEAN
+(*KDEXT_DUMP_HANDLE_CALLBACK)(
+    _In_ PKDEXT_HANDLE_INFORMATION HandleInfo,
+    _In_ ULONG Flags,
+    _Inout_opt_ PVOID Context
+    );
+
+#define DUMP_HANDLE_FLAG_PRINT_OBJECT 0x2
+#define DUMP_HANDLE_FLAG_PRINT_FREE_ENTRY 0x4
+#define DUMP_HANDLE_FLAG_KERNEL_TABLE 0x10
+#define DUMP_HANDLE_FLAG_CID_TABLE 0x20
+
+typedef HRESULT
+(WINAPI *PENUMERATE_HANDLES)(
+    _In_ PDEBUG_CLIENT Client,
+    _In_ ULONG64 Process,
+    _In_ ULONG64 HandleToDump,
+    _In_ ULONG Flags,
+    _In_ KDEXT_DUMP_HANDLE_CALLBACK Callback,
+    _In_opt_ PVOID Context
     );
 
 //
@@ -322,7 +457,6 @@ typedef HRESULT
 
 #define KDEXTS_LOCK_CALLBACKROUTINE_DEFINED 2
 
-
 //
 // EnumerateSystemLocks
 //     Enumerates owned locks and calls CallbackRoutine on all owned/active locks.
@@ -363,9 +497,9 @@ typedef struct _KDEXTS_PTE_INFO {
 //
 typedef HRESULT
 (WINAPI *PKDEXTS_GET_PTE_INFO)(
-    __in PDEBUG_CLIENT Client,
-    __in ULONG64 Virtual,
-    __out PKDEXTS_PTE_INFO PteInfo
+    _In_ PDEBUG_CLIENT Client,
+    _In_ ULONG64 Virtual,
+    _Out_ PKDEXTS_PTE_INFO PteInfo
     );
 
 #endif // _KDEXTSFN_H
@@ -453,10 +587,14 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_USBPORT_OCADATA,
     DEBUG_FLR_WORK_QUEUE_ITEM,
     DEBUG_FLR_ERESOURCE_ADDRESS,  // ERESOURCE, use !locks to display this
-    DEBUG_FLR_PNP_TRIAGE_DATA, // DEBUG_PNP_TRIAGE_INFO struct
+    DEBUG_FLR_PNP_TRIAGE_DATA_DEPRECATED,
     DEBUG_FLR_HANDLE_VALUE,
     DEBUG_FLR_WHEA_ERROR_RECORD, // WHEA_ERROR_RECORD for bugcheck 0x124
     DEBUG_FLR_VERIFIER_FOUND_DEADLOCK, // Possible deadlock found, run !deadlock
+    DEBUG_FLR_PG_MISMATCH,  // Patchguard nt!KiMismatchSummary
+    DEBUG_FLR_DEVICE_NODE,
+    DEBUG_FLR_POWERREQUEST_ADDRESS,
+    DEBUG_FLR_EXECUTE_ADDRESS,
 
     DEBUG_FLR_IRP_ADDRESS = 0x100,
     DEBUG_FLR_IRP_MAJOR_FN,
@@ -466,7 +604,7 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_INVALID_USEREVENT,
     DEBUG_FLR_VIDEO_TDR_CONTEXT,
     DEBUG_FLR_VERIFIER_DRIVER_ENTRY,
-    DEBUG_FLR_PNP_IRP_ADDRESS,
+    DEBUG_FLR_PNP_IRP_ADDRESS_DEPRECATED,
 
 
     // Previous mode 0 == KernelMode , 1 == UserMode
@@ -496,7 +634,9 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_CORRUPTING_POOL_ADDRESS,
     DEBUG_FLR_CORRUPTING_POOL_TAG,
     DEBUG_FLR_FREED_POOL_TAG,
-
+    DEBUG_FLR_LEAKED_SESSION_POOL_TAG,
+    DEBUG_FLR_INSTR_SESSION_POOL_TAG,
+    DEBUG_FLR_CLIENT_DRIVER,
 
     // Filesystem
     DEBUG_FLR_FILE_ID = 0x500,
@@ -505,18 +645,45 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     // bugcheck data
     DEBUG_FLR_BUGCHECK_STR = 0x600,
     DEBUG_FLR_BUGCHECK_SPECIFIER,
+    DEBUG_FLR_BUGCHECK_DESC,
 
-    // Managed code stuff
+    // Managed Code
     DEBUG_FLR_MANAGED_CODE = 0x700,
-    DEBUG_FLR_MANAGED_OBJECT,
-    DEBUG_FLR_MANAGED_EXCEPTION_OBJECT,
-    DEBUG_FLR_MANAGED_EXCEPTION_MESSAGE,
-    DEBUG_FLR_MANAGED_STACK_STRING,
+    DEBUG_FLR_MANAGED_OBJECT,               // Deprecated
+    DEBUG_FLR_MANAGED_EXCEPTION_OBJECT,     // Deprecated
+    DEBUG_FLR_MANAGED_EXCEPTION_MESSAGEX,   // Placeholder, DEBUG_FLR_MANAGED_EXCEPTION_MESSAGE moved
+    DEBUG_FLR_MANAGED_STACK_STRING,         // Deprecated
     DEBUG_FLR_MANAGED_BITNESS_MISMATCH,
-    DEBUG_FLR_MANAGED_OBJECT_NAME,
-    DEBUG_FLR_MANAGED_EXCEPTION_CONTEXT_MESSAGE,
-    DEBUG_FLR_MANAGED_STACK_COMMAND,
+    DEBUG_FLR_MANAGED_OBJECT_NAME,          // Deprecated
+    DEBUG_FLR_MANAGED_EXCEPTION_CONTEXT_MESSAGE, // Deprecated
+    DEBUG_FLR_MANAGED_STACK_COMMAND,        // Deprecated
+    DEBUG_FLR_MANAGED_KERNEL_DEBUGGER,
+    DEBUG_FLR_MANAGED_HRESULT_STRING,       // Deprecated
+    DEBUG_FLR_MANAGED_ENGINE_MODULE,
+    DEBUG_FLR_MANAGED_ANALYSIS_PROVIDER,
 
+    // Managed Exception
+    DEBUG_FLR_MANAGED_EXCEPTION_ADDRESS = 0x800,
+    DEBUG_FLR_MANAGED_EXCEPTION_HRESULT,
+    DEBUG_FLR_MANAGED_EXCEPTION_TYPE,
+    DEBUG_FLR_MANAGED_EXCEPTION_MESSAGE,
+    DEBUG_FLR_MANAGED_EXCEPTION_CALLSTACK,
+    DEBUG_FLR_MANAGED_EXCEPTION_INNER_ADDRESS = 0x810,
+    DEBUG_FLR_MANAGED_EXCEPTION_INNER_HRESULT,
+    DEBUG_FLR_MANAGED_EXCEPTION_INNER_TYPE,
+    DEBUG_FLR_MANAGED_EXCEPTION_INNER_MESSAGE,
+    DEBUG_FLR_MANAGED_EXCEPTION_INNER_CALLSTACK,
+    DEBUG_FLR_MANAGED_EXCEPTION_NESTED_ADDRESS = 0x820,
+    DEBUG_FLR_MANAGED_EXCEPTION_NESTED_HRESULT,
+    DEBUG_FLR_MANAGED_EXCEPTION_NESTED_TYPE,
+    DEBUG_FLR_MANAGED_EXCEPTION_NESTED_MESSAGE,
+    DEBUG_FLR_MANAGED_EXCEPTION_NESTED_CALLSTACK,
+    DEBUG_FLR_MANAGED_EXCEPTION_CMD = 0x8F0,
+
+    // Managed Thread
+    DEBUG_FLR_MANAGED_THREAD_ID = 0x900,
+    DEBUG_FLR_MANAGED_THREAD_CMD_CALLSTACK = 0x9F0,
+    DEBUG_FLR_MANAGED_THREAD_CMD_STACKOBJECTS,
 
     // Constant values / exception code / bugcheck subtypes etc
     DEBUG_FLR_DRIVER_VERIFIER_IO_VIOLATION_TYPE = 0x1000,
@@ -535,7 +702,19 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_BADPAGES_DETECTED,
     DEBUG_FLR_DPC_TIMEOUT_TYPE,
     DEBUG_FLR_DPC_RUNTIME,
-    DEBUG_FLR_DPC_TIMELIMIT,  
+    DEBUG_FLR_DPC_TIMELIMIT,
+    DEBUG_FLR_DUMP_FILE_ATTRIBUTES,
+    DEBUG_FLR_PAGE_HASH_ERRORS,
+    DEBUG_FLR_BUGCHECK_P1,
+    DEBUG_FLR_BUGCHECK_P2,
+    DEBUG_FLR_BUGCHECK_P3,
+    DEBUG_FLR_BUGCHECK_P4,
+    DEBUG_FLR_CRITICAL_PROCESS, // Value is the name of the critical process.
+
+
+    // Clustering (RHS)
+    DEBUG_FLR_RESOURCE_CALL_TYPE = 0x1100,
+    DEBUG_FLR_RESOURCE_CALL_TYPE_STR,
 
     // Notification IDs, values under it doesn't have significance
     DEBUG_FLR_CORRUPT_MODULE_LIST = 0x2000,
@@ -583,6 +762,31 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
                                             // buckets containing just the image name)
     DEBUG_FLR_KERNEL_VERIFIER_ENABLED,      // Set for kernel targets which have verifier enabled
     DEBUG_FLR_SKIP_CORRUPT_MODULE_DETECTION, // do not look at module list for known corrupt modules
+    DEBUG_FLR_GSFAILURE_FALSE_POSITIVE,
+    DEBUG_FLR_IGNORE_LARGE_MODULE_CORRUPTION,
+    DEBUG_FLR_IGNORE_BUCKET_ID_OFFSET,  // set to prevent the function offset from being set in the bucket ID
+    DEBUG_FLR_NO_ARCH_IN_BUCKET,        // do not add the architecture name to the bucket
+    DEBUG_FLR_IGNORE_MODULE_HARDWARE_ID, // do not set Hardware ID info from sysdata.xml. (used if the hardware ID was already set)
+    DEBUG_FLR_ARM_WRITE_AV_CAVEAT,       // Add note that ARM may incorrectly label read AV as write AV in some cases.
+    DEBUG_FLR_ON_DPC_STACK,           // Note if the stack pointer is currently on a DPC stack.
+    DEBUG_FLR_LIVE_KERNEL_DUMP,       // This is a live kernel dump, not a bugcheck.
+    DEBUG_FLR_COVERAGE_BUILD,         // This is an instrumented coverage build
+    DEBUG_FLR_POSSIBLE_STACK_OVERFLOW, // An exception is possibly caused by stack overflow.
+    DEBUG_FLR_WRONG_SYMBOLS_TIMESTAMP,  // Timestamp of Missing/Wrong Symbol
+    DEBUG_FLR_WRONG_SYMBOLS_SIZE,       // Size of Missing/Wrong Symbol
+    DEBUG_FLR_MISSING_IMPORTANT_SYMBOL, // Important module doesn't have private symbols
+    DEBUG_FLR_MISSING_CLR_SYMBOL,       // CLR doesn't have private symbols
+
+    DEBUG_FLR_TARGET_TIME,                     // Target event (crash) time in ISO 8601 format
+    DEBUG_FLR_LOW_SYSTEM_COMMIT,    
+    DEBUG_FLR_LEGACY_PAGE_TABLE_ACCESS,     // AMD64 Kernel mode accessing legacy page table
+    
+    DEBUG_FLR_HIGH_PROCESS_COMMIT,
+    DEBUG_FLR_HIGH_SERVICE_COMMIT,
+    DEBUG_FLR_HIGH_NONPAGED_POOL_USAGE,
+    DEBUG_FLR_HIGH_PAGED_POOL_USAGE,
+    DEBUG_FLR_HIGH_SHARED_COMMIT_USAGE,
+    DEBUG_FLR_APPS_NOT_TERMINATED,
 
     // Known analyzed failure cause or problem that bucketing could be
     // applied against.
@@ -628,6 +832,12 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_GSFAILURE_UP2DATE_UNKNOWN,
     DEBUG_FLR_OS_BUILD_NAME,
     DEBUG_FLR_CPU_MICROCODE_VERSION,
+    DEBUG_FLR_CPU_COUNT,
+    DEBUG_FLR_CPU_SPEED,
+    DEBUG_FLR_CPU_VENDOR,
+    DEBUG_FLR_CPU_FAMILY,
+    DEBUG_FLR_CPU_MODEL,
+    DEBUG_FLR_CPU_STEPPING,
     DEBUG_FLR_INSTR_POINTER_ON_STACK,
     DEBUG_FLR_INSTR_POINTER_ON_HEAP,
     DEBUG_FLR_EVENT_CODE_DATA_MISMATCH,
@@ -647,13 +857,30 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_EXCEPTION_CONTEXT_RECURSION,
     DEBUG_FLR_DISKIO_READ_FAILURE,
     DEBUG_FLR_DISKIO_WRITE_FAILURE,
-    // this belongs with the GS related tags above, but here so that we dont distrub the order
+    // this belongs with the GS related tags above, but here so that we dont disturb the order
     DEBUG_FLR_GSFAILURE_MISSING_ESTABLISHER_FRAME,
     DEBUG_FLR_GSFAILURE_COOKIES_MATCH_EXH,
     DEBUG_FLR_GSFAILURE_MANAGED,
     DEBUG_FLR_MANAGED_FRAME_CHAIN_CORRUPTION,  // not really a GS Failure, but reported and analyzed detected in the same way
     DEBUG_FLR_GSFAILURE_MANAGED_THREADID,
     DEBUG_FLR_GSFAILURE_MANAGED_FRAMEID,
+    DEBUG_FLR_STACKUSAGE_IMAGE,   // The address of the image which used the most stack
+    DEBUG_FLR_STACKUSAGE_IMAGE_SIZE, // The size of stack used by blamed image
+    DEBUG_FLR_STACKUSAGE_FUNCTION, // The address of a function which used the most stack
+    DEBUG_FLR_STACKUSAGE_FUNCTION_SIZE,  // The size of stack used by blamed function.
+    DEBUG_FLR_STACKUSAGE_RECURSION_COUNT,  // The number of times the blamed function appeared in the stack due to recursion
+
+
+    // Xbox specific string values
+    DEBUG_FLR_XBOX_SYSTEM_UPTIME,
+    DEBUG_FLR_XBOX_SYSTEM_CRASHTIME,
+    DEBUG_FLR_XBOX_LIVE_ENVIRONMENT,
+
+    // These should be in the analyzed failure cause, but here to not disturb order
+    DEBUG_FLR_LARGE_TICK_INCREMENT,            // Value is the number of ticks incremented by KeUpdateRunTime
+    DEBUG_FLR_INSTR_POINTER_IN_PAGED_CODE,     // Code is marked pagable, but attempted to execute at IRQL >= DPC_LEVEL    
+    DEBUG_FLR_SERVICETABLE_MODIFIED,           // Kernel service table modification/hooking has been detected
+    DEBUG_FLR_ALUREON,                         // KDCOM is incorrect size, suspect Alureon
 
     // Internal data, retated to the OCA database
     DEBUG_FLR_INTERNAL_RAID_BUG = 0x4000,
@@ -666,13 +893,24 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
 
     // Data corelating a user target to watson DB
     DEBUG_FLR_WATSON_MODULE = 0x4100,
-    DEBUG_FLR_WATSON_MODULE_VERSION,
-    DEBUG_FLR_WATSON_MODULE_OFFSET,
-    DEBUG_FLR_WATSON_PROCESS_VERSION,
+    DEBUG_FLR_WATSON_MODULE_VERSION, 
+    DEBUG_FLR_WATSON_MODULE_OFFSET, 
+    DEBUG_FLR_WATSON_PROCESS_VERSION, 
     DEBUG_FLR_WATSON_IBUCKET,
     DEBUG_FLR_WATSON_MODULE_TIMESTAMP,
     DEBUG_FLR_WATSON_PROCESS_TIMESTAMP,
-    DEBUG_FLR_WATSON_GENERIC_EVENT_NAME,
+    DEBUG_FLR_WATSON_GENERIC_EVENT_NAME,        /* or Generic EventType or EventTypeName */ 
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_00,      /* for Generic Event P0 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_01,      /* for Generic Event P1 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_02,      /* for Generic Event P2 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_03,      /* for Generic Event P3 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_04,      /* for Generic Event P4 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_05,      /* for Generic Event P5 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_06,      /* for Generic Event P6 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_07,      /* for Generic Event P7 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_08,      /* for Generic Event P8 */
+    DEBUG_FLR_WATSON_GENERIC_BUCKETING_09,      /* for Generic Event P9 */
+    
     DEBUG_FLR_WATSON_STAGEONE_STR,
 
     // Data extracted from cabbed files with dump
@@ -684,9 +922,72 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     // System information such as bios data, manufactures (from !sysinfo)
     DEBUG_FLR_SYSINFO_SYSTEM_MANUFACTURER = 0x4300,
     DEBUG_FLR_SYSINFO_SYSTEM_PRODUCT,
+    DEBUG_FLR_SYSINFO_SYSTEM_SKU,
+    DEBUG_FLR_SYSINFO_SYSTEM_VERSION,
     DEBUG_FLR_SYSINFO_BASEBOARD_MANUFACTURER,
+    DEBUG_FLR_SYSINFO_BASEBOARD_PRODUCT,
+    DEBUG_FLR_SYSINFO_BASEBOARD_VERSION,
     DEBUG_FLR_SYSINFO_BIOS_VENDOR,
     DEBUG_FLR_SYSINFO_BIOS_VERSION,
+    DEBUG_FLR_SYSINFO_BIOS_DATE,
+    DEBUG_FLR_VIRTUAL_MACHINE,
+
+    // Service Control Manager
+    DEBUG_FLR_SERVICE = 0x5000,
+    DEBUG_FLR_SERVICE_NAME,             // HKLM\SYSTEM\CurrentControlSet\Services\<Name>
+    DEBUG_FLR_SERVICE_GROUP,            // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\Group
+    DEBUG_FLR_SERVICE_DISPLAYNAME,      // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\DisplayName
+    DEBUG_FLR_SERVICE_DESCRIPTION,      // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\Description
+    DEBUG_FLR_SERVICE_DEPENDONSERVICE,  // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\DependOnService
+    DEBUG_FLR_SERVICE_DEPENDONGROUP,    // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\DependOnGroup
+
+    DEBUG_FLR_SVCHOST = 0x5100,
+    DEBUG_FLR_SVCHOST_GROUP,            // ImagePath: "%SystemRoot%\System32\svchost.exe -k LocalService" --> "LocalService"
+    DEBUG_FLR_SVCHOST_IMAGEPATH,        // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\ImagePath
+    DEBUG_FLR_SVCHOST_SERVICEDLL,       // HKLM\SYSTEM\CurrentControlSet\Services\<Name>\Parameters\ServiceDll
+
+    DEBUG_FLR_SCM = 0x5200,
+    DEBUG_FLR_SCM_BLACKBOX = 0x52F0,
+    DEBUG_FLR_SCM_BLACKBOX_ENTRY,
+    DEBUG_FLR_SCM_BLACKBOX_ENTRY_CONTROLCODE,
+    DEBUG_FLR_SCM_BLACKBOX_ENTRY_STARTTIME,
+    DEBUG_FLR_SCM_BLACKBOX_ENTRY_SERVICENAME,
+
+    // ACPI
+    DEBUG_FLR_ACPI = 0x6000,
+    DEBUG_FLR_ACPI_BLACKBOX = 0x6100,
+    DEBUG_FLR_PO_BLACKBOX ,
+    // bootstat.dat
+    DEBUG_FLR_BOOTSTAT = 0x7000,
+    DEBUG_FLR_BOOTSTAT_BLACKBOX = 0x7100,
+
+    // Storage Device
+    DEBUG_FLR_STORAGE = 0x7400,
+    DEBUG_FLR_STORAGE_ORGID,
+    DEBUG_FLR_STORAGE_MODEL,
+    DEBUG_FLR_STORAGE_MFGID,
+    DEBUG_FLR_STORAGE_ISSUEDESCSTRING,
+    DEBUG_FLR_STORAGE_PUBLIC_TOTSIZE,
+    DEBUG_FLR_STORAGE_PUBLIC_OFFSET,
+    DEBUG_FLR_STORAGE_PUBLIC_DATASIZE,
+    DEBUG_FLR_STORAGE_PRIVATE_TOTSIZE,
+    DEBUG_FLR_STORAGE_PRIVATE_OFFSET,
+    DEBUG_FLR_STORAGE_PRIVATE_DATASIZE,
+    DEBUG_FLR_STORAGE_TOTALSIZE,
+    DEBUG_FLR_STORAGE_REASON,
+    DEBUG_FLR_STORAGE_BLACKBOX = 0x74F0,
+
+    // Filesystems
+    DEBUG_FLR_FILESYSTEMS_NTFS = 0x7600,
+    DEBUG_FLR_FILESYSTEMS_NTFS_BLACKBOX = 0x76F0,
+    DEBUG_FLR_FILESYSTEMS_REFS = 0x7800,
+    DEBUG_FLR_FILESYSTEMS_REFS_BLACKBOX = 0x78F0,
+
+    // Plug'n'Play (PnP)
+    DEBUG_FLR_PNP = 0x8000,
+    DEBUG_FLR_PNP_TRIAGE_DATA,          // DEBUG_PNP_TRIAGE_INFO struct
+    DEBUG_FLR_PNP_IRP_ADDRESS,
+    DEBUG_FLR_PNP_BLACKBOX = 0x8100,
 
     // Strings.
     DEBUG_FLR_BUCKET_ID = 0x10000,
@@ -695,13 +996,13 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_FOLLOWUP_NAME,
     DEBUG_FLR_STACK_COMMAND,
     DEBUG_FLR_STACK_TEXT,
-    DEBUG_FLR_MODULE_NAME,
+    DEBUG_FLR_MODULE_NAME,         // Kernel Blamed module/driver name
     DEBUG_FLR_FIXED_IN_OSVERSION,
     DEBUG_FLR_DEFAULT_BUCKET_ID,
     DEBUG_FLR_MODULE_BUCKET_ID,         // Part of Bucket id specific to the culprit module
     DEBUG_FLR_ADDITIONAL_DEBUGTEXT,
-    DEBUG_FLR_USER_NAME,
     DEBUG_FLR_PROCESS_NAME,
+    DEBUG_FLR_USER_NAME,
     DEBUG_FLR_MARKER_FILE,       // Marker file name from sysdata.xml in cabs
     DEBUG_FLR_INTERNAL_RESPONSE, // Response text for bucket
     DEBUG_FLR_CONTEXT_RESTORE_COMMAND, // command to restore original context as before analysis
@@ -709,6 +1010,8 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_DRIVER_HARDWARE_VENDOR_ID,
     DEBUG_FLR_DRIVER_HARDWARE_DEVICE_ID,
     DEBUG_FLR_DRIVER_HARDWARE_SUBSYS_ID,
+    DEBUG_FLR_DRIVER_HARDWARE_REV_ID,
+    DEBUG_FLR_DRIVER_HARDWARE_ID_BUS_TYPE,
     DEBUG_FLR_MARKER_MODULE_FILE, // Secondary marker file name from the module list
     DEBUG_FLR_BUGCHECKING_DRIVER_IDTAG,  // Tag set during processing to identify bugchecking driver frm triage.ini
     DEBUG_FLR_MARKER_BUCKET,      // bucket id derived from machine marker
@@ -718,6 +1021,7 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_DRIVER_XML_MANUFACTURER,
     DEBUG_FLR_DRIVER_XML_VERSION,
     DEBUG_FLR_BUILD_VERSION_STRING,
+    DEBUG_FLR_BUILD_OS_FULL_VERSION_STRING,      // Asimov-compatible version string
     DEBUG_FLR_ORIGINAL_CAB_NAME,
     DEBUG_FLR_FAULTING_SOURCE_CODE,
     DEBUG_FLR_FAULTING_SERVICE_NAME,
@@ -735,7 +1039,66 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_KERNEL_LOG_PROCESS_NAME,
     DEBUG_FLR_KERNEL_LOG_STATUS,
     DEBUG_FLR_REGISTRYTXT_SOURCE,
-    
+    DEBUG_FLR_FAULTING_SOURCE_LINE,
+    DEBUG_FLR_FAULTING_SOURCE_FILE,             // This TAG is a duplicate of the tag above.  The former is left due to an external (Autobug) dependency
+    DEBUG_FLR_FAULTING_SOURCE_LINE_NUMBER,  // This isnt a string, but it is coorelated with the tag above, so keep them together
+    DEBUG_FLR_SKIP_MODULE_SPECIFIC_BUCKET_INFO, // Do not add the module name to the bucket string.
+    DEBUG_FLR_BUCKET_ID_FUNC_OFFSET, // when pruning the offset from the bucket ID, it is saved in this string instead
+    DEBUG_FLR_XHCI_FIRMWARE_VERSION,
+    DEBUG_FLR_FAILURE_ANALYSIS_SOURCE,  // Kernel/User/TruScan/Radar/Xbox/Phone etc..
+    DEBUG_FLR_FAILURE_ID_HASH,          // MD5 Hash of DEBUG_FLR_FAILURE_ID_HASH_STRING
+    DEBUG_FLR_FAILURE_ID_HASH_STRING,   // LowerCase(DEBUG_FLR_FAILURE_ANALYSIS_SOURCE+FAILURE_BUCKET_ID)
+    DEBUG_FLR_FAILURE_ID_REPORT_LINK,   // Failure ID Report URL - OCA.INI:debugger-params!failurereporturl+FAILURE_ID_HASH
+    DEBUG_FLR_HOLDINFO,                // Live Debug hold info metadata
+    DEBUG_FLR_HOLDINFO_ACTIVE_HOLD_COUNT,
+    DEBUG_FLR_HOLDINFO_TENET_SOCRE,
+    DEBUG_FLR_HOLDINFO_HISTORIC_HOLD_COUNT,
+    DEBUG_FLR_HOLDINFO_ALWAYS_IGNORE,
+    DEBUG_FLR_HOLDINFO_ALWAYS_HOLD,
+    DEBUG_FLR_HOLDINFO_MAX_HOLD_LIMIT,
+    DEBUG_FLR_HOLDINFO_MANUAL_HOLD,
+    DEBUG_FLR_HOLDINFO_NOTIFICATION_ALIASES,
+    DEBUG_FLR_HOLDINFO_LAST_SEEN_HOLD_DATE,
+    DEBUG_FLR_HOLDINFO_RECOMMEND_HOLD, // Indicates if a live debug should be held or released
+
+    // FailureBucketID, the individual building blocks
+    DEBUG_FLR_FAILURE_PROBLEM_CLASS, 
+    DEBUG_FLR_FAILURE_EXCEPTION_CODE,
+    DEBUG_FLR_FAILURE_IMAGE_NAME,
+    DEBUG_FLR_FAILURE_FUNCTION_NAME,
+    DEBUG_FLR_FAILURE_SYMBOL_NAME,
+
+    // RETracer support
+    DEBUG_FLR_FOLLOWUP_BEFORE_RETRACER,
+
+    // Messages for the human debugger
+    DEBUG_FLR_END_MESSAGE,
+    DEBUG_FLR_FEATURE_PATH,
+
+    // User mode watson crumbs in kernel mode dumps
+    DEBUG_FLR_USER_MODE_BUCKET,
+    DEBUG_FLR_USER_MODE_BUCKET_INDEX,
+    DEBUG_FLR_USER_MODE_BUCKET_EVENTTYPE,
+    DEBUG_FLR_USER_MODE_BUCKET_REPORTGUID,
+    DEBUG_FLR_USER_MODE_BUCKET_REPORTCREATIONTIME,
+    DEBUG_FLR_USER_MODE_BUCKET_P0,
+    DEBUG_FLR_USER_MODE_BUCKET_P1,
+    DEBUG_FLR_USER_MODE_BUCKET_P2,
+    DEBUG_FLR_USER_MODE_BUCKET_P3,
+    DEBUG_FLR_USER_MODE_BUCKET_P4,
+    DEBUG_FLR_USER_MODE_BUCKET_P5,
+    DEBUG_FLR_USER_MODE_BUCKET_P6,
+    DEBUG_FLR_USER_MODE_BUCKET_P7,
+    DEBUG_FLR_USER_MODE_BUCKET_STRING,
+    DEBUG_FLR_CRITICAL_PROCESS_REPORTGUID,
+
+    DEBUG_FLR_FAILURE_MODULE_NAME,
+    DEBUG_FLR_PLATFORM_BUCKET_STRING, // Holds the platform string to optionally add to the Bucket Id.
+
+	// Human readable vendor/subvendor/device names for given venid/devid codes
+    DEBUG_FLR_DRIVER_HARDWARE_VENDOR_NAME,
+    DEBUG_FLR_DRIVER_HARDWARE_SUBVENDOR_NAME,
+    DEBUG_FLR_DRIVER_HARDWARE_DEVICE_NAME,
 
     // User-mode specific stuff
     DEBUG_FLR_USERMODE_DATA = 0x100000,
@@ -782,6 +1145,43 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_ULS_SCRIPT_EXCEPTION,
     DEBUG_FLR_LCIE_ISO_AVAILABLE,
     DEBUG_FLR_SHOW_LCIE_ISO_DATA,
+    DEBUG_FLR_URL_LCIE_ENTRY,
+    DEBUG_FLR_URL_URLMON_ENTRY,
+    DEBUG_FLR_URL_XMLHTTPREQ_SYNC_ENTRY,
+    DEBUG_FLR_FAULTING_LOCAL_VARIABLE_NAME,
+    DEBUG_FLR_MODULE_LIST,
+    DEBUG_FLR_DUMP_FLAGS,
+    DEBUG_FLR_APPLICATION_VERIFIER_LOADED,
+    DEBUG_FLR_DUMP_CLASS,
+    DEBUG_FLR_DUMP_QUALIFIER,
+    DEBUG_FLR_KM_MODULE_LIST,
+
+    // Debug Analysis
+    DEBUG_FLR_DEBUG_ANALYSIS = 0x110000,
+
+    // Key/Value
+    DEBUG_FLR_KEYVALUE_ANALYSIS = 0x120000,
+    DEBUG_FLR_KEY_VALUES_STRING = 0x121000,
+    DEBUG_FLR_KEY_VALUES_VARIANT = 0x122000,
+
+    // Timeline
+    DEBUG_FLR_TIMELINE_ANALYSIS = 0x130000,
+    DEBUG_FLR_TIMELINE_TIMES,
+
+    // Stream Analysis
+    DEBUG_FLR_STREAM_ANALYSIS = 0x140000,
+
+    // Memory Analysis
+    DEBUG_FLR_MEMORY_ANALYSIS = 0x150000,
+
+    // Stack Hash Analysis
+    DEBUG_FLR_STACKHASH_ANALYSIS = 0x160000,
+
+    // Processes Analysis
+    DEBUG_FLR_PROCESSES_ANALYSIS = 0x170000,
+
+    // Services Analysis
+    DEBUG_FLR_SERVICE_ANALYSIS = 0x180000,
 
     // Analysis structured data
     DEBUG_FLR_STACK = 0x200000,
@@ -854,6 +1254,38 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_STACK_SHA1_HASH_MF,
     DEBUG_FLR_STACK_SHA1_HASH_MFO,
     DEBUG_FLR_STACK_SHA1_HASH_M,
+    DEBUG_FLR_XML_MODULE_INFO_SYMBOL_TYPE, // loaded symbol type
+    DEBUG_FLR_XML_MODULE_INFO_FILE_FLAGS, // whether debug or release build
+    DEBUG_FLR_STACK_FRAME_MODULE_BASE,
+    DEBUG_FLR_STACK_FRAME_SRC,
+    DEBUG_FLR_XML_SYSTEMINFO,
+    DEBUG_FLR_XML_SYSTEMINFO_SYSTEMMANUFACTURER,
+    DEBUG_FLR_XML_SYSTEMINFO_SYSTEMMODEL,
+    DEBUG_FLR_XML_SYSTEMINFO_SYSTEMMARKER,
+    DEBUG_FLR_FA_ADHOC_ANALYSIS_ITEMS,
+    DEBUG_FLR_XML_APPLICATION_NAME,
+    DEBUG_FLR_XML_PACKAGE_MONIKER,
+    DEBUG_FLR_XML_PACKAGE_RELATIVE_APPLICATION_ID,
+    DEBUG_FLR_XML_MODERN_ASYNC_REQUEST_OUTSTANDING,
+    DEBUG_FLR_XML_EVENTTYPE,
+    DEBUG_FLR_XML_PACKAGE_NAME,
+    DEBUG_FLR_XML_PACKAGE_VERSION,
+
+    DEBUG_FLR_FAILURE_LIST,
+    DEBUG_FLR_FAILURE_DISPLAY_NAME,
+    DEBUG_FLR_FRAME_SOURCE_FILE_NAME,
+    DEBUG_FLR_FRAME_SOURCE_FILE_PATH,
+    DEBUG_FLR_FRAME_SOURCE_LINE_NUMBER,
+
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_IMAGE_STATUS,  // Deprecated
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_IMAGE_ERROR,
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_IMAGE_DETAIL,
+
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_PDB_STATUS,    // Deprecated
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_PDB_ERROR,
+    DEBUG_FLR_XML_MODULE_INFO_SYMSRV_PDB_DETAIL,
+
+    DEBUG_FLR_XML_MODULE_INFO_DRIVER_GROUP,
 
     // cabbed text data / structured data
     DEBUG_FLR_REGISTRY_DATA = 0x300000,
@@ -863,11 +1295,11 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_USER_PROBLEM_CLASSES = 0x304000,
 
 #ifdef AUTOBUG_PROCESSING_SUPPORT
-    // tabs to support autobug cab processing
-    DEBUG_FLR_EXCEPTION_CODE_STR_deprecated = 0x101000,    // This is the string representation of the exception code (ie. c0000005)
-    // this is defined earlier as DEBUG_FLR_EXCEPTION_CODE_STR
+    // tags to support autobug cab processing
+    DEBUG_FLR_EXCEPTION_CODE_STR_deprecated = 0x101000, // String representation of the exception code (ie. c0000005)
+                                                        // This is defined earlier as DEBUG_FLR_EXCEPTION_CODE_STR
     DEBUG_FLR_BUCKET_ID_PREFIX_STR,  // This is the prefix part of BUCKET_ID. Everything before the start of the module name
-    DEBUG_FLR_BUCKET_ID_MODULE_STR,  // This is module, without the .dll/exe/tmp, etc. extension
+    DEBUG_FLR_BUCKET_ID_MODULE_STR,  // This is module, without the offset or _ni postfix
     DEBUG_FLR_BUCKET_ID_MODVER_STR,  // This is version of the aforementioned module, 0.0.0.0 if none.
     DEBUG_FLR_BUCKET_ID_FUNCTION_STR,// This is same as Sym from Watson. If missing 'unknown'.
     DEBUG_FLR_BUCKET_ID_OFFSET,      // The offset portion SYMBOL_NAME
@@ -879,12 +1311,12 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_BUCKET_ID_TIMEDATESTAMP,
     DEBUG_FLR_BUCKET_ID_CHECKSUM,
     DEBUG_FLR_BUILD_FLAVOR_STR,
-    DEBUG_FLR_BUCKET_ID_FLAVOR_STR,      // Is the failing module chk or fre
+    DEBUG_FLR_BUCKET_ID_FLAVOR_STR,   // Is the failing module chk or fre
     DEBUG_FLR_OS_SKU,
     DEBUG_FLR_PRODUCT_TYPE,
     DEBUG_FLR_SUITE_MASK,
     DEBUG_FLR_USER_LCID,
-    DEBUG_FLR_OS_REVISION,            // OS revision
+    DEBUG_FLR_OS_REVISION,            // OS Revision
     DEBUG_FLR_OS_NAME,                // OS Name
     DEBUG_FLR_OS_NAME_EDITION,        // Complete OS Name along with edition
     DEBUG_FLR_OS_PLATFORM_TYPE,       // OS type - x86 / x64 / ia64
@@ -895,8 +1327,86 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_ANALYSIS_SESSION_TIME,  // time stamp when analysis is running
     DEBUG_FLR_ANALYSIS_SESSION_HOST,  // machine on which analysis is running
     DEBUG_FLR_ANALYSIS_SESSION_ELAPSED_TIME, // processing time for analysis set in milliseconds
+    DEBUG_FLR_ANALYSIS_VERSION,       // !analyze version
+    DEBUG_FLR_BUCKET_ID_IMAGE_STR,    // This is image, with the .dll/exe/tmp, etc. extension
+    DEBUG_FLR_BUCKET_ID_PRIVATE,
+    DEBUG_FLR_ANALYSIS_REPROCESS,     // Reprocessing is advised due to transitory issues
 #endif
 
+    // Compressed store specific information
+    DEBUG_FLR_SM_COMPRESSION_FORMAT = 0x50000000,
+    DEBUG_FLR_SM_SOURCE_PFN1,
+    DEBUG_FLR_SM_SOURCE_PFN2,
+    DEBUG_FLR_SM_SOURCE_OFFSET,
+    DEBUG_FLR_SM_SOURCE_SIZE,
+    DEBUG_FLR_SM_TARGET_PFN,
+    DEBUG_FLR_SM_BUFFER_HASH,
+    DEBUG_FLR_SM_ONEBIT_SOLUTION_COUNT,
+
+    // Windows Store specific information
+    DEBUG_FLR_STORE_PRODUCT_ID = 0x60000000,
+    DEBUG_FLR_STORE_PRODUCT_DISPLAY_NAME,
+    DEBUG_FLR_STORE_PRODUCT_DESCRIPTION,
+    DEBUG_FLR_STORE_PRODUCT_EXTENDED_NAME,
+    DEBUG_FLR_STORE_PUBLISHER_ID,
+    DEBUG_FLR_STORE_PUBLISHER_NAME,
+    DEBUG_FLR_STORE_PUBLISHER_CERTIFICATE_NAME,
+    DEBUG_FLR_STORE_DEVELOPER_NAME,
+    DEBUG_FLR_STORE_PACKAGE_FAMILY_NAME,
+    DEBUG_FLR_STORE_PACKAGE_IDENTITY_NAME,
+    DEBUG_FLR_STORE_PRIMARY_PARENT_PRODUCT_ID,
+    DEBUG_FLR_STORE_LEGACY_PARENT_PRODUCT_ID,
+    DEBUG_FLR_STORE_LEGACY_WINDOWS_STORE_PRODUCT_ID,
+    DEBUG_FLR_STORE_LEGACY_WINDOWS_PHONE_PRODUCT_ID,
+    DEBUG_FLR_STORE_LEGACY_XBOX_ONE_PRODUCT_ID,
+    DEBUG_FLR_STORE_LEGACY_XBOX_360_PRODUCT_ID,
+    DEBUG_FLR_STORE_XBOX_TITLE_ID,
+    DEBUG_FLR_STORE_PREFERRED_SKU_ID,
+    DEBUG_FLR_STORE_IS_MICROSOFT_PRODUCT,
+    DEBUG_FLR_STORE_URL_APP,
+    DEBUG_FLR_STORE_URL_APPHEALTH,
+
+    // Windows Phone specific information
+    DEBUG_FLR_PHONE_VERSIONMAJOR=0x70000000,
+    DEBUG_FLR_PHONE_VERSIONMINOR,
+    DEBUG_FLR_PHONE_BUILDNUMBER,
+    DEBUG_FLR_PHONE_BUILDTIMESTAMP,
+    DEBUG_FLR_PHONE_BUILDBRANCH,
+    DEBUG_FLR_PHONE_BUILDER,
+    DEBUG_FLR_PHONE_LCID,
+    DEBUG_FLR_PHONE_QFE,
+    DEBUG_FLR_PHONE_OPERATOR,
+    DEBUG_FLR_PHONE_MCCMNC,
+    DEBUG_FLR_PHONE_FIRMWAREREVISION,
+    DEBUG_FLR_PHONE_RAM,
+    DEBUG_FLR_PHONE_ROMVERSION,
+    DEBUG_FLR_PHONE_SOCVERSION,
+    DEBUG_FLR_PHONE_HARDWAREREVISION,
+    DEBUG_FLR_PHONE_RADIOHARDWAREREVISION,
+    DEBUG_FLR_PHONE_RADIOSOFTWAREREVISION,
+    DEBUG_FLR_PHONE_BOOTLOADERVERSION,
+    DEBUG_FLR_PHONE_REPORTGUID,
+    DEBUG_FLR_PHONE_SOURCE,
+    DEBUG_FLR_PHONE_SOURCEEXTERNAL,
+    DEBUG_FLR_PHONE_USERALIAS,
+    DEBUG_FLR_PHONE_REPORTTIMESTAMP,
+    DEBUG_FLR_PHONE_APPID,
+    DEBUG_FLR_PHONE_SKUID,
+    DEBUG_FLR_PHONE_APPVERSION,
+    DEBUG_FLR_PHONE_UIF_COMMENT,
+    DEBUG_FLR_PHONE_UIF_APPNAME,
+    DEBUG_FLR_PHONE_UIF_APPID,
+    DEBUG_FLR_PHONE_UIF_CATEGORY,
+    DEBUG_FLR_PHONE_UIF_ORIGIN,
+
+    DEBUG_FLR_SIMULTANEOUS_TELSVC_INSTANCES,
+    DEBUG_FLR_SIMULTANEOUS_TELWP_INSTANCES,
+    DEBUG_FLR_MINUTES_SINCE_LAST_EVENT,
+    DEBUG_FLR_MINUTES_SINCE_LAST_EVENT_OF_THIS_TYPE,
+
+    DEBUG_FLR_REPORT_INFO_GUID,
+    DEBUG_FLR_REPORT_INFO_SOURCE,
+    DEBUG_FLR_REPORT_INFO_CREATION_TIME,
 
     // Culprit module
     DEBUG_FLR_FAULTING_IP = 0x80000000,     // Instruction where failure occurred
@@ -905,6 +1415,8 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_FOLLOWUP_IP,
     DEBUG_FLR_FRAME_ONE_INVALID,
     DEBUG_FLR_SYMBOL_FROM_RAW_STACK_ADDRESS,
+    DEBUG_FLR_IMAGE_VERSION,
+    DEBUG_FLR_FOLLOWUP_BUCKET_ID,
 
     // custom analysis plugin tags
     DEBUG_FLR_CUSTOM_ANALYSIS_TAG_MIN = 0xA0000000,
@@ -922,39 +1434,82 @@ typedef enum _DEBUG_FLR_PARAM_TYPE {
     DEBUG_FLR_BLOCKED_THREAD2,
     DEBUG_FLR_BLOCKING_PROCESSID, // process id of processes which is blocking execution
     DEBUG_FLR_PROCESSOR_ID,  // CPU where the fault is
+    DEBUG_FLR_XDV_VIOLATED_CONDITION,
+    DEBUG_FLR_XDV_STATE_VARIABLE,
+    DEBUG_FLR_XDV_HELP_LINK,
+    DEBUG_FLR_XDV_RULE_INFO,
+    DEBUG_FLR_DPC_STACK_BASE,
+
+    DEBUG_FLR_TESTRESULTSERVER = 0xF0000000,
+    DEBUG_FLR_TESTRESULTGUID,
+
+    DEBUG_FLR_CUSTOMREPORTTAG,
+
+    DEBUG_FLR_DISKSEC_ORGID_DEPRECATED,
+    DEBUG_FLR_DISKSEC_MODEL_DEPRECATED,
+    DEBUG_FLR_DISKSEC_MFGID_DEPRECATED,
+    DEBUG_FLR_DISKSEC_ISSUEDESCSTRING_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PUBLIC_TOTSIZE_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PUBLIC_OFFSET_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PUBLIC_DATASIZE_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PRIVATE_TOTSIZE_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PRIVATE_OFFSET_DEPRECATED,
+    DEBUG_FLR_DISKSEC_PRIVATE_DATASIZE_DEPRECATED,
+    DEBUG_FLR_DISKSEC_TOTALSIZE_DEPRECATED,
+    DEBUG_FLR_DISKSEC_REASON_DEPRECATED,
+
+    DEBUG_FLR_WERCOLLECTION_PROCESSTERMINATED,
+    DEBUG_FLR_WERCOLLECTION_PROCESSHEAPDUMP_REQUEST_FAILURE,
+    DEBUG_FLR_WERCOLLECTION_MINIDUMP_WRITE_FAILURE,
+    DEBUG_FLR_WERCOLLECTION_DEFAULTCOLLECTION_FAILURE,
+
+    DEBUG_FLR_PROCESS_BAM_CURRENT_THROTTLED, 
+    DEBUG_FLR_PROCESS_BAM_PREVIOUS_THROTTLED,
+
+    DEBUG_FLR_DUMPSTREAM_COMMENTA,
+    DEBUG_FLR_DUMPSTREAM_COMMENTW,
+
+    DEBUG_FLR_CHPE_PROCESS,
+    DEBUG_FLR_WINLOGON_BLACKBOX, 
+
+    DEBUG_FLR_CUSTOM_COMMAND,
+    DEBUG_FLR_CUSTOM_COMMAND_OUTPUT,
+
     DEBUG_FLR_MASK_ALL = 0xFFFFFFFF
 
 } DEBUG_FLR_PARAM_TYPE;
 
 #ifdef AUTOBUG_PROCESSING_SUPPORT
-    // redifine older tabs to support autobug cab processing
-#define DEBUG_FLR_AUTOBUG_EXCEPTION_CODE_STR 	DEBUG_FLR_EXCEPTION_CODE_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_PREFIX_STR 	DEBUG_FLR_BUCKET_ID_PREFIX_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_MODULE_STR 	DEBUG_FLR_BUCKET_ID_MODULE_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_MODVER_STR 	DEBUG_FLR_BUCKET_ID_MODVER_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_FUNCTION_STR DEBUG_FLR_BUCKET_ID_FUNCTION_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_OFFSET 	DEBUG_FLR_BUCKET_ID_OFFSET
-#define DEBUG_FLR_AUTOBUG_OSBUILD 		DEBUG_FLR_OSBUILD
-#define DEBUG_FLR_AUTOBUG_OSSERVICEPACK 	DEBUG_FLR_OSSERVICEPACK
-#define DEBUG_FLR_AUTOBUG_BUILDLAB_STR 		DEBUG_FLR_BUILDLAB_STR
-#define DEBUG_FLR_AUTOBUG_BUILDDATESTAMP_STR 	DEBUG_FLR_BUILDDATESTAMP_STR
-#define DEBUG_FLR_AUTOBUG_BUILDOSVER_STR 	DEBUG_FLR_BUILDOSVER_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_TIMEDATESTAMP DEBUG_FLR_BUCKET_ID_TIMEDATESTAMP
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_CHECKSUM 	DEBUG_FLR_BUCKET_ID_CHECKSUM
-#define DEBUG_FLR_AUTOBUG_BUILD_FLAVOR_STR 	DEBUG_FLR_BUILD_FLAVOR_STR
-#define DEBUG_FLR_AUTOBUG_BUCKET_ID_FLAVOR_STR 	DEBUG_FLR_BUCKET_ID_FLAVOR_STR
-#define DEBUG_FLR_AUTOBUG_OS_SKU 		DEBUG_FLR_OS_SKU
-#define DEBUG_FLR_AUTOBUG_PRODUCT_TYPE 		DEBUG_FLR_PRODUCT_TYPE
-#define DEBUG_FLR_AUTOBUG_SUITE_MASK 		DEBUG_FLR_SUITE_MASK
-#define DEBUG_FLR_AUTOBUG_USER_LCID 		DEBUG_FLR_USER_LCID
-#define DEBUG_FLR_AUTOBUG_OS_REVISION 		DEBUG_FLR_OS_REVISION
-#define DEBUG_FLR_AUTOBUG_OS_NAME 		DEBUG_FLR_OS_NAME
-#define DEBUG_FLR_AUTOBUG_OS_NAME_EDITION 	DEBUG_FLR_OS_NAME_EDITION
-#define DEBUG_FLR_AUTOBUG_OS_PLATFORM_TYPE 	DEBUG_FLR_OS_PLATFORM_TYPE
-#define DEBUG_FLR_AUTOBUG_OSSERVICEPACK_NUMBER 	DEBUG_FLR_OSSERVICEPACK_NUMBER
-#define DEBUG_FLR_AUTOBUG_OS_LOCALE 		DEBUG_FLR_OS_LOCALE
-#define DEBUG_FLR_AUTOBUG_BUILDDATESTAMP 	DEBUG_FLR_BUILDDATESTAMP
-#define DEBUG_FLR_AUTOBUG_USER_LCID_STR 	DEBUG_FLR_USER_LCID_STR
+    // redefine older tags to support autobug cab processing
+#define DEBUG_FLR_AUTOBUG_EXCEPTION_CODE_STR        DEBUG_FLR_EXCEPTION_CODE_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_PREFIX_STR      DEBUG_FLR_BUCKET_ID_PREFIX_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_IMAGE_STR       DEBUG_FLR_BUCKET_ID_IMAGE_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_MODULE_STR      DEBUG_FLR_BUCKET_ID_MODULE_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_MODVER_STR      DEBUG_FLR_BUCKET_ID_MODVER_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_FUNCTION_STR    DEBUG_FLR_BUCKET_ID_FUNCTION_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_OFFSET          DEBUG_FLR_BUCKET_ID_OFFSET
+#define DEBUG_FLR_AUTOBUG_OSBUILD                   DEBUG_FLR_OSBUILD
+#define DEBUG_FLR_AUTOBUG_OSSERVICEPACK             DEBUG_FLR_OSSERVICEPACK
+#define DEBUG_FLR_AUTOBUG_BUILDLAB_STR              DEBUG_FLR_BUILDLAB_STR
+#define DEBUG_FLR_AUTOBUG_BUILDDATESTAMP_STR        DEBUG_FLR_BUILDDATESTAMP_STR
+#define DEBUG_FLR_AUTOBUG_BUILDOSVER_STR            DEBUG_FLR_BUILDOSVER_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_TIMEDATESTAMP   DEBUG_FLR_BUCKET_ID_TIMEDATESTAMP
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_CHECKSUM        DEBUG_FLR_BUCKET_ID_CHECKSUM
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_PRIVATE         DEBUG_FLR_BUCKET_ID_PRIVATE
+#define DEBUG_FLR_AUTOBUG_BUILD_FLAVOR_STR          DEBUG_FLR_BUILD_FLAVOR_STR
+#define DEBUG_FLR_AUTOBUG_BUCKET_ID_FLAVOR_STR      DEBUG_FLR_BUCKET_ID_FLAVOR_STR
+#define DEBUG_FLR_AUTOBUG_OS_SKU                    DEBUG_FLR_OS_SKU
+#define DEBUG_FLR_AUTOBUG_PRODUCT_TYPE              DEBUG_FLR_PRODUCT_TYPE
+#define DEBUG_FLR_AUTOBUG_SUITE_MASK                DEBUG_FLR_SUITE_MASK
+#define DEBUG_FLR_AUTOBUG_USER_LCID                 DEBUG_FLR_USER_LCID
+#define DEBUG_FLR_AUTOBUG_OS_REVISION               DEBUG_FLR_OS_REVISION
+#define DEBUG_FLR_AUTOBUG_OS_NAME                   DEBUG_FLR_OS_NAME
+#define DEBUG_FLR_AUTOBUG_OS_NAME_EDITION           DEBUG_FLR_OS_NAME_EDITION
+#define DEBUG_FLR_AUTOBUG_OS_PLATFORM_TYPE          DEBUG_FLR_OS_PLATFORM_TYPE
+#define DEBUG_FLR_AUTOBUG_OSSERVICEPACK_NUMBER      DEBUG_FLR_OSSERVICEPACK_NUMBER
+#define DEBUG_FLR_AUTOBUG_OS_LOCALE                 DEBUG_FLR_OS_LOCALE
+#define DEBUG_FLR_AUTOBUG_BUILDDATESTAMP            DEBUG_FLR_BUILDDATESTAMP
+#define DEBUG_FLR_AUTOBUG_USER_LCID_STR             DEBUG_FLR_USER_LCID_STR
 #endif
 
 typedef struct _DBG_THREAD_ATTRIBUTES
@@ -1043,25 +1598,25 @@ DECLARE_INTERFACE(IDebugFAEntryTags)
     // Looksup Type associated for the failure tag
     STDMETHOD_(FA_ENTRY_TYPE, GetType)(
         THIS_
-        __in FA_TAG Tag
+        _In_ FA_TAG Tag
         ) PURE;
 
     // Sets Type associated for the failure tag
     STDMETHOD(SetType)(
         THIS_
-        __in FA_TAG Tag,
-        __in FA_ENTRY_TYPE EntryType
+        _In_ FA_TAG Tag,
+        _In_ FA_ENTRY_TYPE EntryType
         ) PURE;
 
     // Looksup description and name for the failure tag
     STDMETHOD(GetProperties)(
         THIS_
-        __in FA_TAG Tag,
-        __out_bcount_opt(NameSize) PSTR Name,
-        __inout_opt PULONG NameSize,
-        __out_bcount_opt(DescSize) PSTR Description,
-        __inout_opt PULONG DescSize,
-        __out_opt PULONG Flags
+        _In_ FA_TAG Tag,
+        _Out_writes_bytes_opt_(*NameSize) PSTR Name,
+        _Inout_opt_ PULONG NameSize,
+        _Out_writes_bytes_opt_(*DescSize) PSTR Description,
+        _Inout_opt_ PULONG DescSize,
+        _Out_opt_ PULONG Flags
         ) PURE;
 
     // Sets description and name for the failure tag
@@ -1069,19 +1624,19 @@ DECLARE_INTERFACE(IDebugFAEntryTags)
     // previous definition(s)
     STDMETHOD(SetProperties)(
         THIS_
-        __in FA_TAG Tag,
-        __in_opt PCSTR Name,
-        __in_opt PCSTR Description,
-        __in_opt ULONG Flags
+        _In_ FA_TAG Tag,
+        _In_opt_ PCSTR Name,
+        _In_opt_ PCSTR Description,
+        _In_opt_ ULONG Flags
         ) PURE;
 
     // This looks up default analysis tag or plugin's registered tag
     // by its name
     STDMETHOD(GetTagByName)(
         THIS_
-        __in PCSTR PluginId,
-        __in PCSTR TagName,
-        __out FA_TAG* Tag
+        _In_opt_ PCSTR PluginId,
+        _In_ PCSTR TagName,
+        _Out_ FA_TAG* Tag
         ) PURE;
 
     // This allows extensions to check if a given failure
@@ -1090,7 +1645,7 @@ DECLARE_INTERFACE(IDebugFAEntryTags)
     // the predefined tag values in this header file
     STDMETHOD_(BOOL, IsValidTagToSet)(
         THIS_
-        __in FA_TAG Tag
+        _In_ FA_TAG Tag
         ) PURE;
 };
 
@@ -1103,18 +1658,18 @@ typedef struct _FA_ENTRY
 
 #define FA_ENTRY_DATA(Type, Entry) ((Type)((Entry) + 1))
 
-/* ed0de363-451f-4943-820c-62dccdfa7e6d */
-DEFINE_GUID(IID_IDebugFailureAnalysis, 0xed0de363, 0x451f, 0x4943,
-            0x82, 0x0c, 0x62, 0xdc, 0xcd, 0xfa, 0x7e, 0x6d);
 
-typedef interface DECLSPEC_UUID("ed0de363-451f-4943-820c-62dccdfa7e6d")
-    IDebugFailureAnalysis* PDEBUG_FAILURE_ANALYSIS;
+// IID_IDebugFailureAnalysis
+// {ed0de363-451f-4943-820c-62dccdfa7e6d}
+DEFINE_GUID(IID_IDebugFailureAnalysis, 0xed0de363, 0x451f, 0x4943, 0x82, 0x0c, 0x62, 0xdc, 0xcd, 0xfa, 0x7e, 0x6d);
+typedef interface DECLSPEC_UUID("ed0de363-451f-4943-820c-62dccdfa7e6d") IDebugFailureAnalysis* PDEBUG_FAILURE_ANALYSIS;
 
 #undef INTERFACE
 #define INTERFACE IDebugFailureAnalysis
 DECLARE_INTERFACE_(IDebugFailureAnalysis, IUnknown)
 {
-    // IUnknown.
+    // IUnknown
+    
     STDMETHOD(QueryInterface)(
         THIS_
         IN REFIID InterfaceId,
@@ -1127,7 +1682,8 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis, IUnknown)
         THIS
         ) PURE;
 
-    // IDebugFailureAnalysis.
+    // IDebugFailureAnalysis
+    
     STDMETHOD_(ULONG, GetFailureClass)(
         THIS
         ) PURE;
@@ -1150,47 +1706,44 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis, IUnknown)
     STDMETHOD_(PFA_ENTRY, GetString)(
         THIS_
         FA_TAG Tag,
-        __out_bcount(MaxSize) PSTR Str,
+        _Out_writes_bytes_(MaxSize) PSTR Str,
         ULONG MaxSize
         ) PURE;
     STDMETHOD_(PFA_ENTRY, GetBuffer)(
         THIS_
         FA_TAG Tag,
-        __out_bcount(Size) PVOID Buf,
+        _Out_writes_bytes_(Size) PVOID Buf,
         ULONG Size
         ) PURE;
     STDMETHOD_(PFA_ENTRY, GetUlong)(
         THIS_
         FA_TAG Tag,
-        __out PULONG Value
+        _Out_ PULONG Value
         ) PURE;
     STDMETHOD_(PFA_ENTRY, GetUlong64)(
         THIS_
         FA_TAG Tag,
-        __out PULONG64 Value
+        _Out_ PULONG64 Value
         ) PURE;
     STDMETHOD_(PFA_ENTRY, NextEntry)(
         THIS_
-        __in_opt PFA_ENTRY Entry
+        _In_opt_ PFA_ENTRY Entry
         ) PURE;
 };
 
-/* ea15c288-8226-4b70-acf6-0be6b189e3ad */
-DEFINE_GUID(IID_IDebugFailureAnalysis2, 0xea15c288, 0x8226, 0x4b70,
-            0xac, 0xf6, 0x0b, 0xe6, 0xb1, 0x89, 0xe3, 0xad);
+// IID_IDebugFailureAnalysis2
+// {ea15c288-8226-4b70-acf6-0be6b189e3ad}
+DEFINE_GUID(IID_IDebugFailureAnalysis2, 0xea15c288, 0x8226, 0x4b70, 0xac, 0xf6, 0x0b, 0xe6, 0xb1, 0x89, 0xe3, 0xad);
+typedef interface DECLSPEC_UUID("ea15c288-8226-4b70-acf6-0be6b189e3ad") IDebugFailureAnalysis2* PDEBUG_FAILURE_ANALYSIS2;
 
-
-typedef interface DECLSPEC_UUID("ea15c288-8226-4b70-acf6-0be6b189e3ad")
-    IDebugFailureAnalysis2* PDEBUG_FAILURE_ANALYSIS2;
-
-//
-// Interface to query analysis data
-//
 #undef INTERFACE
 #define INTERFACE IDebugFailureAnalysis2
 DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
 {
-    // IUnknown.
+    //
+    // IUnknown
+    //
+
     STDMETHOD(QueryInterface)(
         THIS_
         IN REFIID InterfaceId,
@@ -1203,7 +1756,9 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
         THIS
         ) PURE;
 
-    // IDebugFailureAnalysis2.
+    //
+    // IDebugFailureAnalysis
+    //
 
     // Target class for the given failure
     STDMETHOD_(ULONG, GetFailureClass)(
@@ -1222,60 +1777,65 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, Get)(
         THIS_
-        __in FA_TAG Tag
+        _In_ FA_TAG Tag
         ) PURE;
     // Looks up next FA_ENTRY after the given 'Entry' by
     // matching with Tag & and TagMask
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, GetNext)(
         THIS_
-        __in PFA_ENTRY Entry,
-        __in FA_TAG Tag,
-        __in FA_TAG TagMask
+        _In_ PFA_ENTRY Entry,
+        _In_ FA_TAG Tag,
+        _In_ FA_TAG TagMask
         ) PURE;
     // Looksup FA_ENTRY by tag and copies its string value
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, GetString)(
         THIS_
-        __in FA_TAG Tag,
-        __out_ecount(MaxSize) PSTR Str,
-        __in ULONG MaxSize
+        _In_ FA_TAG Tag,
+        _Out_writes_(MaxSize) PSTR Str,
+        _In_ ULONG MaxSize
         ) PURE;
     // Looksup FA_ENTRY by tag and copies its data value
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, GetBuffer)(
         THIS_
-        __in FA_TAG Tag,
-        __out_bcount(Size) PVOID Buf,
-        __in ULONG Size
+        _In_ FA_TAG Tag,
+        _Out_writes_bytes_(Size) PVOID Buf,
+        _In_ ULONG Size
         ) PURE;
     // Looksup FA_ENTRY by tag and copies its ULONG value
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, GetUlong)(
         THIS_
-        __in FA_TAG Tag,
-        __out PULONG Value
+        _In_ FA_TAG Tag,
+        _Out_ PULONG Value
         ) PURE;
     // Looksup FA_ENTRY by tag and copies its ULONG64 value
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, GetUlong64)(
         THIS_
-        __in FA_TAG Tag,
-        __out PULONG64 Value
+        _In_ FA_TAG Tag,
+        _Out_ PULONG64 Value
         ) PURE;
     // Looks up next FA_ENTRY after the given 'Entry'
     // Returns NULL if tag is not found
     STDMETHOD_(PFA_ENTRY, NextEntry)(
         THIS_
-        __in_opt PFA_ENTRY Entry
+        _In_opt_ PFA_ENTRY Entry
         ) PURE;
+
+    //
+    // IDebugFailureAnalysis2
+    //
+
     // Sets the given String for corresponding tag
     // It overwrites the value if tag is already
     // present.
     STDMETHOD_(PFA_ENTRY, SetString)(
         THIS_
         FA_TAG Tag,
-        __nullterminated PCSTR Str
+        PCSTR Str
         ) PURE;
     // Sets the given extension command and its
     // argument for corresponding tag
@@ -1284,7 +1844,7 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     STDMETHOD_(PFA_ENTRY, SetExtensionCommand)(
         THIS_
         FA_TAG Tag,
-        __nullterminated PCSTR Extension
+        PCSTR Extension
         ) PURE;
     // Sets the given ULONG value for corresponding tag
     // It overwrites the value if tag is already
@@ -1292,7 +1852,7 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     STDMETHOD_(PFA_ENTRY, SetUlong)(
         THIS_
         FA_TAG Tag,
-        __in ULONG Value
+        _In_ ULONG Value
         ) PURE;
     // Sets the given ULONG64 value for corresponding tag
     // It overwrites the value if tag is already
@@ -1300,7 +1860,7 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     STDMETHOD_(PFA_ENTRY, SetUlong64)(
         THIS_
         FA_TAG Tag,
-        __in ULONG64 Value
+        _In_ ULONG64 Value
         ) PURE;
     // Sets the given Buffer value for corresponding tag
     // It overwrites the value if tag is already
@@ -1308,9 +1868,9 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     STDMETHOD_(PFA_ENTRY, SetBuffer)(
         THIS_
         FA_TAG Tag,
-        __in FA_ENTRY_TYPE EntryType,
-        __in_bcount(Size) PVOID Buf,
-        __in ULONG Size
+        _In_ FA_ENTRY_TYPE EntryType,
+        _In_reads_bytes_(Size) PVOID Buf,
+        _In_ ULONG Size
         ) PURE;
     // Sets the given String for corresponding tag
     // It adds a new entry the value if tag is already
@@ -1318,53 +1878,331 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
     STDMETHOD_(PFA_ENTRY, AddString)(
         THIS_
         FA_TAG Tag,
-        __nullterminated PSTR Str
+        _In_ PCSTR Str
         ) PURE;
     // Sets the given extension command and its
     // argument for corresponding tag in a new entry
     STDMETHOD_(PFA_ENTRY, AddExtensionCommand)(
         THIS_
         FA_TAG Tag,
-        __nullterminated PSTR Extension
+        _In_ PCSTR Extension
         ) PURE;
     // Sets the given ULONG value for corresponding tag
     // in a new entry
     STDMETHOD_(PFA_ENTRY, AddUlong)(
         THIS_
         FA_TAG Tag,
-        __in ULONG Value
+        _In_ ULONG Value
         ) PURE;
     // Sets the given ULONG64 value for corresponding tag
     // in a new entry
     STDMETHOD_(PFA_ENTRY, AddUlong64)(
         THIS_
         FA_TAG Tag,
-        __in ULONG64 Value
+        _In_ ULONG64 Value
         ) PURE;
     // Sets the given Buffer value for corresponding tag
     // in a new entry
     STDMETHOD_(PFA_ENTRY, AddBuffer)(
         THIS_
         FA_TAG Tag,
-        __in FA_ENTRY_TYPE EntryType,
-        __in_bcount(Size) PVOID Buf,
-        __in ULONG Size
+        _In_ FA_ENTRY_TYPE EntryType,
+        _In_reads_bytes_(Size) PVOID const Buf,
+        _In_ ULONG Size
         ) PURE;
     // Get the interface to query and set meta-data about
     // failure analysis tags
     STDMETHOD(GetDebugFATagControl)(
         THIS_
-        __out IDebugFAEntryTags** FATagControl
+        _Out_ IDebugFAEntryTags** FATagControl
         ) PURE;
     // Generates and returns XML fragment from analysis data
     STDMETHOD(GetAnalysisXml)(
         THIS_
-// Do not force clients to unnecessarily include msxml, use IUnknown if its not included
-#ifdef __IXMLDOMElement_FWD_DEFINED__
-        __out IXMLDOMElement** pAnalysisXml
-#else 
-        __out IUnknown** pAnalysisXml
-#endif
+        #ifdef __IXMLDOMElement_FWD_DEFINED__
+        _Out_ IXMLDOMElement** ppXMLDOMElement
+        #else 
+        _Out_ IUnknown** ppXMLDOMElement
+        #endif
+        ) PURE;
+    // Adds another analysis object as structured data in a new entry
+    STDMETHOD(AddStructuredAnalysisData)(
+        THIS_
+        FA_TAG Tag,
+        _In_ IDebugFailureAnalysis2 *Analysis
+        ) PURE;
+};
+
+
+// IID_IDebugFailureAnalysis3
+// {3627DC67-FD45-42ff-9BA4-4A67EE64619F}
+DEFINE_GUID(IID_IDebugFailureAnalysis3, 0x3627dc67, 0xfd45, 0x42ff, 0x9b, 0xa4, 0x4a, 0x67, 0xee, 0x64, 0x61, 0x9f);
+typedef interface DECLSPEC_UUID("3627DC67-FD45-42ff-9BA4-4A67EE64619F") IDebugFailureAnalysis3* PDEBUG_FAILURE_ANALYSIS3;
+
+#undef INTERFACE
+#define INTERFACE IDebugFailureAnalysis3
+DECLARE_INTERFACE_(IDebugFailureAnalysis3, IUnknown)
+{
+    //
+    // IUnknown
+    //
+
+    STDMETHOD(QueryInterface)(
+        THIS_
+        IN REFIID InterfaceId,
+        OUT PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    //
+    // IDebugFailureAnalysis
+    //
+
+    // Target class for the given failure
+    STDMETHOD_(ULONG, GetFailureClass)(
+        THIS
+        ) PURE;
+    // Type of failure being analyzed
+    STDMETHOD_(DEBUG_FAILURE_TYPE, GetFailureType)(
+        THIS
+        ) PURE;
+    // Failure code: Bugcheck code for kernel mode,
+    // exception code for user mode
+    STDMETHOD_(ULONG, GetFailureCode)(
+        THIS
+        ) PURE;
+    // Lookup FA_ENTRY by tag
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, Get)(
+        THIS_
+        _In_ FA_TAG Tag
+        ) PURE;
+    // Looks up next FA_ENTRY after the given 'Entry' by
+    // matching with Tag & and TagMask
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, GetNext)(
+        THIS_
+        _In_ PFA_ENTRY Entry,
+        _In_ FA_TAG Tag,
+        _In_ FA_TAG TagMask
+        ) PURE;
+    // Looksup FA_ENTRY by tag and copies its string value
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, GetString)(
+        THIS_
+        _In_ FA_TAG Tag,
+        _Out_writes_(MaxSize) PSTR Str,
+        _In_ ULONG MaxSize
+        ) PURE;
+    // Looksup FA_ENTRY by tag and copies its data value
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, GetBuffer)(
+        THIS_
+        _In_ FA_TAG Tag,
+        _Out_writes_bytes_(Size) PVOID Buf,
+        _In_ ULONG Size
+        ) PURE;
+    // Looksup FA_ENTRY by tag and copies its ULONG value
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, GetUlong)(
+        THIS_
+        _In_ FA_TAG Tag,
+        _Out_ PULONG Value
+        ) PURE;
+    // Looksup FA_ENTRY by tag and copies its ULONG64 value
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, GetUlong64)(
+        THIS_
+        _In_ FA_TAG Tag,
+        _Out_ PULONG64 Value
+        ) PURE;
+    // Looks up next FA_ENTRY after the given 'Entry'
+    // Returns NULL if tag is not found
+    STDMETHOD_(PFA_ENTRY, NextEntry)(
+        THIS_
+        _In_opt_ PFA_ENTRY Entry
+        ) PURE;
+
+    //
+    // IDebugFailureAnalysis2
+    //
+
+    // Sets the given String for corresponding tag
+    // It overwrites the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, SetString)(
+        THIS_
+        FA_TAG Tag,
+        PCSTR Str
+        ) PURE;
+    // Sets the given extension command and its
+    // argument for corresponding tag
+    // It overwrites the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, SetExtensionCommand)(
+        THIS_
+        FA_TAG Tag,
+        PCSTR Extension
+        ) PURE;
+    // Sets the given ULONG value for corresponding tag
+    // It overwrites the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, SetUlong)(
+        THIS_
+        FA_TAG Tag,
+        _In_ ULONG Value
+        ) PURE;
+    // Sets the given ULONG64 value for corresponding tag
+    // It overwrites the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, SetUlong64)(
+        THIS_
+        FA_TAG Tag,
+        _In_ ULONG64 Value
+        ) PURE;
+    // Sets the given Buffer value for corresponding tag
+    // It overwrites the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, SetBuffer)(
+        THIS_
+        FA_TAG Tag,
+        _In_ FA_ENTRY_TYPE EntryType,
+        _In_reads_bytes_(Size) PVOID Buf,
+        _In_ ULONG Size
+        ) PURE;
+    // Sets the given String for corresponding tag
+    // It adds a new entry the value if tag is already
+    // present.
+    STDMETHOD_(PFA_ENTRY, AddString)(
+        THIS_
+        FA_TAG Tag,
+        _In_ PCSTR Str
+        ) PURE;
+    // Sets the given extension command and its
+    // argument for corresponding tag in a new entry
+    STDMETHOD_(PFA_ENTRY, AddExtensionCommand)(
+        THIS_
+        FA_TAG Tag,
+        _In_ PCSTR Extension
+        ) PURE;
+    // Sets the given ULONG value for corresponding tag
+    // in a new entry
+    STDMETHOD_(PFA_ENTRY, AddUlong)(
+        THIS_
+        FA_TAG Tag,
+        _In_ ULONG Value
+        ) PURE;
+    // Sets the given ULONG64 value for corresponding tag
+    // in a new entry
+    STDMETHOD_(PFA_ENTRY, AddUlong64)(
+        THIS_
+        FA_TAG Tag,
+        _In_ ULONG64 Value
+        ) PURE;
+    // Sets the given Buffer value for corresponding tag
+    // in a new entry
+    STDMETHOD_(PFA_ENTRY, AddBuffer)(
+        THIS_
+        FA_TAG Tag,
+        _In_ FA_ENTRY_TYPE EntryType,
+        _In_reads_bytes_(Size) PVOID const Buf,
+        _In_ ULONG Size
+        ) PURE;
+    // Get the interface to query and set meta-data about
+    // failure analysis tags
+    STDMETHOD(GetDebugFATagControl)(
+        THIS_
+        _Out_ IDebugFAEntryTags** FATagControl
+        ) PURE;
+    // Generates and returns XML fragment from analysis data
+    STDMETHOD(GetAnalysisXml)(
+        THIS_
+        #ifdef __IXMLDOMElement_FWD_DEFINED__
+        _Out_ IXMLDOMElement** ppXMLDOMElement
+        #else 
+        _Out_ IUnknown** ppXMLDOMElement
+        #endif
+        ) PURE;
+    // Adds another analysis object as structured data in a new entry
+    STDMETHOD(AddStructuredAnalysisData)(
+        THIS_
+        FA_TAG Tag,
+        _In_ IDebugFailureAnalysis2 *Analysis
+        ) PURE;
+
+    //
+    // IDebugFailureAnalysis3
+    //
+
+    STDMETHOD(AddThreads)(
+        THIS_
+        _In_ IUnknown* pDebugFailureThreadEnum
+        ) PURE;
+
+    // Attributes
+
+    STDMETHOD(AttributeGet)(
+        THIS_
+        _In_ ULONG nIndex,
+        _Out_ VARIANT* pValue
+        ) PURE;
+
+    STDMETHOD(AttributeGetName)(
+        THIS_
+        _In_ ULONG nIndex,
+        _Out_ BSTR* pName
+        ) PURE;
+
+    STDMETHOD(AttributeSet)(
+        THIS_
+        _In_ ULONG nIndex,
+        _In_ VARIANT Value
+        ) PURE;
+
+    // Blames
+
+    STDMETHOD(BlameApplication)(
+        THIS_
+        _In_ BSTR Postfix
+        ) PURE;
+
+    STDMETHOD(BlameProcess)(
+        THIS_
+        _In_ BSTR Postfix
+        ) PURE;
+
+    STDMETHOD(BlameThread)(
+        THIS_
+        _In_ IUnknown* pThread
+        ) PURE;
+
+    STDMETHOD(BlameStitch)(
+        THIS_
+        _In_ IUnknown* pThread,
+        _In_ BSTR Stitch
+        ) PURE;
+
+    // Problem Classes
+
+    STDMETHOD(ProblemClassIsSet)(
+        THIS_
+        _In_ ULONG nIndex,
+        _Out_ VARIANT_BOOL* pSet
+        ) PURE;
+
+    STDMETHOD(ProblemClassDelete)(
+        THIS_
+        _In_ ULONG nIndex
+        ) PURE;
+
+    STDMETHOD(ProblemClassSet)(
+        THIS_
+        _In_ ULONG nIndex
         ) PURE;
 };
 
@@ -1407,29 +2245,119 @@ DECLARE_INTERFACE_(IDebugFailureAnalysis2, IUnknown)
 #define FAILURE_ANALYSIS_USER_ATTRIBUTES_FRAMES 0x10000
 // analyze multiple targets if available
 #define FAILURE_ANALYSIS_MULTI_TARGET           0x20000
+// Show source line information in STACK_TEXT. Switching on this option has significant perf impact otherwise
+#define FAILURE_ANALYSIS_SHOW_SOURCE            0x40000
+// Print wait chain stacks
+#define FAILURE_ANALYSIS_SHOW_WCT_STACKS        0x80000
+// Create basic DebugFailureAnalysis instance
+#define FAILURE_ANALYSIS_CREATE_INSTANCE        0x100000
+// Evaluate failure for holding a live debug session
+#define FAILURE_ANALYSIS_LIVE_DEBUG_HOLD_CHECK  0x200000
+// produces XML file output 
+#define FAILURE_ANALYSIS_XML_FILE_OUTPUT        0x400000
+// verify Analysis XML against XSD 
+#define FAILURE_ANALYSIS_XSD_VERIFY             0x800000
+// Include full source info (source path and line number) in callstack XML
+#define FAILURE_ANALYSIS_CALLSTACK_XML_FULL_SOURCE_INFO 0x1000000
+// Blame function in heap_corruption bucket (the default behavior is to blame module)
+#define FAILURE_ANALYSIS_HEAP_CORRUPTION_BLAME_FUNCTION 0x2000000
+// Do not modify STATUS_ACCESS_VIOLATION in the heap manager (the default behavior is to translate to STATUS_HEAP_CORRUPTION)
+#define FAILURE_ANALYSIS_PERMIT_HEAP_ACCESS_VIOLATIONS  0x4000000
 
+// Apply specified XSLT to the Analysis XML
+#define FAILURE_ANALYSIS_XSLT_FILE_INPUT        0x10000000
+// Save XSLT Ouput to the specified File (default is to the screen)
+#define FAILURE_ANALYSIS_XSLT_FILE_OUTPUT       0x20000000
 
-// GetFailureAnalysis Extension function, deprecarted
+//
+// Class Factory for IDebugFailureAnalysis
+// ## Deprecated ##
+//
 typedef HRESULT
 (WINAPI* EXT_GET_FAILURE_ANALYSIS)(
-    IN PDEBUG_CLIENT4 Client,
-    IN ULONG Flags,
-    OUT PDEBUG_FAILURE_ANALYSIS* Analysis
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ ULONG Flags,
+    _Out_ IDebugFailureAnalysis** ppAnalysis
     );
 
 //
-// Function signature for GetDebugFailureAnalysis extension-function
-// from ext.dll.
-// This analyzes failure state of current target and returns
-// analysis results in Analysis object
+// Class Factory for IDebugFailureAnalysis2
+// ## Deprecated ##
 //
 typedef HRESULT
 (WINAPI* EXT_GET_DEBUG_FAILURE_ANALYSIS)(
-    __in PDEBUG_CLIENT4 Client,
-    __in ULONG Flags,
-    __in CLSID pIIdFailureAnalysis,     // must be IID_IDebugFailureAnalysis2
-    __out PDEBUG_FAILURE_ANALYSIS2* Analysis
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ ULONG Flags,
+    _In_ CLSID ClassId,  // Not Used
+    _Out_ IDebugFailureAnalysis2** ppAnalysis
     );
+
+//
+// CoCreateInstance style Class Factory for CLSID_DebugFailureAnalysis* based objects
+//
+// Classes implemented by ext.dll (!analyze)
+// - All  classes require IDebugClient
+// - Some classes require IDebugClient4 (or higher)
+// - All  classes support IDebugFailureAnalysis
+// - All  classes support IDebugFailureAnalysis2
+// - Some classes support IDebugAnalysis
+// - Some classes support ICLRManagedAnalysis
+// - Some classes support IStreamAnalysis
+// - Some classes support IKeyValues
+// - Some classes support ITimelines
+//
+// Parameters:
+// - Client : IDebugClient via dbgeng.h               (ext.dll - IDebugClient4 or higher is required)
+// - Args   : Flags via Command Line        (optional)(ext.dll - !analyze Command Line)
+// - Flags  : FAILURE_ANALYSIS_* mask       (optional)(ext.dll - FAILURE_ANALYSIS_CREATE_INSTANCE creates CLSID_DebugFailureAnalysisBase)
+// - rclsid : CLSID_DebugFailureAnalysis*             (ext.dll - CLSID_NULL defaults to CLSID_DebugFailureAnalysisTarget)
+// - riid   : IUnknown based interface                (ext.dll - IDebugFailureAnalysis or IDebugFailureAnalysis2)
+// - ppv    : IUnknown based pointer
+//
+// Note: !analyze merges the Args/Flags/oca.ini (debugger-params!AnalysisFlags) bitmasks
+//
+// Return:
+// - S_OK - Success
+// - E_NOINTERFACE - No Interface
+// - E_NOTIMPL - Not Implemented
+// - E_OUTOFMEMORY - Out of Memory
+// - E_* - : Other Failures
+//
+
+typedef HRESULT
+(WINAPI* fnDebugFailureAnalysisCreateInstance)(
+    _In_ IDebugClient* Client,
+    _In_opt_ PCWSTR Args,
+    _In_opt_ ULONG Flags,
+    _In_opt_ REFCLSID rclsid,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv
+    );
+
+// CLSID_DebugFailureAnalysisBasic
+// {B74EED7F-1C7D-4c1b-959F-B96DD9175AA4}
+DEFINE_GUID(CLSID_DebugFailureAnalysisBasic, 0xb74eed7f, 0x1c7d, 0x4c1b, 0x95, 0x9f, 0xb9, 0x6d, 0xd9, 0x17, 0x5a, 0xa4);
+
+// CLSID_DebugFailureAnalysisTarget -- User/Kernel/WinCE/XBox360/etc. based on Target
+// {BA9BFB05-EF75-4bbd-A745-A6B5529458B8}
+DEFINE_GUID(CLSID_DebugFailureAnalysisTarget, 0xba9bfb05, 0xef75, 0x4bbd, 0xa7, 0x45, 0xa6, 0xb5, 0x52, 0x94, 0x58, 0xb8);
+
+// CLSID_DebugFailureAnalysisUser
+// {E60B0C93-CF49-4a32-8147-0362202DC56B}
+DEFINE_GUID(CLSID_DebugFailureAnalysisUser, 0xe60b0c93, 0xcf49, 0x4a32, 0x81, 0x47, 0x3, 0x62, 0x20, 0x2d, 0xc5, 0x6b);
+
+// CLSID_DebugFailureAnalysisKernel
+// {EE433078-64AF-4c33-AB2F-ECAD7F2A002D}
+DEFINE_GUID(CLSID_DebugFailureAnalysisKernel, 0xee433078, 0x64af, 0x4c33, 0xab, 0x2f, 0xec, 0xad, 0x7f, 0x2a, 0x0, 0x2d);
+
+// CLSID_DebugFailureAnalysisWinCE
+// {67D5E86F-F5E2-462a-9233-1BD616FCC7E8}
+DEFINE_GUID(CLSID_DebugFailureAnalysisWinCE, 0x67d5e86f, 0xf5e2, 0x462a, 0x92, 0x33, 0x1b, 0xd6, 0x16, 0xfc, 0xc7, 0xe8);
+
+// CLSID_DebugFailureAnalysisXBox360
+// {901625BB-95F1-4318-AC80-9D733CEE8C8B}
+DEFINE_GUID(CLSID_DebugFailureAnalysisXBox360, 0x901625bb, 0x95f1, 0x4318, 0xac, 0x80, 0x9d, 0x73, 0x3c, 0xee, 0x8c, 0x8b);
+
 
 //
 // This determines the analysis phase during which a registered
@@ -1442,7 +2370,7 @@ typedef enum _FA_EXTENSION_PLUGIN_PHASE
     // Extension plugin is invoked after the primary data such as
     // exception record (for user mode) / bugcheck code (for kernel
     // mode) is initialized
-    FA_PLUGIN_INITILIZATION    = 0x0001,
+    FA_PLUGIN_INITIALIZATION   = 0x0001,
     // Extension plugin is invoked after the stack is analyzed and
     // the analysis has the information about faulting symbol and
     // module if it were available on stack
@@ -1453,15 +2381,17 @@ typedef enum _FA_EXTENSION_PLUGIN_PHASE
     FA_PLUGIN_POST_BUCKETING   = 0x0008,
 } FA_EXTENSION_PLUGIN_PHASE;
 
+#define FA_PLUGIN_INITILIZATION FA_PLUGIN_INITIALIZATION     // fix typo
+
 //
 // Function signature for custom analyzer entry point in a
 // registered analysis-plugin dll.
 //
 typedef HRESULT
 (WINAPI* EXT_ANALYSIS_PLUGIN)(
-    __in PDEBUG_CLIENT4 Client,
-    __in FA_EXTENSION_PLUGIN_PHASE CallPhase,
-    __in PDEBUG_FAILURE_ANALYSIS2 pAnalysis
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ FA_EXTENSION_PLUGIN_PHASE CallPhase,
+    _In_ PDEBUG_FAILURE_ANALYSIS2 pAnalysis
     );
 
 typedef HRESULT
@@ -1471,128 +2401,181 @@ typedef HRESULT
     OUT PFA_ENTRY* Entries
     );
 
-//
-// Typedef for extension function GetManagedObjectName in sos.dll
-//
-typedef HRESULT
-(WINAPI* EXT_GET_MANAGED_OBJECTNAME)(
-    PDEBUG_CLIENT Client,
-    ULONG64 objAddr,
-    PSTR szName,
-    ULONG cbName
-    );
-
-//
-// Typedef for extension function GetManagedObjectFieldInfo in sos.dll
-//
-typedef HRESULT
-(WINAPI* EXT_GET_MANAGED_OBJECT_FIELDINFO)(
-    PDEBUG_CLIENT Client,
-    ULONG64 objAddr,
-    PSTR szFieldName,
-    PULONG64 pValue,
-    PULONG pOffset
-    );
-
-//
-// Typedef for extension function GetManagedExcepStack in sos.dll
-//
-typedef HRESULT
-(WINAPI* EXT_GET_MANAGED_EXCEPSTACK)(
-    PDEBUG_CLIENT Client,
-    ULONG64 StackObjAddr,
-    PSTR szStackString,
-    ULONG cbString
-    );
-
-//
-// Typedef for extension function StackTrace in sos.dll
-//
-typedef HRESULT
-(WINAPI* EXT_GET_MANAGED_STACKTRACE)(
-    PDEBUG_CLIENT Client,
-    WCHAR wszTextOut[],
-    size_t *puiTextLength,
-    LPVOID pTransitionContexts,
-    size_t *puiTransitionContextCount,
-    size_t uiSizeOfContext,
-    ULONG Flags);
-
 
 /*****************************************************************************
-   Target info
+   Target Information
  *****************************************************************************/
-typedef enum _OS_TYPE {
-    WIN_95,
-    WIN_98,
-    WIN_ME,
-    WIN_NT4,
-    WIN_NT5,
-    WIN_NT5_1,
-    WIN_NT5_2, 
-    WIN_NT6_0, 
-    WIN_NT6_1, 
-    NUM_WIN,
-} OS_TYPE;
-
 
 //
-// Info about OS installed
+// CURRENT VERSION
 //
-typedef struct _OS_INFO {
-    ULONG     MajorVer;      // Os major version
-    ULONG     MinorVer;      // Os minor version
-    ULONG     Build;         // Os build number
-    ULONG     BuildQfe;      // Os build QFE number
-    ULONG     ProductType; // NT, LanMan or Server
-    ULONG     Suite;        // OS flavour - per, SmallBuisness etc.
-    ULONG     Revision;
-    struct {
-        ULONG Checked:1;     // If its a checked build
-        ULONG Pae:1;         // True for Pae systems
-        ULONG MultiProc:1;   // True for multiproc enabled OS
-        ULONG Reserved:29;
-    } s;
-    ULONG   SrvPackNumber;          // Service pack number of OS
-    ULONG   ServicePackBuild;       // Service pack build
-    ULONG   Architecture;           // Architecture name such as x86, ia64 or x64
-    ULONG   Lcid;		    // Language id 
-    CHAR    Name[64];               // Short name of OS
-    CHAR    FullName[256];          // Full name of OS includeing SP, Suite, product
-    CHAR    Language[30];           // OS language
-    CHAR    BuildVersion[64];       // Build version string
-    CHAR    ServicePackString[64];  // Service pack string
-} OS_INFO, *POS_INFO;
+// Changes of Note:
+// - CROSS_PLATFORM_MAXIMUM_PROCESSORS = 2048
+//
 
-typedef struct _CPU_INFO {
-    ULONG Type;              // Processor type as in IMAGE_FILE_MACHINE types
-    ULONG NumCPUs;           // Actual number of Processors
-    ULONG CurrentProc;       // Current processor
-    DEBUG_PROCESSOR_IDENTIFICATION_ALL ProcInfo[CROSS_PLATFORM_MAXIMUM_PROCESSORS];
-    ULONG Mhz;               // Processor speed (from currentproc.prcb)
-} CPU_INFO, *PCPU_INFO;
+    #ifndef CROSS_PLATFORM_MAXIMUM_PROCESSORS
+    // NB: Keep in sync with wdbgexts.w/h (the legacy debugger API header)
+    #define CROSS_PLATFORM_MAXIMUM_PROCESSORS 2048
+    #endif
 
-#define MAX_STACK_IN_BYTES 4096
+    typedef enum _OS_TYPE {
+        WIN_95,
+        WIN_98,
+        WIN_ME,
+        WIN_NT4,
+        WIN_NT5,
+        WIN_NT5_1,
+        WIN_NT5_2,
+        WIN_NT6_0,
+        WIN_NT6_1,
+        WIN_UNDEFINED = 0xFF
+    } OS_TYPE;
 
-typedef struct _TARGET_DEBUG_INFO {
-    ULONG       SizeOfStruct;
-    ULONG64     EntryDate;   // Date created
-    ULONG       DebugeeClass;// Kernel / User mode
-    ULONG64     SysUpTime;   // System Up time
-    ULONG64     AppUpTime;   // Application up time
-    ULONG64     CrashTime;   // Time system / app crashed
-    OS_INFO     OsInfo;      // OS details
-    CPU_INFO    Cpu;         // Processor details
-    CHAR        DumpFile[MAX_PATH]; // Dump file name if its a dump
-} TARGET_DEBUG_INFO, *PTARGET_DEBUG_INFO;
+    typedef struct _OS_INFO {
+        ULONG     MajorVer;      // Os major version
+        ULONG     MinorVer;      // Os minor version
+        ULONG     Build;         // Os build number
+        ULONG     BuildQfe;      // Os build QFE number
+        ULONG     ProductType; // NT, LanMan or Server
+        ULONG     Suite;        // OS flavour - per, SmallBuisness etc.
+        ULONG     Revision;
+        struct {
+            ULONG Checked:1;     // If its a checked build
+            ULONG Pae:1;         // True for Pae systems
+            ULONG MultiProc:1;   // True for multiproc enabled OS
+            ULONG Reserved:29;
+        } s;
+        ULONG   SrvPackNumber;          // Service pack number of OS
+        ULONG   ServicePackBuild;       // Service pack build
+        ULONG   Architecture;           // Architecture name such as x86, ia64 or x64
+        ULONG   Lcid;                   // Language id 
+        CHAR    Name[64];               // Short name of OS
+        CHAR    FullName[256];          // Full name of OS includeing SP, Suite, product
+        CHAR    Language[30];           // OS language
+        CHAR    BuildVersion[64];       // Build version string
+        CHAR    ServicePackString[64];  // Service pack string
+    } OS_INFO, *POS_INFO;
 
-// GetTargetInfo
-typedef HRESULT
-(WINAPI* EXT_TARGET_INFO)(
-    PDEBUG_CLIENT4  Client,
-    PTARGET_DEBUG_INFO pTargetInfo
-    );
+    typedef struct _CPU_INFO {
+        ULONG Type;              // Processor type as in IMAGE_FILE_MACHINE types
+        ULONG NumCPUs;           // Actual number of Processors
+        ULONG CurrentProc;       // Current processor
+        DEBUG_PROCESSOR_IDENTIFICATION_ALL ProcInfo[CROSS_PLATFORM_MAXIMUM_PROCESSORS];
+        ULONG Mhz;               // Processor speed (from currentproc.prcb)
+    } CPU_INFO, *PCPU_INFO;
 
+    typedef struct _TARGET_DEBUG_INFO {
+        ULONG       SizeOfStruct;
+        ULONG64     EntryDate;   // Date created
+        ULONG       DebugeeClass;// Kernel / User mode
+        ULONG64     SysUpTime;   // System Up time
+        ULONG64     AppUpTime;   // Application up time
+        ULONG64     CrashTime;   // Time system / app crashed
+        OS_INFO     OsInfo;      // OS details
+        CPU_INFO    Cpu;         // Processor details
+        CHAR        DumpFile[MAX_PATH]; // Dump file name if its a dump
+    } TARGET_DEBUG_INFO, *PTARGET_DEBUG_INFO;
+
+//
+// VERSION 2
+//
+// Changes of Note:
+// - OS_INFO structure
+// - CROSS_PLATFORM_MAXIMUM_PROCESSORS = 1280
+//
+
+    typedef struct _CPU_INFO_v2 {
+        ULONG Type;              // Processor type as in IMAGE_FILE_MACHINE types
+        ULONG NumCPUs;           // Actual number of Processors
+        ULONG CurrentProc;       // Current processor
+        DEBUG_PROCESSOR_IDENTIFICATION_ALL ProcInfo[1280];
+        ULONG Mhz;               // Processor speed (from currentproc.prcb)
+    } CPU_INFO_v2, *PCPU_INFO_v2;
+
+    typedef struct _TARGET_DEBUG_INFO_v2 {
+        ULONG       SizeOfStruct;
+        ULONG64     EntryDate;   // Date created
+        ULONG       DebugeeClass;// Kernel / User mode
+        ULONG64     SysUpTime;   // System Up time
+        ULONG64     AppUpTime;   // Application up time
+        ULONG64     CrashTime;   // Time system / app crashed
+        OS_INFO     OsInfo;      // OS details
+        CPU_INFO_v2 Cpu;         // Processor details
+        CHAR        DumpFile[MAX_PATH]; // Dump file name if its a dump
+    } TARGET_DEBUG_INFO_v2, *PTARGET_DEBUG_INFO_v2;
+
+//
+// VERSION 1
+//
+
+    #define MAX_STACK_IN_BYTES 4096
+
+    typedef struct _OS_INFO_v1 {
+        OS_TYPE   Type;          // OS type such as NT4, NT5 etc.
+        union {
+            struct {
+                ULONG Major;
+                ULONG Minor;
+            } Version;     // 64 bit OS version number
+            ULONG64 Ver64;
+        };
+        ULONG ProductType; // NT, LanMan or Server
+        ULONG Suite;        // OS flavour - per, SmallBuisness etc.
+        struct {
+            ULONG Checked:1;     // If its a checked build
+            ULONG Pae:1;         // True for Pae systems
+            ULONG MultiProc:1;   // True for multiproc enabled OS
+            ULONG Reserved:29;
+        } s;
+        ULONG   SrvPackNumber;   // Service pack number of OS
+        CHAR   Language[30];    // OS language
+        CHAR   OsString[64];    // Build string
+        CHAR   ServicePackString[64];
+                                 // Service pack string
+    } OS_INFO_v1, *POS_INFO_v1;
+
+    typedef struct _CPU_INFO_v1 {
+        ULONG Type;              // Processor type as in IMAGE_FILE_MACHINE types
+        ULONG NumCPUs;           // Actual number of Processors
+        ULONG CurrentProc;       // Current processor
+        DEBUG_PROCESSOR_IDENTIFICATION_ALL ProcInfo[32];
+        ULONG Mhz;               // Processor speed (from currentproc.prcb)
+    } CPU_INFO_v1, *PCPU_INFO_v1;
+
+    typedef struct _TARGET_DEBUG_INFO_v1 {
+        ULONG       SizeOfStruct;
+        ULONG64     Id;          // ID unique to this debug info
+        ULONG64     Source;      // Source where this came from
+        ULONG64     EntryDate;   // Date created
+        ULONG64     SysUpTime;   // System Up time
+        ULONG64     AppUpTime;   // Application up time
+        ULONG64     CrashTime;   // Time system / app crashed
+        ULONG64     Mode;        // Kernel / User mode
+        OS_INFO_v1  OsInfo;      // OS details
+        CPU_INFO_v1 Cpu;         // Processor details
+        CHAR       DumpFile[MAX_PATH]; // Dump file name if its a dump
+        PVOID       FailureData; // Failure data collected by debugger
+        CHAR        StackTr[MAX_STACK_IN_BYTES];
+                                     // Contains stacks, with frames separated by newline
+    } TARGET_DEBUG_INFO_v1, *PTARGET_DEBUG_INFO_v1;
+
+//
+// GetTargetInfo EXPORT
+//
+
+    // GetTargetInfo
+    // - !analyze supports all structure versions defined above
+    // - If there is data trucation (e.g. more CPU are present on the system than the legacy structure supports), the first N are set and S_FALSE is returned
+
+    typedef HRESULT
+    (WINAPI* EXT_TARGET_INFO)(
+        PDEBUG_CLIENT4  Client,
+        PTARGET_DEBUG_INFO pTargetInfo
+        );
+
+/*****************************************************************************
+   Decoding
+ *****************************************************************************/
 
 typedef struct _DEBUG_DECODE_ERROR {
     ULONG     SizeOfStruct;   // Must be == sizeof(DEBUG_DECODE_ERROR)
@@ -1622,6 +2605,15 @@ typedef struct _DEBUG_TRIAGE_FOLLOWUP_INFO {
                              // Caller should initialize the name buffer
 } DEBUG_TRIAGE_FOLLOWUP_INFO, *PDEBUG_TRIAGE_FOLLOWUP_INFO;
 
+typedef struct _DEBUG_TRIAGE_FOLLOWUP_INFO_2 {
+    ULONG SizeOfStruct;      // Must be == sizeof (DEBUG_TRIAGE_FOLLOWUP_INFO_2)
+    ULONG OwnerNameSize;     // Size of allocated buffer
+    PCHAR OwnerName;         // Followup owner name returned in this
+                             // Caller should initialize the name buffer
+    ULONG FeaturePathSize;   // Feature path size
+    PCHAR FeaturePath;       // Feature path in the bug management tool (PS, VSO, etc.)
+} DEBUG_TRIAGE_FOLLOWUP_INFO_2, *PDEBUG_TRIAGE_FOLLOWUP_INFO_2;
+
 #define TRIAGE_FOLLOWUP_FAIL    0
 #define TRIAGE_FOLLOWUP_IGNORE  1
 #define TRIAGE_FOLLOWUP_DEFAULT 2
@@ -1629,10 +2621,16 @@ typedef struct _DEBUG_TRIAGE_FOLLOWUP_INFO {
 
 typedef DWORD
 (WINAPI *EXT_TRIAGE_FOLLOWUP)(
-    IN PDEBUG_CLIENT4 Client,
-    IN PSTR SymbolName,
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ PCSTR SymbolName,
     OUT PDEBUG_TRIAGE_FOLLOWUP_INFO OwnerInfo
     );
+
+typedef HRESULT
+(WINAPI *EXT_RELOAD_TRIAGER)(
+   _In_ PDEBUG_CLIENT4 Client
+    );
+ 
 
 //
 // Struct to receive data from syzdata.XML file cabbed along with the dump
@@ -1660,6 +2658,20 @@ typedef HRESULT
     );
 
 //
+// Driver Info as read from sysdata.xml
+//    
+typedef struct XML_DRIVER_NODE_INFO {
+    CHAR    FileName[64]; //MAX_MODULE_STRLEN
+    ULONG64 FileSize;
+    ULONG64 CreationDate;
+    CHAR Version[64]; //MAX_VERSION_STRLEN
+    CHAR Manufacturer[MAX_PATH];
+    CHAR ProductName[MAX_PATH];
+    CHAR Group[MAX_PATH];
+    CHAR Altitude[MAX_PATH];
+} XML_DRIVER_NODE_INFO, *PXML_DRIVER_NODE_INFO;
+    
+//
 // Extension function type definition for dlls which want to export analyzer
 // function to be used by !analyze to gather component specific data
 //
@@ -1669,15 +2681,15 @@ typedef HRESULT
 
 typedef HRESULT
 (WINAPI *EXT_ANALYZER)(
-   __in_opt PDEBUG_CLIENT Client,
-   __out_bcount(cbBucketSuffix) PSTR BucketSuffix,     // The additional suffix analyzer wants to
+   _In_opt_ PDEBUG_CLIENT Client,
+   _Out_writes_bytes_(cbBucketSuffix) PSTR BucketSuffix,     // The additional suffix analyzer wants to
                               // be added to !analyze BUGCKET_ID to better distinguish this bucket
-   __in ULONG cbBucketSuffix,   // byte count of BucketSuffix buffer supplied
-   __out_bcount(cbDebugText) PSTR DebugText,        // The debugging text (optional) which !analyze
+   _In_ ULONG cbBucketSuffix,   // byte count of BucketSuffix buffer supplied
+   _Out_writes_bytes_(cbDebugText) PSTR DebugText,        // The debugging text (optional) which !analyze
                               // should print out to help people debugging this failure
-   __in ULONG cbDebugText,      // byte count of DebugText buffer supplied
-   __in PULONG Flags,           // Flags that contorl the bucketing
-   __in PDEBUG_FAILURE_ANALYSIS pAnalysis // Data for current analysis
+   _In_ ULONG cbDebugText,      // byte count of DebugText buffer supplied
+   _In_ PULONG Flags,           // Flags that contorl the bucketing
+   _In_ PDEBUG_FAILURE_ANALYSIS pAnalysis // Data for current analysis
    );
 
 //
@@ -1720,11 +2732,41 @@ typedef struct _DEBUG_ANALYSIS_PROCESSOR_INFO {
 //
 typedef HRESULT
 (WINAPI *EXTDLL_QUERYDATABYTAG)(
-    __in PDEBUG_CLIENT4 Client,
-    __in ULONG dwDataTag,
-    __in PVOID pQueryInfo,
-    __out_bcount(cbData) PBYTE pData,
-    __in ULONG cbData
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ ULONG dwDataTag,
+    _In_ PVOID pQueryInfo,
+    _Out_writes_bytes_(cbData) PBYTE pData,
+    _In_ ULONG cbData
+    );
+
+//
+// This is an extension of the function ExtDllQueryDataByTagEx exported by ext.dll to query
+// various data values. This function will return the Path-Non_existing buildName/UNC path value.
+//
+typedef HRESULT
+(WINAPI *EXTDLL_QUERYDATABYTAGEX)(
+    _In_ PDEBUG_CLIENT4 Client,
+    _In_ ULONG dwDataTag,
+    _In_ PVOID pQueryInfo,
+    _Out_writes_bytes_(cbData) PBYTE pData,
+    _In_ ULONG cbData,
+    _Out_writes_bytes_(cbDataEx) PBYTE pDataEx,
+    _In_ ULONG cbDataEx
+    );
+
+typedef
+HRESULT
+(*ENTRY_CALLBACK) (
+    _In_ ULONG64 EntryAddress,
+    _Inout_opt_ PVOID Context
+    );;
+
+typedef VOID
+(WINAPI *EXTDLL_ITERATERTLBALANCEDNODES) (
+    _In_ ULONG64 RootNode,
+    _In_ ULONG EntryOffset,
+    _In_ ENTRY_CALLBACK Callback,
+    _Inout_opt_ PVOID CallbackContext
     );
 
 #endif // _EXTAPIS_H
@@ -1792,6 +2834,5 @@ typedef struct _CKCL_LISTHEAD{
     PCKCL_DATA LogEventListHead;
     HANDLE  Heap;
 }CKCL_LISTHEAD,*PCKCL_LISTHEAD;
-
 
 #endif // _EXTFNS_H

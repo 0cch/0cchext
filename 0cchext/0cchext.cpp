@@ -470,15 +470,15 @@ EXT_COMMAND(grep,
 	capture_exec.Execute(cmd_text);
 	LPCSTR out_text = capture_exec.GetTextNonNull();
 	BOOL except_error = FALSE;
-	std::tr1::cmatch result;
+	std::cmatch result;
 	LPCSTR cur_text = out_text;
 	try {
-		std::tr1::regex pattern(pattern_text, 
-			case_insensitive ? std::tr1::regex::icase | std::tr1::regex::ECMAScript : std::tr1::regex::ECMAScript);
+		std::regex pattern(pattern_text, 
+			case_insensitive ? std::regex::icase | std::regex::ECMAScript : std::regex::ECMAScript);
 
 		ULONG count = 0;
 		CHAR alias[64];
-		while (std::tr1::regex_search(cur_text, result, pattern)) {
+		while (std::regex_search(cur_text, result, pattern)) {
 			count++;
 
 			if (!omit_output) {
@@ -490,7 +490,7 @@ EXT_COMMAND(grep,
 
 			if (set_alias) {
 				for (size_t i = 1; i < result.size(); i++) {
-					sprintf_s(alias, 64, "@#Grep_%u_%u", count - 1, i - 1);
+					sprintf_s(alias, 64, "@#Grep_%u_%u", count - 1, (ULONG)i - 1);
 					m_Control2->SetTextReplacement(alias, result[i].str().c_str());
 				}
 			}
@@ -1508,7 +1508,7 @@ EXT_COMMAND(pe_import,
 
 				if (IMAGE_SNAP_BY_ORDINAL64(ori_thunk_data.u1.AddressOfData)) {
 					char ordinal[64];
-					sprintf_s(ordinal, "%04X", IMAGE_ORDINAL64(ori_thunk_data.u1.AddressOfData));
+					sprintf_s(ordinal, "%04llX", IMAGE_ORDINAL64(ori_thunk_data.u1.AddressOfData));
 					func_info.name = ordinal;
 				}
 				else {

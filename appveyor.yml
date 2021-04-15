@@ -1,21 +1,23 @@
-version: 1.0.19.2.{build}
+version: 1.0.20.1.{build}
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
 configuration: Release
-# platform:
-# - Win32
-# - x64
-# build:
-#   project: 0cchext_vs13.sln
-#   verbosity: minimal 
+
 build_script:
-- MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="Win32"
-- MSBuild.exe "0cchext_vs13.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release /p:Platform="x64"
+- cd ..
+- mkdir 0cchext_build_x86
+- cmake -G "Visual Studio 16 2019" -A Win32 -S .\0cchext -B .\0cchext_build_x86
+- cmake --build .\0cchext_build_x86 --config RelWithDebInfo
+- mkdir 0cchext_build_x64
+- cmake -G "Visual Studio 16 2019" -A x64 -S .\0cchext -B .\0cchext_build_x64
+- cmake --build .\0cchext_build_x64 --config RelWithDebInfo
 - mkdir bin\x86
 - mkdir bin\x64
-- copy Release\0cchext_vs13.dll bin\x86\0cchext.dll
-- copy x64\Release\0cchext_vs13.dll bin\x64\0cchext.dll
+- copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.dll bin\x86\0cchext.dll
+- copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.pdb bin\x86\0cchext.pdb
+- copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.dll bin\x64\0cchext.dll
+- copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
 - 7z a -tzip 0cchext.zip bin\*
 artifacts:
 - path: 0cchext.zip
