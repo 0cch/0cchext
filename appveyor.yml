@@ -1,4 +1,4 @@
-version: 1.0.20.1.{build}
+version: 1.20.1.{build}
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
@@ -10,13 +10,13 @@ build_script:
 
     mkdir 0cchext_build_x86
 
-    cmake -G "Visual Studio 16 2019" -A Win32 -S .\0cchext -B .\0cchext_build_x86
+    cmake -G "Visual Studio 16 2019" -A Win32 -S .\0cchext -B .\0cchext_build_x86 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
 
     cmake --build .\0cchext_build_x86 --config RelWithDebInfo
 
     mkdir 0cchext_build_x64
 
-    cmake -G "Visual Studio 16 2019" -A x64 -S .\0cchext -B .\0cchext_build_x64
+    cmake -G "Visual Studio 16 2019" -A x64 -S .\0cchext -B .\0cchext_build_x64 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
 
     cmake --build .\0cchext_build_x64 --config RelWithDebInfo
 

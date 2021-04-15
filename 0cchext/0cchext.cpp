@@ -52,6 +52,7 @@ public:
 	EXT_COMMAND_METHOD(accessmask);
 	EXT_COMMAND_METHOD(oledata);
 	EXT_COMMAND_METHOD(cppexcrname);
+	EXT_COMMAND_METHOD(gt);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -3481,6 +3482,19 @@ EXT_COMMAND(oledata,
 
 	Dml("<link cmd=\"dt combase!tagSOleTlsData 0x%p\">dt combase!tagSOleTlsData 0x%p</link>\n", ole_data, ole_data);
 	Dml("<link cmd=\"dx (combase!tagSOleTlsData *)0x%p\">dx (combase!tagSOleTlsData *)0x%p</link>\n", ole_data, ole_data);
+}
+
+EXT_COMMAND(gt,
+	"Go and interrupted after a period of time (ms).",
+	"{;ed,r;ms;a period of time(milliseconds)}")
+{
+	ULONG64 wait_ms = GetUnnamedArgU64(0);
+	m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "g", 0);
+	HRESULT hr = m_Control->WaitForEvent(0, (ULONG)wait_ms);
+	if (hr == S_FALSE) {
+		m_Control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE | DEBUG_INTERRUPT_PASSIVE);
+		m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+	}
 }
 
 EXT_COMMAND(cppexcrname,

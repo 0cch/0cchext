@@ -35,6 +35,7 @@ Commands for 0cchext.dll:
   !google          - Use google to search.
   !grep            - Search plain-text data sets for lines matching a regular
                      expression.
+  !gt              - Go and interrupted after a period of time (ms).
   !help            - Displays information on available extension commands
   !hwnd            - Show window information by handle.
   !import_vs_bps   - Import visual studio breakpoints.
@@ -790,4 +791,22 @@ NumberParameters: 3
    Parameter[2]: 00372294
 0:000> !cppexcrname
 Exception name: .?AVexception@std@@
+```
+
+#### !gt
+>  !gt             - Go and interrupted after a period of time (ms).
+
+```
+0:004> .time;!gt 0n1000;.time
+Debug session time: Thu Apr 15 15:09:44.839 2021 (UTC + 8:00)
+System Uptime: 20 days 2:53:31.728
+Process Uptime: 0 days 0:10:23.148
+  Kernel time: 0 days 0:00:00.015
+  User time: 0 days 0:00:00.000
+(af7c.490c): Break instruction exception - code 80000003 (first chance)
+Debug session time: Thu Apr 15 15:09:45.846 2021 (UTC + 8:00)
+System Uptime: 20 days 2:53:32.735
+Process Uptime: 0 days 0:10:24.155
+  Kernel time: 0 days 0:00:00.015
+  User time: 0 days 0:00:00.000
 ```
