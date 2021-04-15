@@ -34,7 +34,7 @@ build_script:
 
     7z a -tzip 0cchext.zip bin\*
 artifacts:
-- path: 0cchext.zip
+- path: ..\0cchext.zip
   name: 0cchext.zip
 before_deploy:
 - cmd: ''
