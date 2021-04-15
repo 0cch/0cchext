@@ -32,7 +32,7 @@ build_script:
 
     copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
 
-    7z a -tzip 0cchext.zip bin\*
+    7z a -tzip .\0cchext\0cchext.zip bin\*
 artifacts:
 - path: ..\0cchext.zip
   name: 0cchext.zip
