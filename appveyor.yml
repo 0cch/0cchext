@@ -2,30 +2,47 @@ version: 1.0.20.1.{build}
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
+image: Visual Studio 2019
 configuration: Release
-
 build_script:
-- cd ..
-- mkdir 0cchext_build_x86
-- cmake -G "Visual Studio 16 2019" -A Win32 -S .\0cchext -B .\0cchext_build_x86
-- cmake --build .\0cchext_build_x86 --config RelWithDebInfo
-- mkdir 0cchext_build_x64
-- cmake -G "Visual Studio 16 2019" -A x64 -S .\0cchext -B .\0cchext_build_x64
-- cmake --build .\0cchext_build_x64 --config RelWithDebInfo
-- mkdir bin\x86
-- mkdir bin\x64
-- copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.dll bin\x86\0cchext.dll
-- copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.pdb bin\x86\0cchext.pdb
-- copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.dll bin\x64\0cchext.dll
-- copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
-- 7z a -tzip 0cchext.zip bin\*
+- cmd: >-
+    cd ..
+
+    mkdir 0cchext_build_x86
+
+    cmake -G "Visual Studio 16 2019" -A Win32 -S .\0cchext -B .\0cchext_build_x86
+
+    cmake --build .\0cchext_build_x86 --config RelWithDebInfo
+
+    mkdir 0cchext_build_x64
+
+    cmake -G "Visual Studio 16 2019" -A x64 -S .\0cchext -B .\0cchext_build_x64
+
+    cmake --build .\0cchext_build_x64 --config RelWithDebInfo
+
+    mkdir bin\x86
+
+    mkdir bin\x64
+
+    copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.dll bin\x86\0cchext.dll
+
+    copy .\0cchext_build_x86\bin\RelWithDebInfo\0cchext.pdb bin\x86\0cchext.pdb
+
+    copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.dll bin\x64\0cchext.dll
+
+    copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
+
+    7z a -tzip 0cchext.zip bin\*
 artifacts:
 - path: 0cchext.zip
   name: 0cchext.zip
+before_deploy:
+- cmd: ''
 deploy:
 - provider: GitHub
   auth_token:
-    secure: joiNNJe1EegeE9zcyLWRXU2XjaIG27B66Lq6IOkMNS+h+W7PEU2bNW+ByAe31RBv
+    secure: XLhF0r8EZbnQFe0PJOAL/vLYGENFayMvY3olajmI/EnZBe9Hx7ae9zpvdlWjBnQk
   artifact: 0cchext.zip
   draft: true
-
+  prerelease: false
+  force_update: false
