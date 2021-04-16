@@ -3492,15 +3492,20 @@ EXT_COMMAND(gt,
 	ULONG64 wait_ms = GetUnnamedArgU64(0);
 	m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "g", 0);
 	HRESULT hr = m_Control->WaitForEvent(0, (ULONG)wait_ms);
+	ExtCaptureOutputA ignore_out;
 	if (hr == S_FALSE) {
 		if (HasArg("c")) {
 			PCSTR cmd = GetArgStr("c");
+			ignore_out.Start();
 			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+			ignore_out.Delete();
 			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, cmd, DEBUG_EXECUTE_NO_REPEAT);
 		}
 		else {
+			ignore_out.Start();
 			m_Control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE);
 			m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "|0s", 0);
+			ignore_out.Delete();
 		}
 	}
 }
