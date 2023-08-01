@@ -10,13 +10,13 @@ build_script:
 
     mkdir 0cchext_build_x86
 
-    cmake -G "Visual Studio 17 2022" -A Win32 -S .\0cchext-hr3d4 -B .\0cchext_build_x86 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+    cmake -G "Visual Studio 17 2022" -A Win32 -S .\0cchext -B .\0cchext_build_x86 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
 
     cmake --build .\0cchext_build_x86 --config RelWithDebInfo
 
     mkdir 0cchext_build_x64
 
-    cmake -G "Visual Studio 17 2022" -A x64 -S .\0cchext-hr3d4 -B .\0cchext_build_x64 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+    cmake -G "Visual Studio 17 2022" -A x64 -S .\0cchext -B .\0cchext_build_x64 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
 
     cmake --build .\0cchext_build_x64 --config RelWithDebInfo
 
@@ -32,7 +32,7 @@ build_script:
 
     copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
 
-    7z a -tzip .\0cchext-hr3d4\0cchext.zip bin\*
+    7z a -tzip .\0cchext\0cchext.zip bin\*
 artifacts:
 - path: 0cchext.zip
   name: 0cchext.zip
