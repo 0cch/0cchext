@@ -21,7 +21,7 @@ ADD_DEFINITIONS(-DUNICODE)
 ADD_DEFINITIONS(-D_UNICODE)
 ADD_DEFINITIONS(-DXEDPARSE_STATIC)
 
-if(NOT DEFINED "${0CCHEXT_VERSION}")
+if(NOT DEFINED 0CCHEXT_VERSION)
 set(0CCHEXT_VERSION "1.0.0.1")
 endif()
 
@@ -47,7 +47,7 @@ ADD_LIBRARY(0cchext SHARED
 	dllmain.cpp
 	0cchext.cpp
 	0cchext.h
-	resource.h
+	${CMAKE_CURRENT_BINARY_DIR}/resource.h
 	stdafx.cpp
 	stdafx.h
 	struct_script.cpp
