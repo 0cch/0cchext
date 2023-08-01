@@ -41,7 +41,7 @@ before_deploy:
 deploy:
 - provider: GitHub
   auth_token:
-    secure: XLhF0r8EZbnQFe0PJOAL/vLYGENFayMvY3olajmI/EnZBe9Hx7ae9zpvdlWjBnQk
+    secure: wX3E8O7pk/nxO+B0JgFQ6Aan+zAOr9QS0aiviSZhZA22iuY9+a1ULL95hGGCCJOv
   artifact: 0cchext.zip
   draft: true
   prerelease: false
