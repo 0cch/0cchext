@@ -6,18 +6,26 @@ image: Visual Studio 2022
 configuration: Release
 build_script:
 - cmd: >-
-    cd ..
+    pushd ..
 
     mkdir 0cchext_build_x86
 
-    cmake -G "Visual Studio 17 2022" -A Win32 -S .\0cchext -B .\0cchext_build_x86 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+    popd
+
+    cmake -G "Visual Studio 17 2022" -A Win32 -S . -B ..\0cchext_build_x86 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+
+    pushd ..
 
     cmake --build .\0cchext_build_x86 --config RelWithDebInfo
 
     mkdir 0cchext_build_x64
 
-    cmake -G "Visual Studio 17 2022" -A x64 -S .\0cchext -B .\0cchext_build_x64 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+    popd
 
+    cmake -G "Visual Studio 17 2022" -A x64 -S . -B ..\0cchext_build_x64 -D0CCHEXT_VERSION=%APPVEYOR_BUILD_VERSION%
+
+    pushd ..
+    
     cmake --build .\0cchext_build_x64 --config RelWithDebInfo
 
     mkdir bin\x86
@@ -32,7 +40,7 @@ build_script:
 
     copy .\0cchext_build_x64\bin\RelWithDebInfo\0cchext.pdb bin\x64\0cchext.pdb
 
-    7z a -tzip .\0cchext\0cchext.zip bin\*
+    7z a -tzip .\0cchext.zip bin\*
 artifacts:
 - path: 0cchext.zip
   name: 0cchext.zip
