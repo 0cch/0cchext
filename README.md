@@ -12,6 +12,7 @@ site:   http://0cch.com
 Commands for 0cchext.dll:
   !a               - Assembles instruction mnemonics and puts the resulting
                      instruction codes into memory.
+  !a64             - Input x64 asm code.
   !accessmask      - Interpret ACCESS MASK value
   !addmodule       - Adds a synthetic module to the module list the debugger
                      maintains for the current process.
@@ -224,7 +225,7 @@ For example:
 > !wql             - Query system information with WMI.
 
 This is one of my favorite features, it can query system information with WMI.
- 
+
 ```
 0:000> !0cchext.wql select * from win32_process where name="explorer.exe"
 -------------------------------------------------------------
@@ -813,3 +814,22 @@ Process Uptime: 0 days 0:10:24.155
 * Capture a dump every second for 10 seconds
 .for(r $t0 = 0; $t0 < 0n10; r $t0 = $t0 + 1) {!0cchext.gt 0n1000 -c .dump /u f:\test.dump;}
 ```
+
+#### !a64
+>  !a64             - Input x64 asm code.
+
+Since the a command does not support 64-bit instruction mnemonics on windbg:
+
+```
+0:000> a .
+00000000`77ae7980 xor rax,rax
+xor rax,rax
+        ^ Couldn't resolve 'xor rax,rax'
+```
+
+I import XED to support 64-bit instruction mnemonics:
+
+```
+0:000> !a64 .
+0000000077ae7980  xor rax,rax
+xor rax,rax = 48 31 c0 
