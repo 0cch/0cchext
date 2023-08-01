@@ -6,9 +6,14 @@
 //
 //----------------------------------------------------------------------------
 
+#ifndef DBG_ENGEXTCPP_SKIP_HEADERS
+
 #include <engextcpp.hpp>
 #include <strsafe.h>
 #include <dbghelp.h>
+
+#endif // DBG_ENGEXTCPP_SKIP_HEADERS
+
 
 #if defined(_PREFAST_) || defined(_PREFIX_)
 #define PRE_ASSUME(_Cond) _Analysis_assume_(_Cond)
@@ -363,10 +368,10 @@ ExtCommandDesc::ParseArgDesc(void)
         // No arguments.
         return;
     }
-    
+
     // First copy the string so we can chop it up.
     m_ArgStrings = _strdup(m_ArgDescStr);
-    if (! m_ArgStrings)
+    if (!m_ArgStrings)
     {
         m_Ext->ThrowOutOfMemory();
     }
@@ -376,8 +381,12 @@ ExtCommandDesc::ParseArgDesc(void)
     //   {<optname>;<type,flags>;<argname>;<descstr>}
     //
 
-    ArgDesc Args[ExtExtension::s_MaxArgs];
-    ArgDesc* Arg = Args - 1;
+    ArgDesc* pArgs = (ArgDesc*)malloc(sizeof(ArgDesc) * ExtExtension::s_MaxArgs);
+    if (pArgs == nullptr)
+    {
+        return;
+    }
+    ArgDesc* Arg = pArgs - 1;
     ULONG NumUnOptArgs = 0;
     bool RemainderUsed = false;
     
@@ -398,7 +407,7 @@ ExtCommandDesc::ParseArgDesc(void)
             continue;
         }
         
-        if (m_NumArgs >= EXT_DIMA(Args))
+        if (m_NumArgs >= ExtExtension::s_MaxArgs)
         {
             m_Ext->ThrowInvalidArg("ArgDesc: Argument count "
                                    "overflow at '%s'", Scan);
@@ -791,10 +800,12 @@ ExtCommandDesc::ParseArgDesc(void)
         {
             m_Ext->ThrowOutOfMemory();
         }
-        memcpy(m_Args, Args, m_NumArgs * sizeof(m_Args[0]));
+        memcpy(m_Args, pArgs, m_NumArgs * sizeof(m_Args[0]));
     }
     
     m_ArgsInitialized = true;
+
+   free(pArgs);
 }
 
 void WINAPI
@@ -1673,9 +1684,9 @@ ExtExtension::GetOffsetSymbol(_In_ ULONG64 Offs,
                 
                 Name->Require(Need, DispChars);
                 StringCchPrintfA(Name->GetBuffer() + (Need - 1),
-                                DispChars,
-                                "+0x%I64x",
-                                LocalDisp);
+                                 DispChars,
+                                 "+0x%I64x",
+                                 LocalDisp);
             }
             return true;
         }
@@ -1767,19 +1778,35 @@ ExtExtension::GetModuleImagehlpInfo(_In_ ULONG64 ModBase,
 bool WINAPI
 ExtExtension::ModuleHasGlobalSymbols(_In_ ULONG64 ModBase)
 {
-    IMAGEHLP_MODULEW64 Info;
+    IMAGEHLP_MODULEW64* pInfo = (IMAGEHLP_MODULEW64*)malloc(sizeof(IMAGEHLP_MODULEW64));
+    if (pInfo == nullptr)
+    {
+        return FALSE;
+    }
+    GetModuleImagehlpInfo(ModBase, pInfo);
 
-    GetModuleImagehlpInfo(ModBase, &Info);
-    return Info.GlobalSymbols != FALSE;
+    bool const hasGlobalSymbols = pInfo->GlobalSymbols != FALSE;
+
+    free(pInfo);
+
+    return hasGlobalSymbols;
 }
 
 bool WINAPI
 ExtExtension::ModuleHasTypeInfo(_In_ ULONG64 ModBase)
 {
-    IMAGEHLP_MODULEW64 Info;
+    IMAGEHLP_MODULEW64* pInfo = (IMAGEHLP_MODULEW64*)malloc(sizeof(IMAGEHLP_MODULEW64));
+    if (pInfo == nullptr)
+    {
+        return FALSE;
+    }
     
-    GetModuleImagehlpInfo(ModBase, &Info);
-    return Info.TypeInfo != FALSE;
+    GetModuleImagehlpInfo(ModBase, pInfo);
+    bool const hasTypeInfo = pInfo->TypeInfo != FALSE;
+
+    free(pInfo);
+
+    return hasTypeInfo;
 }
 
 ULONG64 WINAPI
@@ -1846,7 +1873,7 @@ ExtExtension::CallDebuggeeBase(_In_ PCSTR CommandString,
 
     ULONG64 RetVal;
     
-    GetExprU64("@$callret", -1, &RetVal);
+    GetExprU64("@$callret", (ULONG64)-1, &RetVal);
     return RetVal;
 }
 

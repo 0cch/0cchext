@@ -1,6 +1,6 @@
 //*******************************************************************************
 //
-// Debugger Data Model 
+// Debugger Data Model
 //
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 //
@@ -34,7 +34,7 @@
 //
 // Defines the location for an object.  This particular variant of Location is the C-COM access struct.
 // Note that a location only has meaning in conjunction with a host context.  It is a location within
-// a context.  When performing an operation on the location (reading bytes, writing bytes, etc...), 
+// a context.  When performing an operation on the location (reading bytes, writing bytes, etc...),
 // a valid host context must be supplied.
 //
 struct Location
@@ -145,7 +145,7 @@ struct Location
     {
         return (HostDefined == 0);
     }
-    
+
 #endif // __cplusplus
 
 };
@@ -189,6 +189,10 @@ DEFINE_GUID(IID_IDataModelConcept, 0xfcb98d1d, 0x1114, 0x4fbf, 0xb2, 0x4c, 0xef,
 
 // {D28E8D70-6C00-4205-940D-501016601EA3}
 DEFINE_GUID(IID_IStringDisplayableConcept, 0xd28e8d70, 0x6c00, 0x4205, 0x94, 0xd, 0x50, 0x10, 0x16, 0x60, 0x1e, 0xa3);
+
+// {C7371568-5C78-4A00-A4AB-6EF8823184CB}
+DEFINE_GUID(IID_ICodeAddressConcept, 0xc7371568, 0x5c78, 0x4a00, 0xa4, 0xab, 0x6e, 0xf8, 0x82, 0x31,0x84, 0xcb);
+
 
 // {E4622136-927D-4490-874F-581F3E4E3688}
 DEFINE_GUID(IID_IModelIterator, 0xe4622136, 0x927d, 0x4490, 0x87, 0x4f, 0x58, 0x1f, 0x3e, 0x4e, 0x36, 0x88);
@@ -359,6 +363,7 @@ struct DECLSPEC_UUID("E13613F9-3A3C-40b5-8F48-1E5EBFB9B21B") IRawEnumerator;
 
 struct DECLSPEC_UUID("FCB98D1D-1114-4fbf-B24C-EFFCB5DEF0D3") IDataModelConcept;
 struct DECLSPEC_UUID("D28E8D70-6C00-4205-940D-501016601EA3") IStringDisplayableConcept;
+struct DECLSPEC_UUID("C7371568-5C78-4A00-A4AB-6EF8823184CB") ICodeAddressConcept;
 struct DECLSPEC_UUID("E4622136-927D-4490-874F-581F3E4E3688") IModelIterator;
 struct DECLSPEC_UUID("F5D49D0C-0B02-4301-9C9B-B3A6037628F3") IIterableConcept;
 struct DECLSPEC_UUID("D1FAD99F-3F53-4457-850C-8051DF2D3FB5") IIndexableConcept;
@@ -428,8 +433,8 @@ struct DECLSPEC_UUID("B51887E8-BCD0-4e8f-A8C7-434398B78C37") IDebugHostModule2;
 //
 enum ModelObjectKind
 {
-    // The model object is a property accessor which can be called to retrieve value, etc...  
-    // 
+    // The model object is a property accessor which can be called to retrieve value, etc...
+    //
     // Calling GetIntrinsicValue on the object will yield a variant in which the punkVal
     // IUnknown pointer is an IModelPropertyAccessor.
     //
@@ -449,7 +454,7 @@ enum ModelObjectKind
     //
     ObjectTargetObject,
 
-    // It's a reference to an object within the debuggee (e.g.: the object *REFERS TO* a "target int" or a 
+    // It's a reference to an object within the debuggee (e.g.: the object *REFERS TO* a "target int" or a
     // "target int&").  This is distinct from an object within the debuggee which is a reference (e.g.:
     // the object *IS* a "target int&").
     //
@@ -489,18 +494,18 @@ enum ModelObjectKind
     //
     ObjectIntrinsic,
 
-    // The model object is a method which can be called.  
+    // The model object is a method which can be called.
     //
     // Calling GetIntrinsicValue on the object will yield a variant in which the punkVal
     // IUnknown pointer is an IModelMethod.
     //
     ObjectMethod,
 
-    // The model object is a key reference.  
+    // The model object is a key reference.
     //
     // Calling GetIntrinsicValue on the object will yield a variant in which the punkVal
     // IUnknown pointer is an IKeyReference.
-    // 
+    //
     ObjectKeyReference,
 
 };
@@ -547,7 +552,7 @@ enum TypeKind
 {
     // The type is a UDT (user defined type -- a struct, class, etc...)
     //
-    // The canonical form of an IModelObject which represents a UDT *value* is 
+    // The canonical form of an IModelObject which represents a UDT *value* is
     // ObjectTargetObject where the type is always kept.
     //
     TypeUDT,
@@ -581,19 +586,19 @@ enum TypeKind
     //
     // The base type of an array as returned by GetBaseType() is the type of each element
     // of the array.
-    // 
+    //
     TypeArray,
 
     // The type is a function
     TypeFunction,
 
     // **************************************************************************
-    // This entry is **DEPRECATED**.  
+    // This entry is **DEPRECATED**.
     // **************************************************************************
     //
     // The canonical form of an IModelObject which is a typedef is the same as the canonical
-    // form of whatever the typedef is for.  A typedef will appear completely transparent to 
-    // the user of the object and the type information unless the explicit typedef methods of 
+    // form of whatever the typedef is for.  A typedef will appear completely transparent to
+    // the user of the object and the type information unless the explicit typedef methods of
     // IDebugHostType2 are utilized to query typedef information or there is an explicit data
     // model registered against the typedef.
     //
@@ -603,7 +608,7 @@ enum TypeKind
     //
     // The canonical form of an IModelObject which represents an enum *value* is
     // ObjectIntrinsic where the type is always kept.  The value is packed into
-    // the appropriate type in the object's variant data as described by the 
+    // the appropriate type in the object's variant data as described by the
     // storage type of the enumeration.
     //
     TypeEnum,
@@ -621,7 +626,7 @@ enum TypeKind
 
     // The type is an array which cannot be expressed as TypeArray.
     //
-    // This is due to things such as dynamic sizes, dynamic bounds, etc...  CLI arrays are 
+    // This is due to things such as dynamic sizes, dynamic bounds, etc...  CLI arrays are
     // represented as TypeExtendedArray.
     //
     TypeExtendedArray
@@ -639,7 +644,7 @@ enum IntrinsicKind
 
     // bool
     IntrinsicBool,
-    
+
     // char
     IntrinsicChar,
 
@@ -747,9 +752,46 @@ enum LocationKind
 // "PreferredFormat"
 //     contains a value which is from the PreferredFormat enumeration below that indicates the preferred manner in which a given
 //     value should be *DISPLAYED*.  It does not affect the value itself.
-// 
+//
 // "PreferredRadix"
 //     contains a value which indicates the preferred display radix for an integral value.  This is either 8, 10, or 16
+//
+// "PreferShow"
+//     contains a boolean value which contains an indication of whether the element should, by default, display.
+//     The default value of this metadata key is "true" for values which are not methods and "false" for values
+//     which are methods.
+//
+// "PreferredLength"
+//     contains a value which describes how many iterated elements to display by default.  
+//     The default value of this metadata key is "1" for pointers and the type system defined length of any array
+//     for array types.
+// 
+// "ActionName"
+//     applicable only to object methods which take no arguments and have ObjectNoValueReturns, the presence of this
+//     metadatakey indicates that the method is an action for the object which should be funneled to appropriate UI 
+//     under the name given in this string metadata key.  The UI here may be a DML link (in WinDbg), a context menu,
+//     or other affordance.  An example of an action is "Switch To" for a thread which changes the UI focus to
+//     the given thread.
+//
+// "ActionDescription"
+//     applicable only where the "ActionName" key is present, this is a string value which gives tooltip style
+//     help for an action.
+//
+// "ActionIsDefault"
+//     applicable only where the "ActionName" key is present, this is a boolean value which describes whether
+//     the action is a default action or not.  The default action for an object may be funneled to additional
+//     UI.  By default, the value of this key is "false".  Only a single action method on any given object may
+//     be marked as the default action.
+//
+// "PreferAutoExpand"
+//     contains an unsigned value which describes whether the element should be expanded automatically if
+//     it is a child of some other object and the recursion level is high enough.  The default value for this
+//     key is "true".  If this key is specified as "false", the object **WILL NOT** expand in a console view unless
+//     it is the root element being displayed.
+//
+// "PreferredExpansionDepth"
+//     contains an unsigned value which describes how far the element should be expanded if not otherwise specified
+//     by a host command or other UI affordance.
 //
 
 //
@@ -930,7 +972,7 @@ DECLARE_INTERFACE_(IKeyStore, IUnknown)
     // If the store or its parent has a key named according to the argument 'key', this will
     // return the value of that key and, optionally, any metadata associated with that key.
     //
-    // If the key is a property accessor, this API will fetch the value underlying the property and return it.  
+    // If the key is a property accessor, this API will fetch the value underlying the property and return it.
     // It will not return the IModelPropertyAccessor interface for the property.
     //
     STDMETHOD(GetKeyValue)(
@@ -949,7 +991,7 @@ DECLARE_INTERFACE_(IKeyStore, IUnknown)
     // property.  Note that some properties are read-only and, as such, this API may return a failure if called
     // on such a property.  If the key is not a property accessor, it will overwrite the value of the key directly.
     //
-    // This method will never create a new key named 'key'.  
+    // This method will never create a new key named 'key'.
     //
     STDMETHOD(SetKeyValue)(
         THIS_
@@ -1027,7 +1069,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
     // GetKind():
     //
     // Gets the kind of this object.  This indicates the kind of object (e.g.: a boxed intrinsic value,
-    // an object within the address space of the debug target, a synthetic object created by the 
+    // an object within the address space of the debug target, a synthetic object created by the
     // debugger, an error, etc...).  This does not indicate the language type of the object.
     //
     STDMETHOD(GetKind)(
@@ -1067,7 +1109,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
     // If the object or one of its parent models has a key named according to the argument 'key', this will
     // return the value of that key and, optionally, any metadata associated with that key.
     //
-    // If the key is a property accessor, this API will fetch the value underlying the property and return it.  
+    // If the key is a property accessor, this API will fetch the value underlying the property and return it.
     // It will not return the IModelPropertyAccessor interface for the property.
     //
     STDMETHOD(GetKeyValue)(
@@ -1086,7 +1128,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
     // property.  Note that some properties are read-only and, as such, this API may return a failure if called
     // on such a property.  If the key is not a property accessor, it will overwrite the value of the key directly.
     //
-    // This method will never create a new key named 'key'.  
+    // This method will never create a new key named 'key'.
     //
     STDMETHOD(SetKeyValue)(
         THIS_
@@ -1218,7 +1260,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
 
     // GetNumberOfParentModels():
     //
-    // Returns the number of parent models of this object.  An object may have zero or more parent models associated with it. 
+    // Returns the number of parent models of this object.  An object may have zero or more parent models associated with it.
     // If the object does not have a given key or concept when queried, such calls are passed to all parent models in
     // linear order to satisfy the request.
     //
@@ -1228,7 +1270,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
 
     // GetParentModel():
     //
-    // Returns the 'i'-th parent model of this object and, optionally, the adjusted context object associated with that 
+    // Returns the 'i'-th parent model of this object and, optionally, the adjusted context object associated with that
     // parent model.
     //
     // If the object does not have a given key or concept when queried, such calls are passed to all parent models in
@@ -1245,11 +1287,11 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
     // AddParentModel():
     //
     // Adds a new parent model to this object.  If the object does not have a given key or concept when queried, such calls are
-    // passed to all parent models in linear order to satisfy the request. 
+    // passed to all parent models in linear order to satisfy the request.
     //
     // If the parent model needs to adjust the context (effective this pointer) object so that property accessors and other
     // concept interfaces on the parent model receive a different context pointer than the object itself, such an adjusted context
-    // can be passed in the 'contextObject' argument.  If no adjustment is necessary, nullptr should be passed.  Note that it 
+    // can be passed in the 'contextObject' argument.  If no adjustment is necessary, nullptr should be passed.  Note that it
     // is perfectly legitimate for the object passed in 'contextObject' to be a property accessor.  In that case, the property
     // will always be resolved before being given to any caller of GetParentModel or passed to any other accessor or concept.
     //
@@ -1460,7 +1502,7 @@ DECLARE_INTERFACE_(IModelObject, IUnknown)
 // The core interface for the data model manager.  This is the interface by which new objects are created,
 // intrinsic values are boxed and unboxed, and models are registered for types.
 //
-// This interface is never directly implemented by a client. 
+// This interface is never directly implemented by a client.
 //
 #undef INTERFACE
 #define INTERFACE IDataModelManager
@@ -1540,7 +1582,7 @@ DECLARE_INTERFACE_(IDataModelManager, IUnknown)
         _In_ IDebugHostType* objectType,
         _COM_Errorptr_ IModelObject** object
         ) PURE;
-    
+
     // CreateTypedObjectReference():
     //
     // Creates a reference to an object within the address space of the host.  This is a reference as defined
@@ -1619,7 +1661,7 @@ DECLARE_INTERFACE_(IDataModelManager, IUnknown)
 
     // GetModelForType():
     //
-    // Returns the model (registered via RegisterModelForTypeSignature) whose type signature is the best 
+    // Returns the model (registered via RegisterModelForTypeSignature) whose type signature is the best
     // match for the given type.  In addition to returning the registered model, the type signature
     // and a list of wildcard matches between the signature and the actual type is also returned.
     //
@@ -1672,7 +1714,7 @@ DECLARE_INTERFACE_(IDataModelManager, IUnknown)
 
     // UnregisterExtensionForTypeSignature():
     //
-    // Behaves as UnregisterModelForTypeSignature excepting that it undoes RegisterExtensionForTypeSignature. 
+    // Behaves as UnregisterModelForTypeSignature excepting that it undoes RegisterExtensionForTypeSignature.
     //
     STDMETHOD(UnregisterExtensionForTypeSignature)(
         THIS_
@@ -1773,14 +1815,14 @@ DECLARE_INTERFACE_(IModelKeyReference, IUnknown)
         THIS_
         _Out_ BSTR* keyName
         ) PURE;
-    
+
     // GetOriginalObject():
     //
     // Gets the object on which the original "GetKeyReference" which produced this
     // key reference was called.
     //
     // If a key reference is resolved to a property accessor with GetKey(), the original
-    // object should be passed as context.  The IModelPropertyAccessor object which 
+    // object should be passed as context.  The IModelPropertyAccessor object which
     // is acquired from the resolution will automatically perform the necessary adjustment
     // thunk between the return value of this method and the return value of
     // GetContextObject().
@@ -1834,7 +1876,7 @@ DECLARE_INTERFACE_(IModelKeyReference, IUnknown)
     // "GetKeyValue" method were made on the IModelObject from which this key reference was derived.
     //
     // Note that this method will resolve underlying properties.  If the value of the key is
-    // a property accessor, this API will fetch the value underlying the property and return it. 
+    // a property accessor, this API will fetch the value underlying the property and return it.
     // It will not return the IModelPropertyAccessor interface for the property.
     //
     STDMETHOD(GetKeyValue)(
@@ -2046,8 +2088,8 @@ DECLARE_INTERFACE_(IKeyEnumerator, IUnknown)
 //
 // IRawEnumerator:
 //
-// An interface which enumerates the raw children (e.g.: base classes, fields, etc...) of an object 
-// (and their values and associated metadata).  A raw enumerator can be acquired through the 
+// An interface which enumerates the raw children (e.g.: base classes, fields, etc...) of an object
+// (and their values and associated metadata).  A raw enumerator can be acquired through the
 // EnumerateRawValues or EnumerateRawReferences methods on IModelObject.
 //
 #undef INTERFACE
@@ -2114,7 +2156,7 @@ DECLARE_INTERFACE_(IRawEnumerator, IUnknown)
 //
 // Clients which create data models implement this interface.  It is most frequently
 // consumed by the data model manager itself.
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDataModelConcept
 DECLARE_INTERFACE_(IDataModelConcept, IUnknown)
@@ -2141,7 +2183,7 @@ DECLARE_INTERFACE_(IDataModelConcept, IUnknown)
 
     // InitializeObject():
     //
-    // If a particular data model is attached to a type signature 
+    // If a particular data model is attached to a type signature
     // (via IDataModelManager::RegisterModelForTypeSignature) before an instance of a type matching
     // that signature is created, this method will be called on the model.  The method will be passed
     // the instance object which is being created (modelObject), the type signature which matched
@@ -2151,8 +2193,8 @@ DECLARE_INTERFACE_(IDataModelConcept, IUnknown)
     // Note that a data model implementation **MUST NOT** rely on this method being called.  A data model
     // may be attached after instances of a particular type already exist.  This method is most frequently
     // used for caching purposes.
-    // 
-    // A client of the model never calls this API directly.  It is called by the model itself.  An 
+    //
+    // A client of the model never calls this API directly.  It is called by the model itself.  An
     // implementor may choose to do nothing in the method; however -- any such "do nothing" implementation
     // must still succeed via an S_OK return.  A failure returned from this method will prevent object
     // construction.
@@ -2167,7 +2209,7 @@ DECLARE_INTERFACE_(IDataModelConcept, IUnknown)
     // GetName():
     //
     // Returns the name of the data model.  If the data model is registered under a default name
-    // (via IDataModelManager::RegisterNamedModel), it is expected that the returned name is the 
+    // (via IDataModelManager::RegisterNamedModel), it is expected that the returned name is the
     // registered default name.  Note that a data model may be registered under multiple names.
     // It is also perfectly legitimate for a data model to be completely unnamed.  In such cases,
     // the GetName method may return E_NOTIMPL.
@@ -2212,7 +2254,7 @@ DECLARE_INTERFACE_(IStringDisplayableConcept, IUnknown)
 
     // ToDisplayString():
     //
-    // Called in order to convert an instance of an object to a string suitable for display. 
+    // Called in order to convert an instance of an object to a string suitable for display.
     // The "contextObject" argument refers to the object being converted.  If there is metadata which
     // governs the string conversion (e.g.: choosing which radix to convert an ordinal in), the associated
     // metadata store is passed in the "metadata" argument.
@@ -2222,6 +2264,44 @@ DECLARE_INTERFACE_(IStringDisplayableConcept, IUnknown)
         _In_ IModelObject* contextObject,
         _In_opt_ IKeyStore* metadata,
         _Out_ BSTR* displayString
+        ) PURE;
+};
+
+//
+// ICodeAddressConcept:
+//
+// ICodeAddressConcept Description
+#undef INTERFACE
+#define INTERFACE ICodeAddressConcept
+DECLARE_INTERFACE_(ICodeAddressConcept, IUnknown)
+{
+    //*************************************************
+    // IUnknown:
+
+    STDMETHOD(QueryInterface)(
+        THIS_
+        _In_ REFIID iid,
+        _COM_Outptr_ PVOID* iface
+        ) PURE;
+
+    STDMETHOD_(ULONG, AddRef)(
+        THIS
+        ) PURE;
+
+    STDMETHOD_(ULONG, Release)(
+        THIS
+        ) PURE;
+
+    //*************************************************
+    // Name:
+
+    // GetContainingFunctionSymbol():
+    //
+    // GetContainingFunctionSymbol Description
+    STDMETHOD(GetContainingSymbol)(
+        THIS_
+        _In_ IModelObject* pContextObject,
+        _Out_ IDebugHostSymbol **ppSymbol
         ) PURE;
 };
 
@@ -2277,7 +2357,7 @@ DECLARE_INTERFACE_(IModelIterator, IUnknown)
     // from any call to GetNext.  A client of the GetNext method may choose to pass 0/nullptr and not
     // retrieve the indexer or choose to pass the dimensionality and a buffer of that size to retrieve
     // the indexer.  It is illegal to request or pass back only part of an indexer via a non-zero "dimensions"
-    // argument which is less than the default index dimensionality returned from 
+    // argument which is less than the default index dimensionality returned from
     // IIterableConcept::GetDefaultIndexDimensionality.
     //
     // If the iterator moved forward successfully but there was an error in reading the value of
@@ -2396,10 +2476,10 @@ DECLARE_INTERFACE_(IIndexableConcept, IUnknown)
 
     // GetDimensionality():
     //
-    // Returns the dimensionality of the indexer.  
+    // Returns the dimensionality of the indexer.
     //
-    // Note that if the object in question is iterable as well as indexable and the object supports a 
-    // default indexer (as inquired through IIterableConcept::GetDefaultIndexDimensionality), the 
+    // Note that if the object in question is iterable as well as indexable and the object supports a
+    // default indexer (as inquired through IIterableConcept::GetDefaultIndexDimensionality), the
     // dimensionality returned from the iterator and this method must agree.
     //
     STDMETHOD(GetDimensionality)(
@@ -2411,7 +2491,7 @@ DECLARE_INTERFACE_(IIndexableConcept, IUnknown)
     // GetAt():
     //
     // Returns the value of the element at a particular N-dimensional index.  An indexer of N-dimensions
-    // where N is the value returned from GetDimensionality **MUST** be supported. 
+    // where N is the value returned from GetDimensionality **MUST** be supported.
     //
     // Note that a given object may be indexable in different domains by different types (e.g.: indexable
     // via both ordinals and strings).
@@ -2490,7 +2570,7 @@ DECLARE_INTERFACE_(IPreferredRuntimeTypeConcept, IUnknown)
     //
     // Note that the error E_NOT_SET is considered special by this method.
     // An implementation of this method which returns E_NOT_SET is indicating
-    // to the data model that it does not wish to override the default 
+    // to the data model that it does not wish to override the default
     // (type system based) conversion to a runtime type.
     //
     STDMETHOD(CastToPreferredRuntimeType)(
@@ -2628,7 +2708,7 @@ DECLARE_INTERFACE_(IDebugHostContext, IUnknown)
 // Methods which take an IDebugHostContext can be called with this special defined value to indicate
 // to the debug host that the "current" context of the debugger should be used.  This is in lieu of
 // explicitly calling IDebugHost::GetCurrentContext and explicitly passing it to the method needing
-// an IDebugHostContext.  
+// an IDebugHostContext.
 //
 // Using this may be more efficient than the explicit query and pass.
 //
@@ -2650,7 +2730,7 @@ enum ErrorClass
 //
 // Represents an error sink for the debug host.  Errors which occur during certain operations
 // are sent to the error sink to be handled (or notify the user).
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDebugHostErrorSink
 DECLARE_INTERFACE_(IDebugHostErrorSink, IUnknown)
@@ -2936,7 +3016,7 @@ DECLARE_INTERFACE_(IDebugHostModule, IDebugHostSymbol)
     // GetVersion():
     //
     // Returns the file and product version of the module (assuming they can be read).  If a given version
-    // is requested (via a non-nullptr output pointer) and it cannot be read, an appropriate error will be 
+    // is requested (via a non-nullptr output pointer) and it cannot be read, an appropriate error will be
     // returned.
     //
     STDMETHOD(GetVersion)(
@@ -2983,7 +3063,7 @@ DECLARE_INTERFACE_(IDebugHostModule, IDebugHostSymbol)
 
 //
 // ArrayDimension:
-// 
+//
 // Defines the memory layout of one dimension of an array.
 //
 struct ArrayDimension
@@ -2991,7 +3071,7 @@ struct ArrayDimension
     // The lower bounds of the array.  For C style zero based arrays, this will always be zero.  There is no
     // uniform restriction that all arrays represented by these interfaces are zero based.
     LONG64 LowerBound;
-    
+
     // Defines the length of the dimension.  The dimension is considered to be of the form [LowerBound, LowerBound + Length)
     ULONG64 Length;
 
@@ -3003,7 +3083,7 @@ struct ArrayDimension
 // IDebugHostType:
 //
 // A specialization of IDebugHostSymbol representing a type (e.g.: "MyStruct *")
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDebugHostType
 DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
@@ -3087,7 +3167,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
     // this returns the base type of the derivation.  For pointers, this would return the type pointed to.
     // For arrays, this would return what the array is an array of.  If the type is not such a derivative
     // type, an error is returned.
-    // 
+    //
     // Not that this method has nothing to do with C++ base classes.  Such are symbols (IDebugHostBaseClass)
     // which can be enumerated from the derived class via a call to EnumerateChildren.
     //
@@ -3099,8 +3179,8 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
     // GetHashCode():
     //
     // Returns a 32-bit hash code for the type.  With the exception of a global match (e.g.: a type signature
-    // like "*" if permitted by the host), any type instance which can match a particular type signature must 
-    // return the same hash code.  
+    // like "*" if permitted by the host), any type instance which can match a particular type signature must
+    // return the same hash code.
     //
     // This is used in conjunction with type signatures in order to match type signatures to type instances.
     //
@@ -3116,7 +3196,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
     //
     // The returned "intrinsicKind" indicates things like whether it is a bool, integer, floating point, etc...
     // but not necessarily the size.  The returned "carrierType" indicates how this intrinsic value is
-    // packed into a VARIANT structure.  The combination of this information indicates the full set 
+    // packed into a VARIANT structure.  The combination of this information indicates the full set
     // of information about the intrinsic.
     //
     STDMETHOD(GetIntrinsicType)(
@@ -3133,7 +3213,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
 
     // GetBitField():
     //
-    // If the type is a bit field, this returns the numeric position of the least significant bit of the 
+    // If the type is a bit field, this returns the numeric position of the least significant bit of the
     // field and the length of the field.  Bit positions (lsbOfField + lengthOfField : lsbOfField] define
     // the bit position.
     //
@@ -3143,16 +3223,17 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
         _Out_ ULONG* lengthOfField
         ) PURE;
 
+
     //*************************************************
     // Pointer Information (GetKind returns TypePointer):
     //
-    // The following methods only apply to types which are pointers (or create 
+    // The following methods only apply to types which are pointers (or create
     // derivative types which are pointers)
     //
 
     // GetPointerKind():
     //
-    // Returns what kind of pointer the type is (e.g.: a standard pointer, a pointer to member, 
+    // Returns what kind of pointer the type is (e.g.: a standard pointer, a pointer to member,
     // a reference, an r-value reference, a C++/CX hat, etc...)
     //
     STDMETHOD(GetPointerKind)(
@@ -3236,7 +3317,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
         THIS_
         _Out_ CallingConventionKind* conventionKind
         ) PURE;
-    
+
     // GetFunctionReturnType():
     //
     // Gets the return type of the function as an IDebugHostType.
@@ -3282,7 +3363,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
         ) PURE;
 
     // GetGenericArgumentCount():
-    // 
+    //
     // Returns the number of arguments to the generic/template.  The returned value must be greater
     // than zero.
     //
@@ -3295,7 +3376,7 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
     //
     // For the "i"-th generic argument to the generic/template, this returns a new IDebugHostSymbol
     // which represents that argument.  For templates, this is most often an IDebugHostType; however --
-    // it may be an IDebugHostConstant for non-template type arguments.  
+    // it may be an IDebugHostConstant for non-template type arguments.
     //
     // Note that it is possible for some compiler generated generics and templates that this method
     // will fail.
@@ -3311,9 +3392,9 @@ DECLARE_INTERFACE_(IDebugHostType, IDebugHostSymbol)
 //
 // IDebugHostConstant:
 //
-// A specialization of IDebugHostSymbol which represents a constant symbol.  
+// A specialization of IDebugHostSymbol which represents a constant symbol.
 // Such may be returned as the literal value for some symbol.
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDebugHostConstant
 DECLARE_INTERFACE_(IDebugHostConstant, IDebugHostSymbol)
@@ -3388,7 +3469,7 @@ DECLARE_INTERFACE_(IDebugHostConstant, IDebugHostSymbol)
 // IDebugHostField:
 //
 // A specialization of IDebugHostSymbol which represents a field of a class or struct.
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDebugHostField
 DECLARE_INTERFACE_(IDebugHostField, IDebugHostSymbol)
@@ -3496,7 +3577,7 @@ DECLARE_INTERFACE_(IDebugHostField, IDebugHostSymbol)
 // (e.g.: a global variable)
 //
 #undef INTERFACE
-#define INTERFACE IDebugHostData 
+#define INTERFACE IDebugHostData
 DECLARE_INTERFACE_(IDebugHostData, IDebugHostSymbol)
 {
     //*************************************************
@@ -3897,8 +3978,8 @@ DECLARE_INTERFACE_(IDebugHostSymbols, IUnknown)
 // The core memory access interface which a debug host presents.  This interface can be QI'd from
 // IDebugHost in order to access memory regions (be they virtual / physical / registers / etc...)
 //
-// Note that the combination of context and "location" in the methods of this interface 
-// need not necessarily refer to the virtual address space of the target.  They can refer to the 
+// Note that the combination of context and "location" in the methods of this interface
+// need not necessarily refer to the virtual address space of the target.  They can refer to the
 // physical address space of the target, an I/O space of the target, a register space of the target, etc...
 //
 #undef INTERFACE
@@ -4008,7 +4089,7 @@ DECLARE_INTERFACE_(IDebugHostMemory, IUnknown)
 // be prepared to fall back to other means.  Different hosts may extend expression valuation with non-language
 // semantics as they see fit.  Such semantics are not guaranteed to be cross compatible.  Only pure language
 // level semantics are.
-// 
+//
 #undef INTERFACE
 #define INTERFACE IDebugHostEvaluator
 DECLARE_INTERFACE_(IDebugHostEvaluator, IUnknown)
@@ -4035,10 +4116,10 @@ DECLARE_INTERFACE_(IDebugHostEvaluator, IUnknown)
 
     // EvaluateExpression():
     //
-    // Causes the host to evaluate an expression.  The input expression will be evaluated with 
+    // Causes the host to evaluate an expression.  The input expression will be evaluated with
     // language syntax.  The underlying expression evaluator will not offer any extensions which
     // are private to a particular host.  Such expressions can be evaluated via an intentional
-    // choice to call EvaluateExtendedExpression. 
+    // choice to call EvaluateExtendedExpression.
     //
     // The host context is passed in the "context" argument and
     // defines what debug target, etc...  the expression evaluation occurs in the context of.
@@ -4049,7 +4130,7 @@ DECLARE_INTERFACE_(IDebugHostEvaluator, IUnknown)
     // via some form of qualification (e.g.: a global '::', module qualification syntax, etc...)
     //
     // If the "bindingContext" argument is nullptr, all names will be bound as if the host were in the state
-    // described by the "context" argument.  This may include local variables of a specified stack frame 
+    // described by the "context" argument.  This may include local variables of a specified stack frame
     // of a specified thread, globals (as determined by the host), etc...
     //
     // The result of the expression evaluation and, optionally any resultant metadata, are returned from
@@ -4073,7 +4154,7 @@ DECLARE_INTERFACE_(IDebugHostEvaluator, IUnknown)
     // language.
     //
     // Any extension which calls this method must handle failure of the method in a graceful manner.
-    // 
+    //
     STDMETHOD(EvaluateExtendedExpression)(
         THIS_
         _In_ IDebugHostContext* context,
@@ -4181,7 +4262,7 @@ DECLARE_INTERFACE_(IDebugHostTypeSignature, IUnknown)
     // GetHashCode():
     //
     // Gets a 32-bit hash code for this type signature.  Note that any type instance which matches
-    // this particular signature (with the exception of global matches) *MUST* have the same hash code.  
+    // this particular signature (with the exception of global matches) *MUST* have the same hash code.
     //
     STDMETHOD(GetHashCode)(
         THIS_
@@ -4226,7 +4307,10 @@ enum SymbolSearchOptions
 
     // SymbolSearchCompletion: Search for symbols starting with the specified name rather than
     // symbols of the exact specified name.
-    SymbolSearchCompletion = 0x00000001
+    SymbolSearchCompletion = 0x00000001,
+
+    // SymbolSearchCaseInsensitive: Search for symbols using case-insensitive rules.
+    SymbolSearchCaseInsensitive = 0x00000002
 };
 
 // SymbolSearchInfo:
@@ -4375,7 +4459,7 @@ DECLARE_INTERFACE_(IDebugHostSymbol2, IDebugHostSymbol)
     // EnumerateChildrenEx():
     //
     // Enumerates all child symbols of the given type, name, and extended information which is present.
-    // This behaves identically to EnumerateChildren when searchInfo is nullptr.  SymbolType::Symbol 
+    // This behaves identically to EnumerateChildren when searchInfo is nullptr.  SymbolType::Symbol
     // can be used to search to search for any kind of child.
     //
     // Note that if name is nullptr, children of any name will be produced by the resulting enumerator.
@@ -4813,7 +4897,7 @@ DECLARE_INTERFACE_(IDataModelScriptTemplate, IUnknown)
 
     // GetName():
     //
-    // Gets the name of the template content.  This may fail with E_NOTIMPL if the template does not 
+    // Gets the name of the template content.  This may fail with E_NOTIMPL if the template does not
     // have a name.  A default template is not required to have a name.  All other templates must.
     //
     STDMETHOD(GetName)(
@@ -4894,7 +4978,7 @@ DECLARE_INTERFACE_(IDataModelScript, IUnknown)
     // Populate():
     //
     // Called by the host (or client) in order to change/synchronize the "content" of the script.  This does *NOT*
-    // cause execution of the script of any objects that the script manipulates.  It merely tells the script provider 
+    // cause execution of the script of any objects that the script manipulates.  It merely tells the script provider
     // that the content of the script has changed so that it may synchronize its own internal state.
     //
     // The implementer of the Populate method may not hold the content stream between the Populate and Execute calls.
@@ -4915,12 +4999,12 @@ DECLARE_INTERFACE_(IDataModelScript, IUnknown)
     // script fails to execute (e.g.: syntax errors, etc...), the prior contents of the projection should *not*
     // disappear.
     //
-    // For a properly written script provider and script environment, calling Execute multiple times without an 
+    // For a properly written script provider and script environment, calling Execute multiple times without an
     // intervening Populate() or Unlink() call should be idempotent.  Execution of a script should create a bridge
     // between the object model of the debugger and that of the script.  It should not produce side effecting results
     // on the state of the debug target.   Utilizing properties, methods, or events on the bridge produced via
     // Execute may indeed produce side effecting results.
-    // 
+    //
     STDMETHOD(Execute)(
         THIS_
         _In_ IDataModelScriptClient *client
@@ -5018,8 +5102,8 @@ DECLARE_INTERFACE_(IDataModelScriptTemplateEnumerator, IUnknown)
 // IDataModelScriptProvider:
 //
 // The core interface that any extension which wishes to act as a script provider to the underlying host must
-// implement.  
-// 
+// implement.
+//
 #undef INTERFACE
 #define INTERFACE IDataModelScriptProvider
 DECLARE_INTERFACE_(IDataModelScriptProvider, IUnknown)
@@ -5043,7 +5127,7 @@ DECLARE_INTERFACE_(IDataModelScriptProvider, IUnknown)
 
     //*************************************************
     // IDataModelScriptProvider:
-    
+
     // GetName():
     //
     // Returns the name (type) of the script provider (e.g.: "JavaScript", "Python", "NatVis", etc...)
@@ -5283,7 +5367,7 @@ DECLARE_INTERFACE_(IDynamicKeyProviderConcept, IUnknown)
     // will not stop the search.
     //
     // It is perfectly legal for GetKey to return a boxed property accessor as the key.  This would
-    // be semantically identical to an IModelObject::GetKey returning a property accessor.  
+    // be semantically identical to an IModelObject::GetKey returning a property accessor.
     //
     STDMETHOD(GetKey)(
         THIS_
@@ -5570,7 +5654,7 @@ DECLARE_INTERFACE_(IDataModelNameBinder, IUnknown)
     // script providers.
     //
     // The binding result is the result by value.
-    // 
+    //
     STDMETHOD(BindValue)(
         THIS_
         _In_ IModelObject* contextObject,
@@ -5669,7 +5753,7 @@ DECLARE_INTERFACE_(IModelKeyReference2, IModelKeyReference)
         THIS_
         _Out_ BSTR* keyName
         ) PURE;
-    
+
     STDMETHOD(GetOriginalObject)(
         THIS_
         _COM_Outptr_ IModelObject** originalObject
@@ -5772,7 +5856,7 @@ DECLARE_INTERFACE_(IDebugHostEvaluator2, IDebugHostEvaluator)
 
     // AssignTo():
     //
-    // For a caller which has a model based reference to a *language* value, evaluate 
+    // For a caller which has a model based reference to a *language* value, evaluate
     // (assignmentReference = assignmentValue) and return the result of the assignment
     // according to the underlying language semantics.
     //
@@ -5792,7 +5876,7 @@ DECLARE_INTERFACE_(IDebugHostEvaluator2, IDebugHostEvaluator)
 // The second version of the interface for the data model manager.  This is the interface by which new objects are created,
 // intrinsic values are boxed and unboxed, and models are registered for types.
 //
-// This interface is never directly implemented by a client. 
+// This interface is never directly implemented by a client.
 //
 #undef INTERFACE
 #define INTERFACE IDataModelManager2
@@ -5842,7 +5926,7 @@ DECLARE_INTERFACE_(IDataModelManager2, IDataModelManager)
         _In_ IDebugHostType* objectType,
         _COM_Errorptr_ IModelObject** object
         ) PURE;
-    
+
     STDMETHOD(CreateTypedObjectReference)(
         THIS_
         _In_opt_ IDebugHostContext* context,
@@ -5949,12 +6033,12 @@ DECLARE_INTERFACE_(IDataModelManager2, IDataModelManager)
 
     // AcquireSubNamespace():
     //
-    // A convenience method for acquiring (and registering if necessary) a sub-namespace on an object.  
+    // A convenience method for acquiring (and registering if necessary) a sub-namespace on an object.
     //
-    // modelName 
+    // modelName
     //     the name of the model which is being extended with a namespace (e.g.: "Debugger.Models.Process")
     //
-    // subNamespaceModelName 
+    // subNamespaceModelName
     //     the name of the model which is being added (e.g.: "Debugger.Models.Process.Io")
     //
     // accessName
@@ -5993,12 +6077,12 @@ DECLARE_INTERFACE_(IDataModelManager2, IDataModelManager)
 //
 // IDebugHostMemory2:
 //
-// The second version of the core memory access interface which a debug host presents.  
-// This interface can be QI'd from IDebugHost in order to access memory regions (be they 
+// The second version of the core memory access interface which a debug host presents.
+// This interface can be QI'd from IDebugHost in order to access memory regions (be they
 // virtual / physical / registers / etc...)
 //
-// Note that the combination of context and "location" in the methods of this interface 
-// need not necessarily refer to the virtual address space of the target.  They can refer to the 
+// Note that the combination of context and "location" in the methods of this interface
+// need not necessarily refer to the virtual address space of the target.  They can refer to the
 // physical address space of the target, an I/O space of the target, a register space of the target, etc...
 //
 #undef INTERFACE
@@ -6072,8 +6156,8 @@ DECLARE_INTERFACE_(IDebugHostMemory2, IDebugHostMemory)
     // LinearizeLocation():
     //
     // Takes a location which may represent something other than a virtual memory address and attempts
-    // to linearize the location into a virtual memory address within the given context.  This operation may fail 
-    // if the location cannot be represented by a virtual address (e.g.: it's a register). 
+    // to linearize the location into a virtual memory address within the given context.  This operation may fail
+    // if the location cannot be represented by a virtual address (e.g.: it's a register).
     //
     STDMETHOD(LinearizeLocation)(
         _In_ IDebugHostContext* context,
@@ -6117,7 +6201,7 @@ DECLARE_INTERFACE_(IDebugHostExtensibility, IUnknown)
     // For a function that the script wants to make a "quick alias" for, allow the host to create
     // such an alias.  The meaning of such an alias is host specific.  It may, for instance, mean
     // that the alias name is available as a root function in the host's expression evaluator.  It
-    // may mean that calling the function can be done through "!alias" at a command line. 
+    // may mean that calling the function can be done through "!alias" at a command line.
     //
     STDMETHOD(CreateFunctionAlias)(
         THIS_
@@ -6194,7 +6278,7 @@ enum ScriptDebugEvent
     // ScriptDebugAsyncBreak: indicates that a break into the script occurred (either because of something like break on entry, break on abort,
     //                        etc...)
     ScriptDebugAsyncBreak
-    
+
 };
 
 // enum ScriptExecutionKind
@@ -6320,7 +6404,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebugVariableSetEnumerator, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebugVariableSetEnumerator:
 
     // Reset():
@@ -6370,7 +6454,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebugStackFrame, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebugStackFrame:
 
     // GetName():
@@ -6481,7 +6565,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebugStack, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebugStack:
 
     // GetFrameCount():
@@ -6528,7 +6612,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebugBreakpoint, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebugBreakpoint:
 
     // GetId():
@@ -6610,12 +6694,12 @@ DECLARE_INTERFACE_(IDataModelScriptDebugBreakpointEnumerator, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebugBreakpointEnumerator:
 
     // Reset():
     //
-    // Resets the enumerator 
+    // Resets the enumerator
     //
     STDMETHOD(Reset)(
         THIS
@@ -6659,7 +6743,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebug, IUnknown)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebug:
 
     // GetDebugState():
@@ -6707,7 +6791,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebug, IUnknown)
         _In_ ULONG columnPosition,
         _COM_Outptr_ IDataModelScriptDebugBreakpoint **breakpoint
         ) PURE;
-    
+
     // FindBreakpointById():
     //
     // Finds a breakpoint by its identifier.
@@ -6762,7 +6846,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebug, IUnknown)
 
     // StopDebugging():
     //
-    // Called by a client which wishes to stop debugging a script.  This may be called from a break status or 
+    // Called by a client which wishes to stop debugging a script.  This may be called from a break status or
     // a running status of the script.  It immediately ceases all debugging activity and resets the state back to before
     // StartDebugging was called.
     //
@@ -6800,7 +6884,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebug2, IDataModelScriptDebug)
         THIS
         ) PURE;
 
-    //************************************************* 
+    //*************************************************
     // IDataModelScriptDebug:
 
     STDMETHOD_(ScriptDebugState, GetDebugState)(
@@ -6825,7 +6909,7 @@ DECLARE_INTERFACE_(IDataModelScriptDebug2, IDataModelScriptDebug)
         _In_ ULONG columnPosition,
         _COM_Outptr_ IDataModelScriptDebugBreakpoint **breakpoint
         ) PURE;
-    
+
     STDMETHOD(FindBreakpointById)(
         THIS_
         _In_ ULONG64 breakpointId,
@@ -6988,7 +7072,6 @@ DECLARE_INTERFACE_(IDebugHostModule2, IDebugHostModule)
         _Out_ IDebugHostSymbol** symbol,
         _Out_ ULONG64 *offset
         ) PURE;
-
 };
 
 #undef INTERFACE
@@ -7060,7 +7143,7 @@ DECLARE_INTERFACE_(IEquatableConcept, IUnknown)
 
     // AreObjectsEqual():
     //
-    // Compares this object to another (of arbitrary type) for equality.  If 
+    // Compares this object to another (of arbitrary type) for equality.  If
     // the comparison cannot be performed, E_NOT_SET should be returned.
     //
     STDMETHOD(AreObjectsEqual)(
@@ -7133,7 +7216,7 @@ HRESULT ConvertException(const FN& fn)
 template<typename T>
 Microsoft::WRL::ComPtr<IModelPropertyAccessor>
 BindProperty(
-    T* classObject, 
+    T* classObject,
     HRESULT (T::* getMethod)(PCWSTR key, IModelObject* contextObject, IModelObject** value),
     HRESULT (T::* setMethod)(PCWSTR key, IModelObject* contextObject, IModelObject** value)
     )
@@ -7142,10 +7225,10 @@ BindProperty(
     // PropertyAccessor:
     //
 
-    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<ClassicCom>, IModelPropertyAccessor>
+    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::ClassicCom>, IModelPropertyAccessor>
     {
         PropertyAccessor(
-            T* classObject, 
+            T* classObject,
             HRESULT(T::* getMethod)(PCWSTR, IModelObject*, IModelObject**),
             HRESULT(T::* setMethod)(PCWSTR, IModelObject*, IModelObject**)
             ) :
@@ -7194,7 +7277,7 @@ BindProperty(
 
     };
 
-    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Make<PropertyAccessor>(classObject, getMethod, setMethod);
+    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Microsoft::WRL::Make<PropertyAccessor>(classObject, getMethod, setMethod);
     return spPropertyAccessor.Detach();
 }
 
@@ -7217,7 +7300,7 @@ BindProperty(
     // PropertyAccessor:
     //
 
-    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<ClassicCom>, IModelPropertyAccessor>
+    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::ClassicCom>, IModelPropertyAccessor>
     {
         PropertyAccessor(
             const TGet& getFunctor,
@@ -7257,7 +7340,7 @@ BindProperty(
         TSet _setFunctor;
     };
 
-    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Make<PropertyAccessor>(getFunctor, setFunctor);
+    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Microsoft::WRL::Make<PropertyAccessor>(getFunctor, setFunctor);
     return spPropertyAccessor;
 }
 
@@ -7295,7 +7378,7 @@ BindReadOnlyProperty(
     // PropertyAccessor:
     //
 
-    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<ClassicCom>, IModelPropertyAccessor>
+    struct PropertyAccessor : Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::ClassicCom>, IModelPropertyAccessor>
     {
         PropertyAccessor(
             const TGet& getFunctor
@@ -7330,13 +7413,13 @@ BindReadOnlyProperty(
         TGet _getFunctor;
     };
 
-    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Make<PropertyAccessor>(getFunctor);
+    Microsoft::WRL::ComPtr<PropertyAccessor> spPropertyAccessor = Microsoft::WRL::Make<PropertyAccessor>(getFunctor);
     return spPropertyAccessor;
 }
 
 #endif // _WRL_CLIENT_H_
 
-} // namespace: DataModel 
+} // namespace: DataModel
 
 } // namespace: Debugger
 

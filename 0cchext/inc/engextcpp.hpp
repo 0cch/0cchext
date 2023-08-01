@@ -218,14 +218,14 @@ public:
     {
         return m_Ptr != NULL;
     }
-    void Throw(void) const throw(...)
+    void Throw(void) const
     {
         if (!m_Ptr)
         {
             throw ExtCheckedPointerException(m_Message);
         }
     }
-    _T* Get(void) const throw(...)
+    _T* Get(void) const
     {
         Throw();
         return m_Ptr;
@@ -244,15 +244,15 @@ public:
         return !(*this == Ptr);
     }
 
-    operator _T*(void) throw(...)
+    operator _T*(void)
     {
         return Get();
     }
-    operator const _T*(void) const throw(...)
+    operator const _T*(void) const
     {
         return Get();
     }
-    _T* operator->(void) const throw(...)
+    _T* operator->(void) const
     {
         return Get();
     }
@@ -297,7 +297,7 @@ public:
         EXT_RELEASE(m_Unk);
     }
     
-    _T* Get(void) const throw(...)
+    _T* Get(void) const
     {
         if (!m_Unk)
         {
@@ -327,11 +327,11 @@ public:
         return !(*this == Unk);
     }
     
-    operator _T*(void) throw(...)
+    operator _T*(void)
     {
         return Get();
     }
-    _T* operator->(void) throw(...)
+    _T* operator->(void)
     {
         return Get();
     }
@@ -384,7 +384,7 @@ public:
         Delete();
     }
 
-    _T* New(void) throw(...)
+    _T* New(void)
     {
         if (_Vector)
         {
@@ -399,7 +399,7 @@ public:
         Set(Ptr);
         return Ptr;
     }
-    _T* New(_In_ ULONG Elts) throw(...)
+    _T* New(_In_ ULONG Elts)
     {
         if (Elts > (ULONG_PTR)-1 / sizeof(_T))
         {
@@ -433,7 +433,7 @@ public:
         m_Ptr = NULL;
     }
         
-    _T* Get(void) const throw(...)
+    _T* Get(void) const
     {
         if (!m_Ptr)
         {
@@ -463,15 +463,15 @@ public:
         return !(*this == Ptr);
     }
     
-    operator _T*(void) throw(...)
+    operator _T*(void)
     {
         return Get();
     }
-    operator const _T*(void) const throw(...)
+    operator const _T*(void) const
     {
         return Get();
     }
-    _T* operator->(void) const throw(...)
+    _T* operator->(void) const
     {
         return Get();
     }
@@ -529,7 +529,7 @@ public:
         Restore();
     }
 
-    void WINAPI Refresh(void) throw(...);
+    void WINAPI Refresh(void);
     void WINAPI Restore(void);
 
     ULONG m_ThreadId;
@@ -565,7 +565,7 @@ public:
         Restore();
     }
 
-    void WINAPI Refresh(void) throw(...);
+    void WINAPI Refresh(void);
     void WINAPI Restore(void);
 
     ULONG m_ProcessId;
@@ -601,7 +601,7 @@ public:
         Restore();
     }
 
-    void WINAPI Refresh(void) throw(...);
+    void WINAPI Refresh(void);
     void WINAPI Restore(void);
 
     bool IsHolding(void)
@@ -642,7 +642,7 @@ public:
         Restore();
     }
 
-    void WINAPI Refresh(void) throw(...);
+    void WINAPI Refresh(void);
     void WINAPI Restore(void);
 
     ULONG m_Radix;
@@ -700,7 +700,7 @@ public:
     {
         Set(Ptr, Elts, Owned, 0);
     }
-    void SetEltsUsed(_In_ ULONG Elts) throw(...)
+    void SetEltsUsed(_In_ ULONG Elts)
     {
         if (Elts > m_EltsAlloc)
         {
@@ -712,7 +712,7 @@ public:
         m_EltsUsed = Elts;
     }
 
-    void Resize(_In_ ULONG Elts) throw(...)
+    void Resize(_In_ ULONG Elts)
     {
         if (Elts > (ULONG_PTR)-1 / sizeof(_T))
         {
@@ -749,7 +749,7 @@ public:
     // can be done for the caller here.  The request
     // is for Elts+Extra slots to be available for use.
     void Require(_In_ ULONG Elts,
-                 _In_ ULONG Extra = 0) throw(...)
+                 _In_ ULONG Extra = 0)
     {
         if (Elts > (ULONG)-1 - Extra)
         {
@@ -765,7 +765,7 @@ public:
         }
     }
     void RequireRounded(_In_ ULONG Elts,
-                        _In_ ULONG Round) throw(...)
+                        _In_ ULONG Round)
     {
         if (Round < 2 ||
             Elts > (ULONG)-1 - Round)
@@ -806,13 +806,13 @@ public:
         m_Owned = false;
     }
 
-    _T* Get(_In_ ULONG Use) throw(...)
+    _T* Get(_In_ ULONG Use)
     {
         Require(Use);
         m_EltsUsed = Use;
         return m_Ptr;
     }
-    _T* GetBuffer(void) const throw(...)
+    _T* GetBuffer(void) const
     {
         if (!m_Ptr)
         {
@@ -825,11 +825,11 @@ public:
     {
         return m_Ptr;
     }
-    operator _T*(void) throw(...)
+    operator _T*(void)
     {
         return GetBuffer();
     }
-    operator const _T*(void) const throw(...)
+    operator const _T*(void) const
     {
         return GetBuffer();
     }
@@ -904,7 +904,7 @@ class ExtDeclBuffer : public ExtBuffer<_T>
 {
 public:
     ExtDeclBuffer(void) :
-        ExtBuffer(m_Decl, _DeclElts, false, 0)
+        ExtBuffer<_T>(m_Decl, _DeclElts, false, 0)
     {
     };
 
@@ -937,7 +937,7 @@ class ExtDeclAlignedBuffer : public ExtBuffer<_T>
 {
 public:
     ExtDeclAlignedBuffer(void) :
-        ExtBuffer((_T*)m_Decl, _DeclElts, false, 0)
+        ExtBuffer<_T>((_T*)m_Decl, _DeclElts, false, 0)
     {
     };
 
@@ -1041,9 +1041,9 @@ public:
 
     void WINAPI ClearArgs(void);
     void WINAPI DeleteArgs(void);
-    PSTR WINAPI ParseDirective(_In_ PSTR Scan) throw(...);
-    void WINAPI ParseArgDesc(void) throw(...);
-    void WINAPI ExInitialize(_In_ ExtExtension* Ext) throw(...);
+    PSTR WINAPI ParseDirective(_In_ PSTR Scan);
+    void WINAPI ParseArgDesc(void);
+    void WINAPI ExInitialize(_In_ ExtExtension* Ext);
 
     ArgDesc* WINAPI FindArg(_In_ PCSTR Name);
     ArgDesc* WINAPI FindUnnamedArg(_In_ ULONG Index);
@@ -1462,12 +1462,12 @@ public:
     // handing out multiple static strings.
     //
 
-    PSTR WINAPI RequestCircleString(_In_ ULONG Chars) throw(...);
-    PSTR WINAPI CopyCircleString(_In_ PCSTR Str) throw(...);
+    PSTR WINAPI RequestCircleString(_In_ ULONG Chars);
+    PSTR WINAPI CopyCircleString(_In_ PCSTR Str);
     PSTR WINAPI PrintCircleStringVa(_In_ PCSTR Format,
-                             _In_ va_list Args) throw(...);
+                             _In_ va_list Args);
     PSTR WINAPIV PrintCircleString(_In_ PCSTR Format,
-                                   ...) throw(...);
+                                   ...);
 
     //
     // String buffer with append support.
@@ -1480,11 +1480,11 @@ public:
     
     void WINAPI SetAppendBuffer(_In_reads_(BufferChars) PSTR Buffer,
                          _In_ ULONG BufferChars);
-    void WINAPI AppendBufferString(_In_ PCSTR Str) throw(...);
+    void WINAPI AppendBufferString(_In_ PCSTR Str);
     void WINAPI AppendStringVa(_In_ PCSTR Format,
-                        _In_ va_list Args) throw(...);
+                        _In_ va_list Args);
     void WINAPIV AppendString(_In_ PCSTR Format,
-                              ...) throw(...);
+                              ...);
 
     bool IsAppendStart(void)
     {
@@ -1504,9 +1504,9 @@ public:
     // and optionally initialize an effective processor holder.
     //
 
-    ULONG WINAPI GetEffectiveProcessor(void) throw(...);
+    ULONG WINAPI GetEffectiveProcessor(void);
     void WINAPI SetEffectiveProcessor(_In_ ULONG ProcType,
-                                      _Inout_opt_ ExtEffectiveProcessorTypeHolder* Holder = NULL) throw(...);
+                                      _Inout_opt_ ExtEffectiveProcessorTypeHolder* Holder = NULL);
 
     //
     // Cached symbol info.  The cache is
@@ -1532,7 +1532,7 @@ public:
     // Symbol helpers.
     //
 
-    void WINAPI FindSymMatchStringA(void) throw(...);
+    void WINAPI FindSymMatchStringA(void);
     
     // Matches patterns using the same code as dbgeng/dbghelp.
     bool MatchPattern(_In_ PCSTR ArbitraryString,
@@ -1588,7 +1588,7 @@ public:
     bool WINAPI GetOffsetSymbol(_In_ ULONG64 Offs,
                                _Inout_ ExtBuffer<char>* Name,
                                _Out_opt_ PULONG64 Displacement = NULL,
-                               _In_ bool AddDisp = false) throw(...);
+                               _In_ bool AddDisp = false);
     
     // Returns index of the first module whose name
     // matches the given pattern.  The scan starts
@@ -1596,7 +1596,7 @@ public:
     // looks at loaded modules.
     ULONG WINAPI FindFirstModule(_In_ PCSTR Pattern,
                                  _Inout_opt_ ExtBuffer<char>* Name = NULL,
-                                 _In_ ULONG StartIndex = 0) throw(...);
+                                 _In_ ULONG StartIndex = 0);
 
     //
     // Module information helpers.
@@ -1615,7 +1615,7 @@ public:
     void ExecuteVa(_In_ ULONG OutCtl,
                    _In_ ULONG ExecFlags,
                    _In_ PCSTR Format,
-                   _In_ va_list Args) throw(...)
+                   _In_ va_list Args)
     {
         HRESULT Status;
         PSTR Cmd = PrintCircleStringVa(Format, Args);
@@ -1629,7 +1629,7 @@ public:
     void Execute(_In_ ULONG OutCtl,
                  _In_ ULONG ExecFlags,
                  _In_ PCSTR Format,
-                 ...) throw(...)
+                 ...)
     {
         va_list Args;
 
@@ -1638,7 +1638,7 @@ public:
         va_end(Args);
     }
     void Execute(_In_ PCSTR Format,
-                 ...) throw(...)
+                 ...)
     {
         va_list Args;
 
@@ -1647,7 +1647,7 @@ public:
         va_end(Args);
     }
     void ExecuteSilent(_In_ PCSTR Format,
-                       ...) throw(...)
+                       ...)
     {
         va_list Args;
 
@@ -1788,17 +1788,17 @@ public:
         return m_NumUnnamedArgs;
     }
     
-    PCSTR WINAPI GetUnnamedArgStr(_In_ ULONG Index) throw(...);
-    ULONG64 WINAPI GetUnnamedArgU64(_In_ ULONG Index) throw(...);
+    PCSTR WINAPI GetUnnamedArgStr(_In_ ULONG Index);
+    ULONG64 WINAPI GetUnnamedArgU64(_In_ ULONG Index);
     bool HasUnnamedArg(_In_ ULONG Index)
     {
         return Index < m_NumUnnamedArgs;
     }
 
     PCSTR WINAPI GetArgStr(_In_ PCSTR Name,
-                    _In_ bool Required = true) throw(...);
+                    _In_ bool Required = true);
     ULONG64 WINAPI GetArgU64(_In_ PCSTR Name,
-                      _In_ bool Required = true) throw(...);
+                      _In_ bool Required = true);
     bool HasArg(_In_ PCSTR Name)
     {
         return FindArg(Name, false) != NULL;
@@ -1812,16 +1812,16 @@ public:
     bool WINAPI SetUnnamedArg(_In_ ULONG Index,
                               _In_opt_ PCSTR StrArg,
                               _In_ ULONG64 NumArg,
-                              _In_ bool OnlyIfUnset = false) throw(...);
+                              _In_ bool OnlyIfUnset = false);
     bool SetUnnamedArgStr(_In_ ULONG Index,
                           _In_ PCSTR Arg,
-                          _In_ bool OnlyIfUnset = false) throw(...)
+                          _In_ bool OnlyIfUnset = false)
     {
         return SetUnnamedArg(Index, Arg, 0, OnlyIfUnset);
     }
     bool SetUnnamedArgU64(_In_ ULONG Index,
                           _In_ ULONG64 Arg,
-                          _In_ bool OnlyIfUnset = false) throw(...)
+                          _In_ bool OnlyIfUnset = false)
     {
         return SetUnnamedArg(Index, NULL, Arg, OnlyIfUnset);
     }
@@ -1829,16 +1829,16 @@ public:
     bool WINAPI SetArg(_In_ PCSTR Name,
                        _In_opt_ PCSTR StrArg,
                        _In_ ULONG64 NumArg,
-                       _In_ bool OnlyIfUnset = false) throw(...);
+                       _In_ bool OnlyIfUnset = false);
     bool SetArgStr(_In_ PCSTR Name,
                    _In_ PCSTR Arg,
-                   _In_ bool OnlyIfUnset = false) throw(...)
+                   _In_ bool OnlyIfUnset = false)
     {
         return SetArg(Name, Arg, 0, OnlyIfUnset);
     }
     bool SetArgU64(_In_ PCSTR Name,
                    _In_ ULONG64 Arg,
-                   _In_ bool OnlyIfUnset = false) throw(...)
+                   _In_ bool OnlyIfUnset = false)
     {
         return SetArg(Name, NULL, Arg, OnlyIfUnset);
     }
@@ -1857,16 +1857,16 @@ public:
     PCSTR WINAPI GetExpr64(_In_ PCSTR Str,
                            _In_ bool Signed,
                            _In_ ULONG64 Limit,
-                           _Out_ PULONG64 Val) throw(...);
+                           _Out_ PULONG64 Val);
     PCSTR GetExprU64(_In_ PCSTR Str,
                      _In_ ULONG64 Limit,
-                     _Out_ PULONG64 Val) throw(...)
+                     _Out_ PULONG64 Val)
     {
         return GetExpr64(Str, false, Limit, Val);
     }
     PCSTR GetExprS64(_In_ PCSTR Str,
                      _In_ LONG64 Limit,
-                     _Out_ PLONG64 Val) throw(...)
+                     _Out_ PLONG64 Val)
     {
         return GetExpr64(Str, true, (ULONG64)Limit, (PULONG64)Val);
     }
@@ -1885,7 +1885,7 @@ public:
         return FullVal.I64;
     }
 
-    void DECLSPEC_NORETURN ThrowCommandHelp(void) throw(...)
+    void DECLSPEC_NORETURN ThrowCommandHelp(void)
     {
         if (m_CurCommand)
         {
@@ -1893,35 +1893,35 @@ public:
         }
         throw ExtStatusException(E_INVALIDARG);
     }
-    void ThrowInterrupt(void) throw(...)
+    void ThrowInterrupt(void)
     {
         if (m_Control->GetInterrupt() == S_OK)
         {
             throw ExtInterruptException();
         }
     }
-    void DECLSPEC_NORETURN ThrowOutOfMemory(void) throw(...)
+    void DECLSPEC_NORETURN ThrowOutOfMemory(void)
     {
         throw ExtStatusException(E_OUTOFMEMORY);
     }
-    void DECLSPEC_NORETURN ThrowContinueSearch(void) throw(...)
+    void DECLSPEC_NORETURN ThrowContinueSearch(void)
     {
         throw ExtStatusException(DEBUG_EXTENSION_CONTINUE_SEARCH);
     }
-    void DECLSPEC_NORETURN ThrowReloadExtension(void) throw(...)
+    void DECLSPEC_NORETURN ThrowReloadExtension(void)
     {
         throw ExtStatusException(DEBUG_EXTENSION_RELOAD_EXTENSION);
     }
     void DECLSPEC_NORETURN WINAPIV ThrowInvalidArg(_In_ PCSTR Format,
-                                                    ...) throw(...);
+                                                    ...);
     void DECLSPEC_NORETURN WINAPIV ThrowRemote(_In_ HRESULT Status,
                                                _In_ PCSTR Format,
-                                               ...) throw(...);
+                                               ...);
     void DECLSPEC_NORETURN WINAPIV ThrowStatus(_In_ HRESULT Status,
                                                _In_ PCSTR Format,
-                                               ...) throw(...);
+                                               ...);
     void DECLSPEC_NORETURN WINAPIV
-        ThrowLastError(_In_opt_ PCSTR Message = NULL) throw(...)
+        ThrowLastError(_In_opt_ PCSTR Message = NULL)
         {
             ExtStatusException Ex(HRESULT_FROM_WIN32(GetLastError()),
                                   Message);
@@ -2010,7 +2010,7 @@ public:
     
     bool m_ExInitialized;
     
-    void WINAPI ExInitialize(void) throw(...);
+    void WINAPI ExInitialize(void);
 
     HRESULT WINAPI QueryMachineInfo(void);
     HRESULT WINAPI Query(_In_ PDEBUG_CLIENT Start);
@@ -2068,15 +2068,15 @@ public:
                                       _Out_ PULONG TypeFlags);
 
     ArgVal* WINAPI FindArg(_In_ PCSTR Name,
-                           _In_ bool Required) throw(...);
+                           _In_ bool Required);
     PCSTR WINAPI SetRawArgVal(_In_ ExtCommandDesc::ArgDesc* Check,
                               _In_opt_ ArgVal* Val,
                               _In_ bool ExplicitVal,
                               _In_opt_ PCSTR StrVal,
                               _In_ bool StrWritable,
-                              _In_ ULONG64 NumVal) throw(...);
+                              _In_ ULONG64 NumVal);
     void WINAPI ParseArgs(_In_ ExtCommandDesc* Desc,
-                          _In_opt_ PCSTR Args) throw(...);
+                          _In_opt_ PCSTR Args);
 
     void WINAPI OutCommandArg(_In_ ExtCommandDesc::ArgDesc* Arg,
                               _In_ bool Separate);
@@ -2310,14 +2310,14 @@ public:
         Clear();
     }
     ExtRemoteData(_In_ ULONG64 Offset,
-                  _In_ ULONG Bytes) throw(...)
+                  _In_ ULONG Bytes)
     {
         Clear();
         Set(Offset, Bytes);
     }
     ExtRemoteData(_In_opt_ PCSTR Name,
                   _In_ ULONG64 Offset,
-                  _In_ ULONG Bytes) throw(...)
+                  _In_ ULONG Bytes)
     {
         Clear();
         m_Name = Name;
@@ -2325,7 +2325,7 @@ public:
     }
     
     void Set(_In_ ULONG64 Offset,
-             _In_ ULONG Bytes) throw(...)
+             _In_ ULONG Bytes)
     {
         m_Offset = Offset;
         m_ValidOffset = true;
@@ -2342,123 +2342,123 @@ public:
     }
     void WINAPI Set(_In_ const DEBUG_TYPED_DATA* Typed);
 
-    void WINAPI Read(void) throw(...);
-    void WINAPI Write(void) throw(...);
+    void WINAPI Read(void);
+    void WINAPI Write(void);
 
-    ULONG64 WINAPI GetData(_In_ ULONG Request) throw(...);
+    ULONG64 WINAPI GetData(_In_ ULONG Request);
     void WINAPI SetData(_In_ ULONG64 Data,
                         _In_ ULONG Request,
-                        _In_ bool NoWrite = false) throw(...);
+                        _In_ bool NoWrite = false);
 
     //
     // Fixed-size primitive type accesses.
     // Accesses are validated against the known data size.
     //
     
-    CHAR GetChar(void) throw(...)
+    CHAR GetChar(void)
     {
         return (CHAR)GetData(sizeof(CHAR));
     }
-    UCHAR GetUchar(void) throw(...)
+    UCHAR GetUchar(void)
     {
         return (UCHAR)GetData(sizeof(UCHAR));
     }
-    BOOLEAN GetBoolean(void) throw(...)
+    BOOLEAN GetBoolean(void)
     {
         return (BOOLEAN)GetData(sizeof(BOOLEAN));
     }
-    bool GetStdBool(void) throw(...)
+    bool GetStdBool(void)
     {
         return GetData(sizeof(bool)) != 0;
     }
-    BOOL GetW32Bool(void) throw(...)
+    BOOL GetW32Bool(void)
     {
         return (BOOL)GetData(sizeof(BOOL));
     }
-    SHORT GetShort(void) throw(...)
+    SHORT GetShort(void)
     {
         return (SHORT)GetData(sizeof(SHORT));
     }
-    USHORT GetUshort(void) throw(...)
+    USHORT GetUshort(void)
     {
         return (USHORT)GetData(sizeof(USHORT));
     }
-    LONG GetLong(void) throw(...)
+    LONG GetLong(void)
     {
         return (LONG)GetData(sizeof(LONG));
     }
-    ULONG GetUlong(void) throw(...)
+    ULONG GetUlong(void)
     {
         return (ULONG)GetData(sizeof(ULONG));
     }
-    LONG64 GetLong64(void) throw(...)
+    LONG64 GetLong64(void)
     {
         return (LONG64)GetData(sizeof(LONG64));
     }
-    ULONG64 GetUlong64(void) throw(...)
+    ULONG64 GetUlong64(void)
     {
         return (ULONG64)GetData(sizeof(ULONG64));
     }
-    float GetFloat(void) throw(...)
+    float GetFloat(void)
     {
         GetData(sizeof(float));
         return *(float *)&m_Data;
     }
-    double GetDouble(void) throw(...)
+    double GetDouble(void)
     {
         GetData(sizeof(double));
         return *(double *)&m_Data;
     }
     
-    void SetChar(_In_ CHAR Data) throw(...)
+    void SetChar(_In_ CHAR Data)
     {
         SetData(Data, sizeof(CHAR));
     }
-    void SetUchar(_In_ UCHAR Data) throw(...)
+    void SetUchar(_In_ UCHAR Data)
     {
         SetData(Data, sizeof(UCHAR));
     }
-    void SetBoolean(_In_ BOOLEAN Data) throw(...)
+    void SetBoolean(_In_ BOOLEAN Data)
     {
         SetData(Data, sizeof(BOOLEAN));
     }
-    void SetStdBool(_In_ bool Data) throw(...)
+    void SetStdBool(_In_ bool Data)
     {
         SetData(Data, sizeof(bool));
     }
-    void SetW32Bool(_In_ BOOL Data) throw(...)
+    void SetW32Bool(_In_ BOOL Data)
     {
         SetData(Data, sizeof(BOOL));
     }
-    void SetShort(_In_ SHORT Data) throw(...)
+    void SetShort(_In_ SHORT Data)
     {
         SetData(Data, sizeof(SHORT));
     }
-    void SetUshort(_In_ USHORT Data) throw(...)
+    void SetUshort(_In_ USHORT Data)
     {
         SetData(Data, sizeof(USHORT));
     }
-    void SetLong(_In_ LONG Data) throw(...)
+    void SetLong(_In_ LONG Data)
     {
         SetData(Data, sizeof(LONG));
     }
-    void SetUlong(_In_ ULONG Data) throw(...)
+    void SetUlong(_In_ ULONG Data)
     {
         SetData(Data, sizeof(ULONG));
     }
-    void SetLong64(_In_ LONG64 Data) throw(...)
+    void SetLong64(_In_ LONG64 Data)
     {
         SetData(Data, sizeof(LONG64));
     }
-    void SetUlong64(_In_ ULONG64 Data) throw(...)
+    void SetUlong64(_In_ ULONG64 Data)
     {
         SetData(Data, sizeof(ULONG64));
     }
-    void SetFloat(_In_ float Data) throw(...)
+    void SetFloat(_In_ float Data)
     {
         SetData(*(ULONG*)&Data, sizeof(float));
     }
-    void SetDouble(_In_ double Data) throw(...)
+    void SetDouble(_In_ double Data)
     {
         SetData(*(ULONG64*)&Data, sizeof(double));
     }
@@ -2469,13 +2469,13 @@ public:
     // Accesses are validated against the known data size.
     //
     
-    LONG64 GetLongPtr(void) throw(...)
+    LONG64 GetLongPtr(void)
     {
         return g_Ext->m_PtrSize == 8 ?
             (LONG64)GetData(g_Ext->m_PtrSize) :
             (LONG)GetData(g_Ext->m_PtrSize);
     }
-    ULONG64 GetUlongPtr(void) throw(...)
+    ULONG64 GetUlongPtr(void)
     {
         return (ULONG64)GetData(g_Ext->m_PtrSize);
     }
@@ -2486,11 +2486,11 @@ public:
     // Accesses are validated against the known data size.
     //
     
-    void SetLongPtr(_In_ LONG64 Data) throw(...)
+    void SetLongPtr(_In_ LONG64 Data)
     {
         SetData(Data, g_Ext->m_PtrSize);
     }
-    void SetUlongPtr(_In_ ULONG64 Data) throw(...)
+    void SetUlongPtr(_In_ ULONG64 Data)
     {
         SetData(Data, g_Ext->m_PtrSize);
     }
@@ -2499,7 +2499,7 @@ public:
     // Pointer data read, with automatic sign extension.
     //
     
-    ULONG64 GetPtr(void) throw(...)
+    ULONG64 GetPtr(void)
     {
         return g_Ext->m_PtrSize == 8 ?
             GetData(g_Ext->m_PtrSize) :
@@ -2510,7 +2510,7 @@ public:
     // Pointer data write, using the current pointer size.
     //
     
-    void SetPtr(_In_ ULONG64 Data) throw(...)
+    void SetPtr(_In_ ULONG64 Data)
     {
         SetData(Data, g_Ext->m_PtrSize);
     }
@@ -2521,10 +2521,10 @@ public:
 
     ULONG WINAPI ReadBuffer(_Out_writes_bytes_(Bytes) PVOID Buffer,
                             _In_ ULONG Bytes,
-                            _In_ bool MustReadAll = true) throw(...);
+                            _In_ bool MustReadAll = true);
     ULONG WINAPI WriteBuffer(_In_reads_bytes_(Bytes) PVOID Buffer,
                              _In_ ULONG Bytes,
-                             _In_ bool MustWriteAll = true) throw(...);
+                             _In_ bool MustWriteAll = true);
     
     //
     // String reads.
@@ -2538,16 +2538,16 @@ public:
                           _In_ ULONG BufferChars,
                           _In_ ULONG MaxChars = 1024,
                           _In_ bool MustFit = false,
-                          _Out_opt_ PULONG NeedChars = NULL) throw(...);
+                          _Out_opt_ PULONG NeedChars = NULL);
     PWSTR WINAPI GetString(_Out_writes_opt_(BufferChars) PWSTR Buffer,
                            _In_ ULONG BufferChars,
                            _In_ ULONG MaxChars = 1024,
                            _In_ bool MustFit = false,
-                           _Out_opt_ PULONG NeedChars = NULL) throw(...);
+                           _Out_opt_ PULONG NeedChars = NULL);
     PSTR WINAPI GetString(_Inout_ ExtBuffer<char>* Buffer,
-                          _In_ ULONG MaxChars = 1024) throw(...);
+                          _In_ ULONG MaxChars = 1024);
     PWSTR WINAPI GetString(_Inout_ ExtBuffer<WCHAR>* Buffer,
-                           _In_ ULONG MaxChars = 1024) throw(...);
+                           _In_ ULONG MaxChars = 1024);
     
     PCSTR m_Name;
     ULONG64 m_Offset;
@@ -2590,23 +2590,23 @@ public:
     {
         Clear();
     }
-    ExtRemoteTyped(_In_ PCSTR Expr) throw(...)
+    ExtRemoteTyped(_In_ PCSTR Expr)
     {
         m_Release = false;
         Set(Expr);
     }
-    ExtRemoteTyped(_In_ const DEBUG_TYPED_DATA* Typed) throw(...)
+    ExtRemoteTyped(_In_ const DEBUG_TYPED_DATA* Typed)
     {
         m_Release = false;
         Copy(Typed);
     }
-    ExtRemoteTyped(_In_ const ExtRemoteTyped& Typed) throw(...)
+    ExtRemoteTyped(_In_ const ExtRemoteTyped& Typed)
     {
         m_Release = false;
         Copy(Typed);
     }
     ExtRemoteTyped(_In_ PCSTR Expr,
-                   _In_ ULONG64 Offset) throw(...)
+                   _In_ ULONG64 Offset)
     {
         m_Release = false;
         Set(Expr, Offset);
@@ -2615,7 +2615,7 @@ public:
                    _In_ ULONG64 Offset,
                    _In_ bool PtrTo,
                    _Inout_opt_ PULONG64 CacheCookie = NULL,
-                   _In_opt_ PCSTR LinkField = NULL) throw(...)
+                   _In_opt_ PCSTR LinkField = NULL)
     {
         m_Release = false;
         Set(Type, Offset, PtrTo, CacheCookie, LinkField);
@@ -2625,19 +2625,19 @@ public:
         Release();
     }
 
-    ExtRemoteTyped& operator=(_In_ const DEBUG_TYPED_DATA* Typed) throw(...)
+    ExtRemoteTyped& operator=(_In_ const DEBUG_TYPED_DATA* Typed)
     {
         Copy(Typed);
         return *this;
     }
-    ExtRemoteTyped& operator=(_In_ const ExtRemoteTyped& Typed) throw(...)
+    ExtRemoteTyped& operator=(_In_ const ExtRemoteTyped& Typed)
     {
         Copy(Typed);
         return *this;
     }
     
-    void WINAPI Copy(_In_ const DEBUG_TYPED_DATA* Typed) throw(...);
-    void Copy(_In_ const ExtRemoteTyped& Typed) throw(...)
+    void WINAPI Copy(_In_ const DEBUG_TYPED_DATA* Typed);
+    void Copy(_In_ const ExtRemoteTyped& Typed)
     {
         if (Typed.m_Release)
         {
@@ -2649,22 +2649,22 @@ public:
         }
     }
     
-    void WINAPI Set(_In_ PCSTR Expr) throw(...);
+    void WINAPI Set(_In_ PCSTR Expr);
     void WINAPI Set(_In_ PCSTR Expr,
-                    _In_ ULONG64 Offset) throw(...);
+                    _In_ ULONG64 Offset);
     void WINAPI Set(_In_ bool PtrTo,
                     _In_ ULONG64 TypeModBase,
                     _In_ ULONG TypeId,
-                    _In_ ULONG64 Offset) throw(...);
+                    _In_ ULONG64 Offset);
     void WINAPI Set(_In_ PCSTR Type,
                     _In_ ULONG64 Offset,
                     _In_ bool PtrTo,
                     _Inout_opt_ PULONG64 CacheCookie = NULL,
-                    _In_opt_ PCSTR LinkField = NULL) throw(...);
+                    _In_opt_ PCSTR LinkField = NULL);
 
     // Uses a circle string.
     void WINAPIV SetPrint(_In_ PCSTR Format,
-                          ...) throw(...);
+                          ...);
 
     bool HasField(_In_ PCSTR Field)
     {
@@ -2674,7 +2674,7 @@ public:
                         Field) == S_OK;
     }
 
-    ULONG GetTypeSize(void) throw(...)
+    ULONG GetTypeSize(void)
     {
         ULONG Size;
         
@@ -2683,13 +2683,13 @@ public:
         return Size;
     }
     
-    ULONG WINAPI GetFieldOffset(_In_ PCSTR Field) throw(...);
+    ULONG WINAPI GetFieldOffset(_In_ PCSTR Field);
     
-    ExtRemoteTyped WINAPI Field(_In_ PCSTR Field) throw(...);
-    ExtRemoteTyped WINAPI ArrayElement(_In_ LONG64 Index) throw(...);
-    ExtRemoteTyped WINAPI Dereference(void) throw(...);
-    ExtRemoteTyped WINAPI GetPointerTo(void) throw(...);
-    ExtRemoteTyped WINAPI Eval(_In_ PCSTR Expr) throw(...);
+    ExtRemoteTyped WINAPI Field(_In_ PCSTR Field);
+    ExtRemoteTyped WINAPI ArrayElement(_In_ LONG64 Index);
+    ExtRemoteTyped WINAPI Dereference(void);
+    ExtRemoteTyped WINAPI GetPointerTo(void);
+    ExtRemoteTyped WINAPI Eval(_In_ PCSTR Expr);
 
     ExtRemoteTyped operator[](_In_ LONG Index)
     {
@@ -2719,23 +2719,23 @@ public:
     }
     
     // Uses the circular string buffer.
-    PSTR WINAPI GetTypeName(void) throw(...);
+    PSTR WINAPI GetTypeName(void);
     // Uses the circular string buffer.
-    PSTR WINAPI GetSimpleValue(void) throw(...);
+    PSTR WINAPI GetSimpleValue(void);
     
-    void OutTypeName(void) throw(...)
+    void OutTypeName(void)
     {
         ErtIoctl("OutTypeName", EXT_TDOP_OUTPUT_TYPE_NAME, ErtIn);
     }
-    void OutSimpleValue(void) throw(...)
+    void OutSimpleValue(void)
     {
         ErtIoctl("OutSimpleValue", EXT_TDOP_OUTPUT_SIMPLE_VALUE, ErtIn);
     }
-    void OutFullValue(void) throw(...)
+    void OutFullValue(void)
     {
         ErtIoctl("OutFullValue", EXT_TDOP_OUTPUT_FULL_VALUE, ErtIn);
     }
-    void OutTypeDefinition(void) throw(...)
+    void OutTypeDefinition(void)
     {
         ErtIoctl("OutTypeDefinition", EXT_TDOP_OUTPUT_TYPE_DEFINITION, ErtIn);
     }
@@ -2750,7 +2750,7 @@ public:
     }
 
     static ULONG WINAPI GetTypeFieldOffset(_In_ PCSTR Type,
-                                           _In_ PCSTR Field) throw(...);
+                                           _In_ PCSTR Field);
 
     DEBUG_TYPED_DATA m_Typed;
     bool m_Release;
@@ -2887,7 +2887,7 @@ public:
                        _In_ ULONG64 TypeModBase = 0,
                        _In_ ULONG TypeId = 0,
                        _Inout_opt_ PULONG64 CacheCookie = NULL,
-                       _In_ bool Double = false) throw(...)
+                       _In_ bool Double = false)
         : ExtRemoteList(Head, 0, Double)
     {
         SetTypeAndLink(Type, LinkField, TypeModBase, TypeId, CacheCookie);
@@ -2898,7 +2898,7 @@ public:
                        _In_ ULONG64 TypeModBase = 0,
                        _In_ ULONG TypeId = 0,
                        _Inout_opt_ PULONG64 CacheCookie = NULL,
-                       _In_ bool Double = false) throw(...)
+                       _In_ bool Double = false)
         : ExtRemoteList(Head, 0, Double)
     {
         SetTypeAndLink(Type, LinkField, TypeModBase, TypeId, CacheCookie);
@@ -2908,7 +2908,7 @@ public:
                         _In_ PCSTR LinkField,
                         _In_ ULONG64 TypeModBase = 0,
                         _In_ ULONG TypeId = 0,
-                        _Inout_opt_ PULONG64 CacheCookie = NULL) throw(...)
+                        _Inout_opt_ PULONG64 CacheCookie = NULL)
     {
         m_Type = Type;
         m_TypeModBase = TypeModBase;
@@ -2927,7 +2927,7 @@ public:
         }
     }
 
-    ExtRemoteTyped GetTypedNodePtr(void) throw(...)
+    ExtRemoteTyped GetTypedNodePtr(void)
     {
         ExtRemoteTyped Typed;
 
@@ -2950,7 +2950,7 @@ public:
         }
         return Typed;
     }
-    ExtRemoteTyped GetTypedNode(void) throw(...)
+    ExtRemoteTyped GetTypedNode(void)
     {
         ExtRemoteTyped Typed;
         
@@ -3273,10 +3273,14 @@ public:
     }
     
     // IDebugOutputCallbacks*.
+
+    // The interface definitions IDebugOutputCallbacks* for Output method defines the Text parameter as "_In_ PCSTR Text" or "_In_ PCWSTR Text".
+    // Here we provide the character type with a template parameter, so to avoid OACR warnings we have to manually add "_Null_terminated_" as both
+    // PCSTR and PCWSTR have it.
     STDMETHOD(Output)(
         THIS_
         _In_ ULONG Mask,
-        _In_ const _CharType* Text
+        _In_ _Null_terminated_ const _CharType* Text
         )
     {
         ULONG Chars;

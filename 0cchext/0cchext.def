@@ -49,6 +49,7 @@ EXPORTS
 	oledata
 	cppexcrname
 	gt
+	a64
 ;--------------------------------------------------------------------
 ;
 ; these are the extension service functions provided for the debugger
