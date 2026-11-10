@@ -1,0 +1,103 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            preset: vs2022-x86
+            test_preset: vs2022-x86-release-tests
+          - arch: x64
+            preset: vs2022-x64
+            test_preset: vs2022-x64-release-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (& ./scripts/Resolve-ReleaseVersion.ps1 -Tag "${{ github.ref_name }}").Trim()
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Configure
+        shell: pwsh
+        run: >
+          cmake --preset ${{ matrix.preset }}
+          -D0CCHEXT_USE_INSTALLED_ENGEXTCPP=OFF
+          -D0CCHEXT_VERSION=${{ steps.version.outputs.value }}
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build --preset ${{ matrix.preset }}-relwithdebinfo --parallel 4
+
+      - name: Test
+        shell: pwsh
+        run: ctest --preset ${{ matrix.test_preset }} --output-on-failure
+
+      - name: Smoke test extension
+        shell: pwsh
+        run: ./tests/integration/cdb-smoke.ps1 -Architecture ${{ matrix.arch }} -BuildDirectory "${{ github.workspace }}/build/${{ matrix.arch }}/bin"
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.arch }}
+          path: |
+            build/${{ matrix.arch }}/bin/0cchext.dll
+            build/${{ matrix.arch }}/bin/0cchext.pdb
+            build/${{ matrix.arch }}/bin/luadbg.dll
+            build/${{ matrix.arch }}/bin/luadbg.pdb
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    runs-on: windows-2022
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:GITHUB_WORKSPACE "package"
+          New-Item -ItemType Directory -Force -Path "$out/x86", "$out/x64" | Out-Null
+          Copy-Item artifacts/release-x86/* "$out/x86" -Force
+          Copy-Item artifacts/release-x64/* "$out/x64" -Force
+          Copy-Item LICENSE, README.md "$out" -Force
+          Compress-Archive -Path "$out/*" -DestinationPath "0cchext-${{ github.ref_name }}.zip"
+          Get-FileHash "0cchext-${{ github.ref_name }}.zip" -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
+            Set-Content "0cchext-${{ github.ref_name }}.sha256"
+
+      - name: Publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "0cchext-${{ github.ref_name }}.zip" `
+            "0cchext-${{ github.ref_name }}.sha256" `
+            --generate-notes

@@ -1,0 +1,56 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "vs2022-x86",
+      "displayName": "Visual Studio 2022 x86",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/x86",
+      "cacheVariables": {
+        "WINDBG_ROOT": "C:/Program Files (x86)/Windows Kits/10/Debuggers"
+      }
+    },
+    {
+      "name": "vs2022-x64",
+      "displayName": "Visual Studio 2022 x64",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/x64",
+      "cacheVariables": {
+        "WINDBG_ROOT": "C:/Program Files (x86)/Windows Kits/10/Debuggers"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "vs2022-x86-relwithdebinfo",
+      "configurePreset": "vs2022-x86",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "vs2022-x64-relwithdebinfo",
+      "configurePreset": "vs2022-x64",
+      "configuration": "RelWithDebInfo"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "vs2022-x86-release-tests",
+      "configurePreset": "vs2022-x86",
+      "configuration": "RelWithDebInfo",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "vs2022-x64-release-tests",
+      "configurePreset": "vs2022-x64",
+      "configuration": "RelWithDebInfo",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

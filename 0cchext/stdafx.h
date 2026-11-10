@@ -9,6 +9,7 @@
 #include <atlstr.h>
 #include <engextcpp.hpp>
 #include <regex>
+#include <atomic>
 #include <map>
 #include <set>
 #include <vector>
@@ -20,6 +21,7 @@
 #include <wbemidl.h>
 #include <comutil.h>
 #include <mstcpip.h>
+#include <WS2tcpip.h>
 #include <time.h>
 #include <stdlib.h>
 #pragma comment( lib, "ws2_32.lib")

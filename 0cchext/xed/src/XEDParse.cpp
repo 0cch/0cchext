@@ -1,5 +1,5 @@
 #include "XEDParse.h"
-#include "..\xed2\include\xed-interface.h"
+#include "xed-interface.h"
 #include "Parser.h"
 #include "Translator.h"
 #include "ParseTest.h"
@@ -40,8 +40,8 @@ XEDPARSE_EXPORT XEDPARSE_STATUS XEDPARSE_CALL XEDParseAssemble(XEDPARSE* XEDPars
     char instString[XEDPARSE_MAXBUFSIZE];
     memset(instString, 0, sizeof(instString));
 
-    InstructionToString(instString, &instruction);
-    strcpy(XEDParse->error, instString);
+    InstructionToString(instString, sizeof(instString), &instruction);
+    strcpy_s(XEDParse->error, XEDPARSE_MAXBUFSIZE, instString);
     _strlwr(XEDParse->error);
 
     return XEDPARSE_OK;

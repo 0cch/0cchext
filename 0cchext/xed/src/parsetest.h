@@ -3,6 +3,6 @@
 
 #include "Parser.h"
 
-void OperandToString(char* Buffer, InstOperand* Operand);
-void InstructionToString(char* Buffer, Inst* Instruction);
+void OperandToString(char* Buffer, size_t BufferChars, InstOperand* Operand);
+void InstructionToString(char* Buffer, size_t BufferChars, Inst* Instruction);
 #endif

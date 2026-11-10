@@ -1,24 +1,25 @@
 #include "ParseTest.h"
 #include "Register.h"
 #include <stdio.h>
+#include <strsafe.h>
 
-void OperandToString(char* Buffer, InstOperand* Operand)
+void OperandToString(char* Buffer, size_t BufferChars, InstOperand* Operand)
 {
     switch(Operand->Type)
     {
     case OPERAND_INVALID:
-        strcpy(Buffer, "(INVALID OPERAND)");
+        StringCchCopyA(Buffer, BufferChars, "(INVALID OPERAND)");
         break;
 
     case OPERAND_REG:
-        strcpy(Buffer, RegToString(Operand->Reg.Reg));
+        StringCchCopyA(Buffer, BufferChars, RegToString(Operand->Reg.Reg));
         break;
 
     case OPERAND_IMM:
         if(Operand->Imm.Signed && Operand->Imm.simm < 0)
-            sprintf(Buffer, "-0x%llX/%d", (~Operand->Imm.imm) + 1, Operand->Size);
+            StringCchPrintfA(Buffer, BufferChars, "-0x%llX/%d", (~Operand->Imm.imm) + 1, Operand->Size);
         else
-            sprintf(Buffer, "0x%llX/%d", Operand->Imm.imm, Operand->Size);
+            StringCchPrintfA(Buffer, BufferChars, "0x%llX/%d", Operand->Imm.imm, Operand->Size);
         break;
 
     case OPERAND_MEM:
@@ -33,9 +34,9 @@ void OperandToString(char* Buffer, InstOperand* Operand)
             sprintf(base, "%s + ", RegToString(Operand->Mem.BaseVal));
 
         if(Operand->Mem.Index)
-            sprintf(scale, "%s * %d + ", RegToString(Operand->Mem.IndexVal), Operand->Mem.ScaleVal);
+            sprintf(scale, "%s * %u + ", RegToString(Operand->Mem.IndexVal), (unsigned int)Operand->Mem.ScaleVal);
 
-        sprintf(Buffer, "%s ptr %s:[%s%s0x%llX/%d]",
+        StringCchPrintfA(Buffer, BufferChars, "%s ptr %s:[%s%s0x%llX/%d]",
                 OpsizeToString(Operand->Size),
                 RegToString(Operand->Segment),
                 base,
@@ -46,35 +47,35 @@ void OperandToString(char* Buffer, InstOperand* Operand)
     break;
 
     case OPERAND_SEGSEL:
-        sprintf(Buffer, "0x%llX", Operand->Sel.Offset);
+        StringCchPrintfA(Buffer, BufferChars, "0x%llX", Operand->Sel.Offset);
         break;
     }
 }
 
-void InstructionToString(char* Buffer, Inst* Instruction)
+void InstructionToString(char* Buffer, size_t BufferChars, Inst* Instruction)
 {
     // Add the prefix if there was one
     if(Instruction->Prefix != PREFIX_NONE)
     {
-        strcat(Buffer, PrefixToString(Instruction->Prefix));
-        strcat(Buffer, " ");
+        StringCchCatA(Buffer, BufferChars, PrefixToString(Instruction->Prefix));
+        StringCchCatA(Buffer, BufferChars, " ");
     }
 
     // Append mnemonic
-    strcat(Buffer, Instruction->Mnemonic);
+    StringCchCatA(Buffer, BufferChars, Instruction->Mnemonic);
 
     // Append all operands
     if(Instruction->OperandCount > 0)
     {
-        strcat(Buffer, " ");
+        StringCchCatA(Buffer, BufferChars, " ");
 
         for(int i = 0; i < Instruction->OperandCount; i++)
         {
             char op[XEDPARSE_MAXBUFSIZE];
-            OperandToString(op, &Instruction->Operands[i]);
+            OperandToString(op, sizeof(op), &Instruction->Operands[i]);
 
-            strcat(Buffer, op);
-            strcat(Buffer, ", ");
+            StringCchCatA(Buffer, BufferChars, op);
+            StringCchCatA(Buffer, BufferChars, ", ");
         }
 
         // Remove the final trailing comma

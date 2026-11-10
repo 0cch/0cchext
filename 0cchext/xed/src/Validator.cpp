@@ -1,4 +1,5 @@
 #include "Translator.h"
+#include <mutex>
 
 // This maps an ICLASS to all of its IFORMs
 IClassType XedInstLookupTable[XED_ICLASS_LAST];
@@ -386,7 +387,11 @@ void ValidateFpuOperands(XEDPARSE* Parse, Inst* Instruction)
             continue;
 
         // String compare for _ST0
+#ifdef XEDPARSE_NEW_XED
+        const char* iformStr = xed_iform_enum_t2str(xed_inst_iform_enum(inst));
+#else
         const char* iformStr = xed_iform_enum_t2str(inst->_iform_enum);
+#endif
         size_t iformLen = strlen(iformStr);
 
         if(!strstr(iformStr, "_ST0"))
@@ -540,11 +545,8 @@ bool ValidateInstOperands(XEDPARSE* Parse, Inst* Instruction)
 
 void LookupTableInit()
 {
-    static bool bInitialized = false;
-
-    if(bInitialized)
-        return;
-
+    static std::once_flag init_flag;
+    std::call_once(init_flag, [] {
     // Initialize Xed's internal state
     xed_tables_init();
 
@@ -568,11 +570,10 @@ void LookupTableInit()
         type->IClass            = iclass;
         type->MinimumOperands   = min(xed_inst_noperands(inst), type->MinimumOperands);
 
-        if(type->InstructionCount >= 32)
-            __debugbreak(); //This can actually happen when two threads call LookupTableInit with bInitialized = false, mitigated by placing LookupTableInit() in DllMain.
+        if(type->InstructionCount >= (int)(sizeof(type->Instructions) / sizeof(type->Instructions[0])))
+            continue;
 
         type->Instructions[type->InstructionCount++] = inst;
     }
-
-    bInitialized = true;
+    });
 }

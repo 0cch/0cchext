@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "0cchext.h"
+#include "resource.h"
 #include "util.h"
 #include "struct_script.h"
-#include "xed/src/XEDParse.h"
+#include "assembler_backend.h"
 
 
 class EXT_CLASS : public ExtExtension
@@ -55,6 +56,7 @@ public:
 	EXT_COMMAND_METHOD(cppexcrname);
 	EXT_COMMAND_METHOD(gt);
 	EXT_COMMAND_METHOD(a64);
+	EXT_COMMAND_METHOD(diag);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -66,7 +68,7 @@ private:
 	ULONG GetAddressPtrSize();
 
 	CComPtr<IDebugClient> log_client_;
-	
+
 };
 
 EXT_DECLARE_GLOBALS();
@@ -114,36 +116,36 @@ EXT_COMMAND(hwnd,
 			Out("Window Name: %mu\n", wnd_ptr.Field("strName.Buffer").GetPtr());
 		}
 
-		Dml("tagCLS * @ <link cmd=\"r @$t0=%p;dt @@C++(((win32k!tagWnd *)@$t0)->pcls) win32k!tagCLS\">%p</link>\n", 
+		Dml("tagCLS * @ <link cmd=\"r @$t0=%p;dt @@C++(((win32k!tagWnd *)@$t0)->pcls) win32k!tagCLS\">%p</link>\n",
 			wnd_data.GetPtr(), wnd_ptr.Field("pcls").GetPtr());
 
 		if (wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr() != 0) {
 			Out("Window Class Name: %ma\n", wnd_ptr.Field("pcls.lpszAnsiClassName").GetPtr());
 		}
 		if (wnd_ptr.Field("spwndNext").GetPtr() != 0) {
-			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %p\">%p</link>\n",
 				wnd_ptr.Field("spwndNext.head.h").GetPtr(), wnd_ptr.Field("spwndNext.head.h").GetPtr());
 		}
 		if (wnd_ptr.Field("spwndPrev").GetPtr() != 0) {
-			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %p\">%p</link>\n",
 				wnd_ptr.Field("spwndPrev.head.h").GetPtr(), wnd_ptr.Field("spwndPrev.head.h").GetPtr());
 		}
 		if (wnd_ptr.Field("spwndParent").GetPtr() != 0) {
-			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %p\">%p</link>\n",
 				wnd_ptr.Field("spwndParent.head.h").GetPtr(), wnd_ptr.Field("spwndParent.head.h").GetPtr());
 		}
 		if (wnd_ptr.Field("spwndChild").GetPtr() != 0) {
-			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %p\">%p</link>\n",
 				wnd_ptr.Field("spwndChild.head.h").GetPtr(), wnd_ptr.Field("spwndChild.head.h").GetPtr());
 		}
 		if (wnd_ptr.Field("spwndOwner").GetPtr() != 0) {
-			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %p\">%p</link>\n", 
+			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %p\">%p</link>\n",
 				wnd_ptr.Field("spwndOwner.head.h").GetPtr(), wnd_ptr.Field("spwndOwner.head.h").GetPtr());
 		}
 		if (wnd_ptr.Field("lpfnWndProc").GetPtr() != 0) {
 			Dml("pfnWndProc:   "
 				"<link cmd=\"r @$t0=%p;.process /p /r @@C++(((nt!_ETHREAD *)((win32k!tagWnd *)@$t0)->head.pti->pEThread)->Tcb.Process);"
-				"u @@C++(((win32k!tagWnd *)@$t0)->lpfnWndProc)\">%p</link>\n", 
+				"u @@C++(((win32k!tagWnd *)@$t0)->lpfnWndProc)\">%p</link>\n",
 				wnd_data.GetPtr(), wnd_ptr.Field("lpfnWndProc").GetPtr());
 		}
 
@@ -153,7 +155,7 @@ EXT_COMMAND(hwnd,
 		Out("Child:    %d\n", (style & (1<<30)) != 0);
 		Out("Minimized:%d\n", (style & (1<<29)) != 0);
 		Out("Disabled: %d\n", (style & (1<<27)) != 0);
-		Out("Window Rect {%d, %d, %d, %d}\n", 
+		Out("Window Rect {%d, %d, %d, %d}\n",
 			wnd_ptr.Field("rcWindow.left").GetLong(),
 			wnd_ptr.Field("rcWindow.top").GetLong(),
 			wnd_ptr.Field("rcWindow.right").GetLong(),
@@ -192,31 +194,31 @@ EXT_COMMAND(hwnd,
 
 		HWND next_wnd = GetWindow(wnd, GW_HWNDNEXT);
 		if (next_wnd != 0) {
-			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+			Dml("Next Wnd:     <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n",
 				(ULONG64)next_wnd, (ULONG64)next_wnd);
 		}
 
 		HWND prev_wnd = GetWindow(wnd, GW_HWNDPREV);
 		if (prev_wnd != 0) {
-			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+			Dml("Previous Wnd: <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n",
 				(ULONG64)prev_wnd, (ULONG64)prev_wnd);
 		}
 
 		HWND parent_wnd = GetParent(wnd);
 		if (parent_wnd != 0) {
-			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+			Dml("Parent Wnd:   <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n",
 				(ULONG64)parent_wnd, (ULONG64)parent_wnd);
 		}
 
 		HWND child_wnd = GetWindow(wnd, GW_CHILD);
 		if (child_wnd != 0) {
-			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+			Dml("Child Wnd:    <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n",
 				(ULONG64)child_wnd, (ULONG64)child_wnd);
 		}
 
 		HWND own_wnd = GetWindow(wnd, GW_OWNER);
 		if (own_wnd != 0) {
-			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n", 
+			Dml("Own Wnd:      <link cmd=\"!0cchext.hwnd %I64X\">%I64X</link>\n",
 				(ULONG64)own_wnd, (ULONG64)own_wnd);
 		}
 
@@ -225,10 +227,10 @@ EXT_COMMAND(hwnd,
 		Out("Child:    %d\n", (style & (1<<30)) != 0);
 		Out("Minimized:%d\n", (style & (1<<29)) != 0);
 		Out("Disabled: %d\n", (style & (1<<27)) != 0);
-		
+
 		RECT rc;
 		GetWindowRect(wnd, &rc);
-		Out("Window Rect {%d, %d, %d, %d}\n", 
+		Out("Window Rect {%d, %d, %d, %d}\n",
 			rc.left,
 			rc.top,
 			rc.right,
@@ -275,17 +277,17 @@ EXT_COMMAND(setvprot,
 	}
 
 	ULONG old_type = 0;
-	if (!VirtualProtectEx((HANDLE)handle, 
-		(PVOID)base_address, 
-		(SIZE_T)region_size, 
-		(ULONG)protection_type, 
+	if (!VirtualProtectEx((HANDLE)handle,
+		(PVOID)base_address,
+		(SIZE_T)region_size,
+		(ULONG)protection_type,
 		&old_type)) {
 			Err("Failed to set virtual protection type.\n");
 			return;
 	}
 
 	Dml("[%p - %p] Change %08X to %08X <link cmd=\"!vprot %p\">Detail</link>\n",
-		base_address, region_size, (ULONG)old_type, (ULONG)protection_type, base_address);
+		base_address, base_address + region_size, (ULONG)old_type, (ULONG)protection_type, base_address);
 }
 
 EXT_COMMAND(dpx,
@@ -297,6 +299,10 @@ EXT_COMMAND(dpx,
 {
 	ULONG64 base_address = GetUnnamedArgU64(0);
 	ULONG64 range = GetUnnamedArgU64(1);
+	if (range > 0x10000) {
+		Err("Range is too large. Maximum supported range is 0x10000 pointers.\n");
+		return;
+	}
 
 	ULONG64 query_data;
 	CHAR sym_buffer[128];
@@ -335,31 +341,31 @@ EXT_COMMAND(dpx,
 		ZeroMemory(buffer, sizeof(buffer));
 		print_flag = 0;
 
-		if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data, 
-			sym_buffer, 
-			sizeof(sym_buffer), 
-			&ret_size, 
+		if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data,
+			sym_buffer,
+			sizeof(sym_buffer),
+			&ret_size,
 			&displacement))) {
 				print_flag |= 1;
 		}
-		
+
 		ZeroMemory(unicode_buffer, sizeof(unicode_buffer));
-		if (m_Data4->ReadUnicodeStringVirtualWide(query_data, 
-			_countof(unicode_buffer) - 1, 
-			unicode_buffer, 
-			_countof(unicode_buffer) - 1, 
-			&ret_size) != E_INVALIDARG && 
+		if (m_Data4->ReadUnicodeStringVirtualWide(query_data,
+			_countof(unicode_buffer) - 1,
+			unicode_buffer,
+			_countof(unicode_buffer) - 1,
+			&ret_size) != E_INVALIDARG &&
 			wcslen(unicode_buffer) != 0 &&
 			IsPrintAbleW(unicode_buffer, (ULONG)wcslen(unicode_buffer))) {
 				print_flag |= 2;
 		}
-		
+
 		ZeroMemory(buffer, sizeof(buffer));
-		if (m_Data4->ReadMultiByteStringVirtual(query_data, 
-			0x1000, 
-			buffer, 
-			sizeof(buffer) - 1, 
-			&ret_size) != E_INVALIDARG && 
+		if (m_Data4->ReadMultiByteStringVirtual(query_data,
+			0x1000,
+			buffer,
+			sizeof(buffer) - 1,
+			&ret_size) != E_INVALIDARG &&
 			strlen(buffer) != 0 &&
 			IsPrintAble(buffer, (ULONG)strlen(buffer))) {
 				print_flag |= 4;
@@ -392,7 +398,7 @@ EXT_COMMAND(dpx,
 			Dml("\n");
 		}
 	}
-	
+
 }
 
 EXT_COMMAND(grep,
@@ -476,13 +482,17 @@ EXT_COMMAND(grep,
 	std::cmatch result;
 	LPCSTR cur_text = out_text;
 	try {
-		std::regex pattern(pattern_text, 
+		std::regex pattern(pattern_text,
 			case_insensitive ? std::regex::icase | std::regex::ECMAScript : std::regex::ECMAScript);
 
 		ULONG count = 0;
 		CHAR alias[64];
 		while (std::regex_search(cur_text, result, pattern)) {
 			count++;
+			if (count > 0x10000) {
+				Err("Too many matches; stopping at 0x10000.\n");
+				break;
+			}
 
 			if (!omit_output) {
 				std::string str = ReadLines(out_text, cur_text + result.position(0), print_lines);
@@ -497,44 +507,74 @@ EXT_COMMAND(grep,
 					m_Control2->SetTextReplacement(alias, result[i].str().c_str());
 				}
 			}
-			
+
 		}
 
 		if (set_alias) {
 			sprintf_s(alias, 64, "%u", count);
 			m_Control2->SetTextReplacement("@#GrepCount", alias);
 		}
-		
+
 	}
 	catch (...) {
 		except_error = TRUE;
 	}
-	
+
 	if (except_error) {
 		Err("Failed to parse regex.\n");
 	}
-	
+
 	LocalFree(argv);
-	
+
 }
 
 
 
+EXT_COMMAND(diag,
+	"Show extension build and debugger diagnostics.",
+	"")
+{
+	CHAR module_path[MAX_PATH] = {0};
+	GetModuleFileNameA(ExtExtension::s_Module, module_path, _countof(module_path));
+
+	ULONG class_type = 0, qualifier_type = 0;
+	HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+
+	Out("0CCh Extension diagnostics\n");
+	Out("Version: %s\n", VER_STR);
+	Out("Architecture: %s\n", GetAddressPtrSize() == 8 ? "x64" : "x86");
+	Out("Module: %s\n", module_path);
+	if (SUCCEEDED(hr)) {
+		Out("Debuggee class: 0x%x, qualifier: 0x%x\n", class_type, qualifier_type);
+	}
+	else {
+		Out("Debuggee class: unavailable (0x%08X)\n", hr);
+	}
+	Out("Debugger module: %s\n", GetModuleHandleA("dbgeng.dll") != NULL ? "loaded" : "not loaded");
+}
 EXT_COMMAND(version,
 	"Displays the version information for 0cchext.dll",
 	NULL)
 {
-	CHAR filename[MAX_PATH];
-	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
+	CHAR filename[MAX_PATH] = {0};
+	if (GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH) == 0) {
+		Err("Failed to get extension path.\n");
+		return;
+	}
 
 	ULONG handle = 0;
 	ULONG size = GetFileVersionInfoSizeA(filename, &handle);
-	PVOID info = malloc(size);
-	if (!GetFileVersionInfoA(filename, handle, size, info)) {
-		free(info);
+	if (size == 0) {
+		Err("Failed to get version information.\n");
 		return;
 	}
-	
+	PVOID info = malloc(size);
+	if (info == NULL || !GetFileVersionInfoA(filename, handle, size, info)) {
+		free(info);
+		Err("Failed to get version information.\n");
+		return;
+	}
+
 	UINT len = 0;
 	VS_FIXEDFILEINFO* vsfi = NULL;
 	if (VerQueryValueA(info, "\\", (PVOID *)&vsfi, &len)) {
@@ -543,14 +583,14 @@ EXT_COMMAND(version,
 			"Author:  nightxie\n"
 			"For more information about 0CChExt,\n"
 			"see the 0CCh website at <link cmd=\"!0cchext.url http://0cch.net\">http://0cch.net</link>.\n"
-			"You can also enter the <link cmd=\"!0cchext.help\">!0cchext.help</link> to get help\n", 
+			"You can also enter the <link cmd=\"!0cchext.help\">!0cchext.help</link> to get help\n",
 			HIWORD(vsfi->dwFileVersionMS), LOWORD(vsfi->dwFileVersionMS),
 			HIWORD(vsfi->dwFileVersionLS), LOWORD(vsfi->dwFileVersionLS));
 	}
 	else {
 		Err("Failed to get version information.");
 	}
-	
+
 	free(info);
 }
 
@@ -558,7 +598,15 @@ EXT_COMMAND(url,
 	"Open a URL in a default browser.",
 	"{;x,r;url;The url of a website.}")
 {
-	ShellExecuteA(NULL, "open", GetUnnamedArgStr(0), NULL, NULL, SW_SHOWNORMAL);
+	PCSTR value = GetUnnamedArgStr(0);
+	if (_strnicmp(value, "http://", 7) != 0 && _strnicmp(value, "https://", 8) != 0) {
+		Err("Only http and https URLs are supported.\n");
+		return;
+	}
+	HINSTANCE result = ShellExecuteA(NULL, "open", value, NULL, NULL, SW_SHOWNORMAL);
+	if (reinterpret_cast<INT_PTR>(result) <= 32) {
+		Err("Failed to open URL.\n");
+	}
 }
 
 EXT_COMMAND(favcmd,
@@ -566,7 +614,7 @@ EXT_COMMAND(favcmd,
 	"{;ed,o,d=8;Number;The number of the commands to display.}")
 {
 	size_t display_count = (size_t)GetUnnamedArgU64(0);
-	
+
 	CHAR filename[MAX_PATH];
 	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
 	PathRemoveFileSpecA(filename);
@@ -589,10 +637,10 @@ EXT_COMMAND(favcmd,
 	display_count = display_count < str_vec.size() ? display_count : str_vec.size();
 
 	for (size_t i = 0; i < display_count; i++) {
-		Dml("%u <link cmd=\"%s\">%s</link>\n", i, str_vec[i].c_str(), str_vec[i].c_str());
+		Dml("%Iu <link cmd=\"%s\">%s</link>\n", i, str_vec[i].c_str(), str_vec[i].c_str());
 	}
 
-	Dml("Display: %u    Total: %u\n", display_count, str_vec.size());
+	Dml("Display: %Iu    Total: %Iu\n", display_count, str_vec.size());
 }
 
 
@@ -640,9 +688,9 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 			}
 			int skip_space = 0;
 			if (level <= display_sublevel) {
-				Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
+				Dml("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address),
 					member_name.c_str(), isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
-				skip_space = _scprintf("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address), 
+				skip_space = _scprintf("+%04X  %-14s - %-5s : ", (ULONG)(tmp_addr - address),
 					member_name.c_str(), isptr ? std::string(member_type_name + "*").c_str() : member_type_name.c_str());
 			}
 			for (int k = 0; k < count; k++) {
@@ -681,7 +729,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("0x%02X \n", remote_data.GetUchar());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_WORD:
@@ -718,7 +766,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("0x%04X \n", remote_data.GetUshort());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_DWORD:
@@ -755,7 +803,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("0x%08X \n", remote_data.GetUlong());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_QWORD:
@@ -792,7 +840,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("0x%016I64X \n", remote_data.GetUlong64());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_CHAR:
@@ -829,7 +877,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("%c \n", remote_data.GetChar());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_WCHAR:
@@ -866,7 +914,7 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 								Dml("%C \n", remote_data.GetShort());
 							}
 						}
-						
+
 					}
 					break;
 				case TK_TYPE_UDT:
@@ -906,7 +954,8 @@ void EXT_CLASS::PrintStruct( std::vector<StructInfo> &struct_array, const char *
 					}
 					break;
 				default:
-					__debugbreak();
+					Err("Unsupported structure member type.\n");
+					return;
 				}
 			}
 		}
@@ -963,7 +1012,7 @@ EXT_COMMAND(dtx,
 		if (HasCharArg('r')) {
 			display_sublevel = (int)GetArgU64("r");
 		}
-		
+
 		for (int i = 0; i < array_number; i++) {
 			if (array_number == 1) {
 				PrintStruct(struct_array, GetUnnamedArgStr(0), addr, 0, display_sublevel);
@@ -991,13 +1040,13 @@ EXT_COMMAND(init_script_env,
 	CHAR build_string[MAX_PATH];
 	ULONG build_string_used;
 
-	HRESULT hr = m_Control->GetSystemVersion(&platform_id, 
-		&major, 
-		&minor, 
-		service_pack_string, 
-		MAX_PATH, 
-		&service_pack_string_used, 
-		&service_pack_number, 
+	HRESULT hr = m_Control->GetSystemVersion(&platform_id,
+		&major,
+		&minor,
+		service_pack_string,
+		MAX_PATH,
+		&service_pack_string_used,
+		&service_pack_number,
 		build_string,
 		MAX_PATH,
 		&build_string_used);
@@ -1023,9 +1072,24 @@ EXT_COMMAND(init_script_env,
 
 	m_Control2->SetTextReplacement("@#NtBuildString", build_string);
 
-	hr = m_Control4->GetSystemVersionValues(&platform_id, &major, &minor, NULL, NULL);
+	ULONG win32_major = 0, win32_minor = 0, kd_major = 0, kd_minor = 0;
+	hr = m_Control4->GetSystemVersionValues(&platform_id, &win32_major, &win32_minor, &kd_major, &kd_minor);
 	if (FAILED(hr)) {
 		return;
+	}
+
+	sprintf_s(buffer, sizeof(buffer), "0n%u", win32_major);
+	m_Control2->SetTextReplacement("@#Win32MajorVersion", buffer);
+	sprintf_s(buffer, sizeof(buffer), "0n%u", win32_minor);
+	m_Control2->SetTextReplacement("@#Win32MinorVersion", buffer);
+	sprintf_s(buffer, sizeof(buffer), "0n%u", kd_major);
+	m_Control2->SetTextReplacement("@#KdMajorVersion", buffer);
+	sprintf_s(buffer, sizeof(buffer), "0n%u", kd_minor);
+	m_Control2->SetTextReplacement("@#KdMinorVersion", buffer);
+
+	CHAR build_version[64] = {0};
+	if (SUCCEEDED(m_Control4->GetSystemVersionString(DEBUG_SYSVERSTR_BUILD, build_version, sizeof(build_version), NULL))) {
+		m_Control2->SetTextReplacement("@#NtBuildString", build_version);
 	}
 
 	sprintf_s(buffer, sizeof(buffer), "0n%u", major);
@@ -1097,11 +1161,12 @@ EXT_COMMAND(autocmd,
 			size_t pos = it->find(']');
 			if (pos != std::string::npos) {
 				current_section_name = it->substr(1, pos - 1);
-				transform(current_section_name.begin(), current_section_name.end(), current_section_name.begin(), tolower);
+				transform(current_section_name.begin(), current_section_name.end(), current_section_name.begin(),
+			[](unsigned char c) { return static_cast<char>(tolower(c)); });
 				continue;
 			}
 		}
-		
+
 		cmd_map[current_section_name].push_back(*it);
 	}
 
@@ -1112,7 +1177,7 @@ EXT_COMMAND(autocmd,
 	}
 
 	_strlwr_s(execute_path, MAX_PATH);
-	
+
 	CHAR *execute_name = PathFindFileNameA(execute_path);
 	if (execute_name == NULL) {
 		Err("Failed to get execute name.\n");
@@ -1129,8 +1194,8 @@ EXT_COMMAND(autocmd,
 	}
 
 	if (class_type == DEBUG_CLASS_KERNEL) {
-		if (qualifier_type == DEBUG_KERNEL_SMALL_DUMP || 
-			qualifier_type == DEBUG_KERNEL_DUMP || 
+		if (qualifier_type == DEBUG_KERNEL_SMALL_DUMP ||
+			qualifier_type == DEBUG_KERNEL_DUMP ||
 			qualifier_type == DEBUG_KERNEL_FULL_DUMP) {
 				for (std::vector<std::string>::iterator it = cmd_map["kernel dump"].begin(); it != cmd_map["kernel dump"].end(); ++it) {
 					m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, it->c_str(), execute_flags);
@@ -1143,7 +1208,7 @@ EXT_COMMAND(autocmd,
 		}
 	}
 	else if (class_type == DEBUG_CLASS_USER_WINDOWS) {
-		if (qualifier_type == DEBUG_USER_WINDOWS_SMALL_DUMP || 
+		if (qualifier_type == DEBUG_USER_WINDOWS_SMALL_DUMP ||
 			qualifier_type == DEBUG_USER_WINDOWS_DUMP) {
 				std::string dump_name = execute_name;
 				dump_name += " dump";
@@ -1171,13 +1236,13 @@ EXT_COMMAND(pe_export,
 	"{;ed;Address;Specifies the address of the module.}"
 	"{;s;Pattern;Specifies the pattern.}"
 	"{o;b;ordinal;Display function without name.}"
-	"{b;b,o;simplification;Only output address.}") 
+	"{b;b,o;simplification;Only output address.}")
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
 	bool ordinal = HasArg("o");
 	bool simplification = HasArg("b");
-	
+
 	std::vector<EXPORT_FUNC_INFO> funcs_info;
 	IMAGE_EXPORT_DIRECTORY dir = {0};
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
@@ -1213,7 +1278,7 @@ EXT_COMMAND(pe_export,
 
 		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
 
-		
+
 		ULONG func_count = dir.NumberOfFunctions;
 		cur = addr + dir.AddressOfFunctions;
 
@@ -1236,7 +1301,7 @@ EXT_COMMAND(pe_export,
 
 		free(func_addr_array);
 
-		
+
 	}
 	else {
 		remote_data.Set(cur, sizeof(IMAGE_NT_HEADERS64));
@@ -1306,7 +1371,7 @@ EXT_COMMAND(pe_export,
 	}
 
 	remote_data.ReadBuffer(name_id_array, name_id_size, TRUE);
-	
+
 	for (ULONG i = 0; i < name_count; i++) {
 		ExtBuffer<char> func_name;
 		remote_data.Set(addr + name_array[i], 1024);
@@ -1318,11 +1383,11 @@ EXT_COMMAND(pe_export,
 	free(name_array);
 	free(name_id_array);
 
-	
+
 	if (!simplification) {
 		Out("ID   Address   Export Name    Symbol Name\n");
 	}
-	
+
 	for (size_t i = 0; i < funcs_info.size(); i++) {
 		if (ordinal) {
 			if (funcs_info[i].name.empty()) {
@@ -1330,10 +1395,10 @@ EXT_COMMAND(pe_export,
 					Out("%p\n", (ULONG64)funcs_info[i].address);
 				}
 				else {
-					Out("%04X %p  N/A  %y\n", i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
+					Out("%04X %p  N/A  %y\n", (ULONG)i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address);
 				}
 			}
-			
+
 		}
 		else {
 			if (MatchPattern(funcs_info[i].name.c_str(), pattern)) {
@@ -1341,13 +1406,13 @@ EXT_COMMAND(pe_export,
 					Out("%p\n", (ULONG64)funcs_info[i].address);
 				}
 				else {
-					Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n", 
-						i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address, 
+					Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n",
+						i, (ULONG64)funcs_info[i].address, (ULONG64)funcs_info[i].address,
 						(ULONG64)funcs_info[i].address, funcs_info[i].name.c_str(), (ULONG64)funcs_info[i].address);
 				}
 			}
 		}
-		
+
 	}
 }
 
@@ -1356,12 +1421,12 @@ EXT_COMMAND(pe_import,
 	"{;ed;Address;Specifies the address of the module.}"
 	"{;s;Pattern;Specifies the pattern.}"
 	"{b;b,o;simplification;Only output address.}"
-	) 
+	)
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
 	PCSTR pattern = GetUnnamedArgStr(1);
 	bool simplification = HasArg("b");
-	
+
 	ExtRemoteData remote_data(addr, sizeof(IMAGE_DOS_HEADER));
 
 	IMAGE_DOS_HEADER dos_header;
@@ -1538,7 +1603,7 @@ EXT_COMMAND(pe_import,
 			remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
 		}
 	}
-	
+
 	for (std::map<std::string, std::vector<IMPORT_FUNC_INFO>>::iterator it = func_map.begin(); it != func_map.end(); ++it) {
 		if (!simplification) {
 			Dml("%s  <link cmd=\"lmva %p;!lmi %p\">(detail)</link>\n", it->first.c_str(), addr, addr);
@@ -1550,9 +1615,9 @@ EXT_COMMAND(pe_import,
 						Out("%p\n", (ULONG64)it->second[i].address);
 					}
 					else {
-						Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n", 
+						Dml("%04X <link cmd=\"u %p\"><altlink name=\"Set Breakpoint [bp]\" cmd=\"bp %p\">%p</link>  %s  %y\n",
 							i, (ULONG64)it->second[i].address, (ULONG64)it->second[i].address,
-							(ULONG64)it->second[i].address, it->second[i].name.c_str(), (ULONG64)it->second[i].address);	
+							(ULONG64)it->second[i].address, it->second[i].name.c_str(), (ULONG64)it->second[i].address);
 					}
 				}
 			}
@@ -1560,9 +1625,9 @@ EXT_COMMAND(pe_import,
 			if (!simplification) {
 				Out("\n");
 			}
-			
+
 		}
-		
+
 	}
 }
 
@@ -1614,6 +1679,9 @@ public:
 
 	virtual HRESULT __stdcall GetInterestMask(PULONG Mask)
 	{
+		if (Mask != NULL) {
+			*Mask = DEBUG_OUTPUT_NORMAL | DEBUG_OUTPUT_PROMPT;
+		}
 		return S_OK;
 	}
 
@@ -1622,42 +1690,53 @@ public:
 		ULONG64 Arg,
 		PCWSTR Text)
 	{
+		UNREFERENCED_PARAMETER(Which);
+		UNREFERENCED_PARAMETER(Flags);
+		UNREFERENCED_PARAMETER(Arg);
+		UNREFERENCED_PARAMETER(Text);
 		return S_OK;
 	}
 
-	BOOL CreateCmdLogFile(LPCSTR file_path) 
+	BOOL CreateCmdLogFile(LPCSTR file_path)
 	{
 		CloseCmdLogFile();
-		cmd_log_file_ = CreateFileA(file_path, 
-			GENERIC_READ | GENERIC_WRITE, 
-			FILE_SHARE_READ, 
-			NULL, 
-			OPEN_ALWAYS, 
-			FILE_ATTRIBUTE_NORMAL, 
+		cmd_log_file_ = CreateFileA(file_path,
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
 			NULL);
 
-		return cmd_log_file_ != INVALID_HANDLE_VALUE;
+		if (cmd_log_file_ == INVALID_HANDLE_VALUE) {
+			cmd_log_file_ = NULL;
+		}
+		return cmd_log_file_ != NULL;
 	}
 
 	void CloseCmdLogFile()
 	{
-		if (cmd_log_file_ != NULL) {
+		if (cmd_log_file_ != NULL && cmd_log_file_ != INVALID_HANDLE_VALUE) {
 			CloseHandle(cmd_log_file_);
-			cmd_log_file_ = NULL;
 		}
+		cmd_log_file_ = NULL;
+		last_command_.clear();
 	}
 
 	void ClearCmdLogFile()
 	{
-		if (cmd_log_file_ != NULL) {
-			SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN);
-			SetEndOfFile(cmd_log_file_);
+		if (cmd_log_file_ != NULL && cmd_log_file_ != INVALID_HANDLE_VALUE) {
+			if (SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN) != INVALID_SET_FILE_POINTER) {
+				SetEndOfFile(cmd_log_file_);
+			}
 		}
+		last_command_.clear();
 	}
 
-	BOOL WriteCmdLog(LPSTR log_str)
+	BOOL WriteCmdLog(LPCSTR log_str)
 	{
-		if (cmd_log_file_ == NULL || log_str == NULL || log_str[0] == '\0') {
+		if (cmd_log_file_ == NULL || cmd_log_file_ == INVALID_HANDLE_VALUE ||
+			log_str == NULL || log_str[0] == '\0') {
 			return FALSE;
 		}
 
@@ -1665,33 +1744,30 @@ public:
 			return FALSE;
 		}
 
-		int log_str_length = (int)strlen(log_str);
-		for (int i = 0; i < log_str_length; i++) {
-			if (log_str[i] == '\r' || log_str[i] == '\n' || log_str[i] == '\t') {
-				log_str[i] = ' ';
+		std::string command(log_str);
+		if (command.size() > 0x10000) {
+			return FALSE;
+		}
+		for (size_t i = 0; i < command.size(); i++) {
+			if (command[i] == '\r' || command[i] == '\n' || command[i] == '\t') {
+				command[i] = ' ';
 			}
 		}
-
-		for (int i = log_str_length - 1; i >= 0; i--) {
-			if (log_str[i] == ' ') {
-				log_str[i] = '\0';
-			}
-			else {
-				break;
-			}
+		while (!command.empty() && command.back() == ' ') {
+			command.pop_back();
 		}
-
-		if (last_command_ == log_str) {
+		if (command.empty() || last_command_ == command) {
 			return FALSE;
 		}
 
-		log_str_length = (int)strlen(log_str);
-
-		last_command_ = log_str;
-
-		SetFilePointer(cmd_log_file_, 0, 0, FILE_END);
+		last_command_ = command;
+		if (SetFilePointer(cmd_log_file_, 0, 0, FILE_END) == INVALID_SET_FILE_POINTER) {
+			return FALSE;
+		}
 		ULONG return_length = 0;
-		return WriteFile(cmd_log_file_, log_str, log_str_length + 1, &return_length, NULL);
+		DWORD bytes_to_write = static_cast<DWORD>(command.size() + 1);
+		return WriteFile(cmd_log_file_, command.c_str(), bytes_to_write, &return_length, NULL) &&
+			return_length == bytes_to_write;
 	}
 
 	BOOL ReadCmdLog(std::vector<std::string> &log_items)
@@ -1700,35 +1776,35 @@ public:
 			return FALSE;
 		}
 
-		ULONG log_size = GetFileSize(cmd_log_file_, NULL);
-		if (log_size == 0) {
+		DWORD high_size = 0;
+		DWORD low_size = GetFileSize(cmd_log_file_, &high_size);
+		if ((low_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) || high_size != 0 ||
+			low_size == 0 || low_size > 64 * 1024 * 1024) {
 			return FALSE;
 		}
 
-		SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN);
-
-		CHAR *log_buffer = (CHAR *)malloc(log_size);
-		if (log_buffer == NULL) {
+		if (SetFilePointer(cmd_log_file_, 0, 0, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {
 			return FALSE;
 		}
 
+		std::vector<char> log_buffer(static_cast<size_t>(low_size) + 1, '\0');
 		ULONG return_length = 0;
-		if (!ReadFile(cmd_log_file_, log_buffer, log_size, &return_length, NULL)) {
-			free(log_buffer);
+		if (!ReadFile(cmd_log_file_, log_buffer.data(), low_size, &return_length, NULL) ||
+			return_length != low_size) {
 			return FALSE;
 		}
 
-		for (CHAR *cur = log_buffer; cur < log_buffer + log_size;) {
-			if (*cur == '\0') {
+		const char *begin = log_buffer.data();
+		const char *end = begin + return_length;
+		for (const char *cur = begin; cur < end;) {
+			size_t remaining = static_cast<size_t>(end - cur);
+			size_t length = strnlen_s(cur, remaining);
+			if (length == 0) {
 				break;
 			}
-
-			log_items.push_back(cur);
-			cur += strlen(cur) + 1;
+			log_items.emplace_back(cur, length);
+			cur += length + 1;
 		}
-
-
-		free(log_buffer);
 		return TRUE;
 	}
 
@@ -1752,7 +1828,7 @@ int replace_all(T& str,  const T& pattern,  const T& newpat)
 		count++;
 	}
 
-	return count; 
+	return count;
 }
 
 void HandleDmlEscape(std::string &s)
@@ -1793,7 +1869,7 @@ EXT_COMMAND(logcmd,
 		g_log_callback.ClearCmdLogFile();
 		for (std::set<std::string>::iterator it = log_set.begin();
 			it != log_set.end(); ++it) {
-			g_log_callback.WriteCmdLog((LPSTR)it->c_str());	
+			g_log_callback.WriteCmdLog((LPSTR)it->c_str());
 		}
 
 		return;
@@ -1803,7 +1879,7 @@ EXT_COMMAND(logcmd,
 		return;
 	}
 	else if (HasArg("i")) {
-		
+
 		LPCSTR log_file_path = GetArgStr("i");
 		if (!g_log_callback.CreateCmdLogFile(log_file_path)) {
 			Err("Failed to open log file.\n");
@@ -1820,35 +1896,33 @@ EXT_COMMAND(logcmd,
 	for (size_t i = log_items.size() > cmd_number ? log_items.size() - cmd_number : 0, j = 0; i < log_items.size(); i++) {
 		if (MatchPattern(log_items[i].c_str(), GetUnnamedArgStr(1))) {
 			HandleDmlEscape(log_items[i]);
-			Dml("<link cmd=\"%s\">%u</link> %s\n", log_items[i].c_str(), j++, log_items[i].c_str());
+			Dml("<link cmd=\"%s\">%Iu</link> %s\n", log_items[i].c_str(), j++, log_items[i].c_str());
 		}
 	}
 }
 
 EXT_COMMAND(google,
 	"Use google to search.",
-	"{;x;Key;Specifies the key word.}") 
+	"{;x;Key;Specifies the key word.}")
 {
-	char url[INTERNET_MAX_URL_LENGTH] = "https://www.google.com/#q=";
-	if (GetNumUnnamedArgs() >= 1) {
-		PCSTR key_word = GetUnnamedArgStr(0);
-		strcat_s(url, key_word);
+	std::string url = "https://www.google.com/search?q=";
+	url += UrlEncodeComponent(GetUnnamedArgStr(0));
+	HINSTANCE result = ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	if (reinterpret_cast<INT_PTR>(result) <= 32) {
+		Err("Failed to open search URL.\n");
 	}
-	
-	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 }
 
 EXT_COMMAND(bing,
 	"Use bing to search.",
-	"{;x;Key;Specifies the key word.}") 
+	"{;x;Key;Specifies the key word.}")
 {
-	char url[INTERNET_MAX_URL_LENGTH] = "http://global.bing.com/search?q=";
-	if (GetNumUnnamedArgs() >= 1) {
-		PCSTR key_word = GetUnnamedArgStr(0);
-		strcat_s(url, key_word);
+	std::string url = "https://www.bing.com/search?q=";
+	url += UrlEncodeComponent(GetUnnamedArgStr(0));
+	HINSTANCE result = ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	if (reinterpret_cast<INT_PTR>(result) <= 32) {
+		Err("Failed to open search URL.\n");
 	}
-
-	ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 }
 
 EXT_COMMAND(a,
@@ -1858,12 +1932,16 @@ EXT_COMMAND(a,
 {
 	ULONG64 address = GetUnnamedArgU64(0);
 	PCSTR instruction = GetUnnamedArgStr(1);
+	if (instruction == NULL || instruction[0] == '\0' || strlen(instruction) > 0x1000) {
+		Err("Invalid or too long instruction.\r\n");
+		return;
+	}
 	ULONG64 end_address;
 	if (FAILED(m_Control->Assemble(address, instruction, &end_address))) {
 		Err("Failed to assemble.\n");
 		return;
 	}
-	
+
 	char buffer[64];
 	sprintf_s(buffer, sizeof(buffer), "0x%I64x", end_address);
 	m_Control2->SetTextReplacement("@#LastAsmAddr", buffer);
@@ -1947,16 +2025,16 @@ EXT_COMMAND(import_vs_bps,
 
 			src_path_list.insert(path.m_strPath.GetString());
 	}
-	
+
 	for (std::set<std::wstring>::iterator it = src_path_list.begin();
 		it != src_path_list.end(); ++it) {
 			m_Symbols3->AppendSourcePathWide(it->c_str());
 	}
-	
+
 	for (std::vector<std::pair<std::wstring, ULONG>>::iterator it = bp_list.begin();
 		it != bp_list.end(); ++it) {
 			CPathW path = it->first.c_str();
-			
+
 			PDEBUG_BREAKPOINT2 bp = NULL;
 			m_Control4->AddBreakpoint2(DEBUG_BREAKPOINT_CODE, DEBUG_ANY_ID, &bp);
 			if (bp != NULL) {
@@ -1987,12 +2065,19 @@ EXT_COMMAND(wql,
 		return;
 	}
 
-	CoInitialize(NULL);
-	if (WmiQueryInfoImpl(CA2W(query_str), query_result)) {
-		query_result.Replace(TEXT("%"), TEXT("%%"));
-		Out(query_result.GetString());
+	HRESULT com_hr = CoInitialize(NULL);
+	if (SUCCEEDED(com_hr)) {
+		if (WmiQueryInfoImpl(CA2W(query_str), query_result)) {
+			Out(L"%s", query_result.GetString());
+		}
+		else {
+			Err("WMI query failed.\r\n");
+		}
+		CoUninitialize();
 	}
-	CoUninitialize();
+	else {
+		Err("Failed to initialize COM: 0x%08X\r\n", com_hr);
+	}
 }
 
 EXT_COMMAND(err,
@@ -2018,7 +2103,7 @@ EXT_COMMAND(err,
 	h = NULL;
 	err_msg = L"<Unable to get error code text>";
 	h = GetModuleHandle(TEXT("ntdll.dll"));
-	
+
 	if (h != NULL && FindMessage(h, err_code, err_msg)) {
 		Out(L"Error code: (NTSTATUS) 0x%x (%u) - %s\n", err_code, err_code, err_msg.GetString());
 	}
@@ -2118,7 +2203,7 @@ EXT_COMMAND(filepath,
 		Err("This command must be used in User-Mode and same computer\n");
 		return;
 	}
-	
+
 	if (FAILED(m_System->GetCurrentProcessHandle(&src_handle))) {
 		Err("Failed to get debuggee handle.\n");
 		return;
@@ -2131,14 +2216,30 @@ EXT_COMMAND(filepath,
 	}
 
 	CString file_path;
-	if (!GetFinalPathNameByHandle(dst_file_handle, file_path.GetBufferSetLength(MAX_PATH), MAX_PATH, 0)) {
+	DWORD buffer_chars = MAX_PATH;
+	bool got_path = false;
+	for (int attempt = 0; attempt < 4; attempt++) {
+		LPTSTR buffer = file_path.GetBufferSetLength(buffer_chars);
+		DWORD length = GetFinalPathNameByHandle(dst_file_handle, buffer, buffer_chars, 0);
+		file_path.ReleaseBuffer(0);
+		if (length == 0) {
+			break;
+		}
+		if (length < buffer_chars) {
+			file_path.ReleaseBufferSetLength(length);
+			got_path = true;
+			break;
+		}
+		buffer_chars = length + 1;
+	}
+
+	if (!got_path) {
+		CloseHandle(dst_file_handle);
 		Err("Failed to get file path.\n");
 		return;
 	}
 
-	file_path.ReleaseBuffer();
 	Out(L"   %s\n", file_path.GetString());
-
 	CloseHandle(dst_file_handle);
 }
 
@@ -2170,16 +2271,17 @@ EXT_COMMAND(stackstat,
 		m_System->SetCurrentThreadId(dtids[i]);
 		std::vector<DEBUG_STACK_FRAME> stack_frames;
 		ULONG fill_count = 0;
-		stack_frames.resize(0x1000);
-		m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), 0x1000, &fill_count);
+		const ULONG max_frames = 0x400;
+		stack_frames.resize(max_frames);
+		m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), max_frames, &fill_count);
 
 		CString stack_key;
 		for (ULONG j = 0; j < fill_count; j++) {
 			if (GetAddressPtrSize() == 4) {
-				stack_key.AppendFormat(TEXT("%X"), (ULONG)stack_frames[j].InstructionOffset);
+				stack_key.AppendFormat(TEXT("%08X,"), (ULONG)stack_frames[j].InstructionOffset);
 			}
 			else {
-				stack_key.AppendFormat(TEXT("%I64X"), stack_frames[j].InstructionOffset);
+				stack_key.AppendFormat(TEXT("%016I64X,"), stack_frames[j].InstructionOffset);
 			}
 		}
 
@@ -2192,7 +2294,7 @@ EXT_COMMAND(stackstat,
 	Dml("Duplicate threads stack:\r\n\r\n");
 	int i = 0;
 	for (std::map<CString, std::vector<CString>>::iterator it = stat_info.begin(); it != stat_info.end(); ++it) {
-		Dml("%u:\tCount = %u\r\n\t", i++, (*it).second.size());
+		Dml("%u:\tCount = %Iu\r\n\t", i++, (*it).second.size());
 		for (std::vector<CString>::iterator it2 = (*it).second.begin(); it2 != (*it).second.end(); ++it2) {
 			Dml("%S ", (*it2).GetString());
 		}
@@ -2228,7 +2330,7 @@ CStringA FormatSize(ULONGLONG size)
 		size_str.Format("%8.3lf (KB)", (double)size / kBytePerKB);
 	}
 	else {
-		size_str.Format("%8u ( B)", size);
+		size_str.Format("%8I64u ( B)", size);
 	}
 
 	return size_str;
@@ -2238,60 +2340,62 @@ EXT_COMMAND(memstat,
 	"Statistics virtual memory allocation.",
 	"{m;b,o;Sort;Sort by total memory.}")
 {
-	MEMORY_BASIC_INFORMATION64 info;
-	ULONG64 cur = 0;
+	struct MemStatEntry {
+		DBG_MEMORY_BASIC_INFORMATION64 sample = {};
+		size_t count = 0;
+		ULONGLONG total_size = 0;
+	};
 
-	std::map<CString, std::vector<DBG_MEMORY_BASIC_INFORMATION64>> stat_result;
+	MEMORY_BASIC_INFORMATION64 info = {};
+	ULONG64 cur = 0;
+	std::map<CString, MemStatEntry> stat_result;
 
 	while (SUCCEEDED(m_Data2->QueryVirtual(cur, &info))) {
-
 		if (info.State != MEM_FREE) {
 			CString key;
 			key.Format(L"%I64x%x%x%x", info.RegionSize, info.Protect, info.State, info.Type);
-			stat_result[key].push_back(*(PDBG_MEMORY_BASIC_INFORMATION64)&info);
+			MemStatEntry &entry = stat_result[key];
+			if (entry.count == 0) {
+				entry.sample = *reinterpret_cast<PDBG_MEMORY_BASIC_INFORMATION64>(&info);
+			}
+			entry.count++;
+			entry.total_size += info.RegionSize;
 		}
 
 		cur = info.BaseAddress + info.RegionSize;
 		if (cur == 0) {
 			break;
 		}
-
 		ZeroMemory(&info, sizeof(info));
 	}
 
-	std::vector<std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *>> sort_result;
-	for(std::map<CString, std::vector<DBG_MEMORY_BASIC_INFORMATION64>>::iterator it = stat_result.begin(); 
+	std::vector<const MemStatEntry *> sort_result;
+	sort_result.reserve(stat_result.size());
+	for (std::map<CString, MemStatEntry>::const_iterator it = stat_result.begin();
 		it != stat_result.end(); ++it) {
-		sort_result.push_back(std::make_pair(it->second.size(), &it->second));
+		sort_result.push_back(&it->second);
 	}
-
-	struct {
-		bool operator()(std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> &a, std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> & b)
-		{   
-			return a.first > b.first;
-		}
-	} mem_sort;
-
-	struct {
-		bool operator()(std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> &a, std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *> & b)
-		{   
-			return (*a.second)[0].RegionSize * a.first > (*b.second)[0].RegionSize * b.first;
-		}
-	} mem_total_sort;
 
 	if (HasArg("m")) {
-		std::sort(sort_result.begin(), sort_result.end(), mem_total_sort);
+		std::sort(sort_result.begin(), sort_result.end(),
+			[](const MemStatEntry *a, const MemStatEntry *b) {
+				return a->total_size > b->total_size;
+			});
 	}
 	else {
-		std::sort(sort_result.begin(), sort_result.end(), mem_sort);
+		std::sort(sort_result.begin(), sort_result.end(),
+			[](const MemStatEntry *a, const MemStatEntry *b) {
+				return a->count > b->count;
+			});
 	}
-	
+
 	Dml("Size              Count     Total(MB)      State     Protect   Type\r\n");
-	for(std::vector<std::pair<size_t, std::vector<DBG_MEMORY_BASIC_INFORMATION64> *>>::iterator it = sort_result.begin(); 
+	for (std::vector<const MemStatEntry *>::const_iterator it = sort_result.begin();
 		it != sort_result.end(); ++it) {
-			Dml("%016I64x  %8u  %s  %08x  %08x  %08x\r\n", 
-				(*it->second)[0].RegionSize, it->first, FormatSize((*it->second)[0].RegionSize * it->first).GetString(), 
-				(*it->second)[0].State, (*it->second)[0].Protect, (*it->second)[0].Type);
+		const MemStatEntry *entry = *it;
+		Dml("%016I64x  %8Iu  %s  %08x  %08x  %08x\r\n",
+			entry->sample.RegionSize, entry->count, FormatSize(entry->total_size).GetString(),
+			entry->sample.State, entry->sample.Protect, entry->sample.Type);
 	}
 }
 
@@ -2316,7 +2420,7 @@ EXT_COMMAND(tracecreate,
 			key_count++;
 		}
 	}
-	
+
 	CString key_str;
 	key_str.Format(TEXT("%u_"), key_count);
 	for (int i = 0; i < key_count; i++) {
@@ -2325,8 +2429,9 @@ EXT_COMMAND(tracecreate,
 
 	std::vector<DEBUG_STACK_FRAME> stack_frames;
 	ULONG fill_count = 0;
-	stack_frames.resize(0x1000);
-	m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), 0x1000, &fill_count);
+	const ULONG max_frames = 0x400;
+	stack_frames.resize(max_frames);
+	m_Control->GetStackTrace(0, 0, 0, stack_frames.data(), max_frames, &fill_count);
 	stack_frames.resize(fill_count);
 	stack_frames.shrink_to_fit();
 
@@ -2390,9 +2495,9 @@ EXT_COMMAND(tracedisplay,
 	}
 
 	struct {
-		bool operator()(std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator &a, 
+		bool operator()(std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator &a,
 			std::map<CString, std::pair<std::vector<DEBUG_STACK_FRAME>, std::set<ULONG64>>>::iterator &b)
-		{   
+		{
 			return a->second.second.size() > b->second.second.size();
 		}
 	} count_sort;
@@ -2445,9 +2550,9 @@ EXT_COMMAND(addsymbol,
 	ULONG64 offset = GetUnnamedArgU64(0);
 	ULONG64 sym_size = GetUnnamedArgU64(1);
 	PCSTR sym_name = GetUnnamedArgStr(2);
-	
+
 	offset += GetUnnamedArgU64(3);
-	
+
 	std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.find(offset);
 	if (it != g_synthetic_symbols_list.end()) {
 		m_Symbols3->RemoveSyntheticSymbol(&it->second.id);
@@ -2471,7 +2576,7 @@ EXT_COMMAND(removesymbol,
 	)
 {
 	if (HasArg("a")) {
-		for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin(); 
+		for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin();
 			it != g_synthetic_symbols_list.end(); ++it) {
 				m_Symbols3->RemoveSyntheticSymbol(&it->second.id);
 		}
@@ -2495,7 +2600,7 @@ EXT_COMMAND(listsymbol,
 {
 	Dml("ID  Offset  Size  Name\r\n");
 	ULONG i = 0;
-	for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin(); 
+	for (std::map<ULONG64, synthetic_symbol>::iterator it = g_synthetic_symbols_list.begin();
 		it != g_synthetic_symbols_list.end(); ++it) {
 			Dml("%u  %p  %u  %s\r\n", i++, it->second.offset, it->second.symbol_size, it->second.symbol_name.c_str());
 	}
@@ -2574,7 +2679,7 @@ EXT_COMMAND(listmodule,
 {
 	Dml("ID  Address  Size  Name  Path\r\n");
 	ULONG i = 0;
-	for (std::map<ULONG64, synthetic_module>::iterator it = g_synthetic_module_list.begin(); 
+	for (std::map<ULONG64, synthetic_module>::iterator it = g_synthetic_module_list.begin();
 		it != g_synthetic_module_list.end(); ++it) {
 			Dml("%u  %p  %u  %-12s  %s\r\n", i++, it->second.base_addr, it->second.module_size, it->second.module_name.c_str(), it->second.module_path.c_str());
 	}
@@ -2585,7 +2690,7 @@ CStringW g_download_path;
 
 EXT_COMMAND(setdlsympath,
 	"Set download symbol path.",
-	"{;x;Path;Symbol path.}") 
+	"{;x;Path;Symbol path.}")
 {
 	g_download_path = GetUnnamedArgStr(0);
 }
@@ -2670,7 +2775,7 @@ public:
 				GlobalFree(opt_[2].Value.pszValue);
 			}
 		}
-		
+
 	}
 
 	BOOL SetConnectionOptions(LPWSTR conn_name,LPWSTR proxy_full_addr)
@@ -2691,7 +2796,7 @@ public:
 		list.pOptions[1].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
 		list.pOptions[1].Value.pszValue = proxy_full_addr;
 		list.pOptions[2].dwOption = INTERNET_PER_CONN_PROXY_BYPASS;
-		list.pOptions[2].Value.pszValue = L"";
+		list.pOptions[2].Value.pszValue = const_cast<LPWSTR>(L"");
 
 		retval = InternetSetOption(NULL,
 			INTERNET_OPTION_PER_CONNECTION_OPTION, &list, buf_size);
@@ -2750,11 +2855,21 @@ EXT_COMMAND(dlsym,
 	WCHAR download_str2[INTERNET_MAX_URL_LENGTH];
 	WCHAR pdb_name[MAX_PATH + 1];
 	WCHAR pdb_name2[MAX_PATH + 1];
-	wcscpy_s(pdb_name, sym.pdbfile);
-	wcscpy_s(pdb_name2, sym.pdbfile);
+	if (sym.pdbfile == NULL || sym.pdbfile[0] == L'\0') {
+		Err("Failed to get PDB file name.\r\n");
+		return;
+	}
+	if (wcscpy_s(pdb_name, sym.pdbfile) != 0 || wcscpy_s(pdb_name2, sym.pdbfile) != 0) {
+		Err("PDB file name is too long.\r\n");
+		return;
+	}
+	if (wcslen(pdb_name) == 0) {
+		Err("Failed to get PDB file name.\r\n");
+		return;
+	}
 	pdb_name[wcslen(pdb_name) - 1] = L'_';
-	swprintf_s(download_str, L"http://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name);
-	swprintf_s(download_str2, L"http://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name2);
+	swprintf_s(download_str, L"https://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name);
+	swprintf_s(download_str2, L"https://msdl.microsoft.com/download/symbols/%s/%s%X/%s", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age, pdb_name2);
 
 	Out(L"Download url  : %s\r\n", download_str);
 	Out(L"Download url  : %s\r\n", download_str2);
@@ -2772,13 +2887,18 @@ EXT_COMMAND(dlsym,
 			return;
 		}
 	}
-	
-	
+
+
 	CStringW sub_path;
 	sub_path.Format(L"%s\\%s%X", sym.pdbfile, GUIDToWstring(&sym.guid).GetString(), sym.age);
-	CPathW download_path = g_download_path;
+	CPathW download_path(g_download_path.GetString());
 	download_path.Append(sub_path);
-	SHCreateDirectory(NULL, download_path.m_strPath.GetString());
+	int create_dir_result = SHCreateDirectory(NULL, download_path.m_strPath.GetString());
+	if (create_dir_result != ERROR_SUCCESS && create_dir_result != ERROR_ALREADY_EXISTS &&
+		create_dir_result != ERROR_FILE_EXISTS) {
+		Err("Failed to create symbol download directory: %u\r\n", create_dir_result);
+		return;
+	}
 	CPathW download_path2 = download_path;
 	download_path.Append(pdb_name);
 	download_path2.Append(pdb_name2);
@@ -2822,15 +2942,19 @@ EXT_COMMAND(dlsym,
 		WCHAR expand_path[MAX_PATH] = {0};
 		ExpandEnvironmentStrings(L"%systemroot%\\system32\\expand.exe", expand_path, MAX_PATH);
 
-		CStringW cmd = L"expand.exe -R " + download_path.m_strPath;
+		CStringW cmd = L"expand.exe -R \"" + download_path.m_strPath + L"\"";
 		HANDLE exp_handle = CreateProcessEasy(expand_path, cmd.GetBuffer());
 		if (exp_handle == NULL) {
 			Err("Failed to expand pdb file.\r\n");
 			return;
 		}
 
-		WaitForSingleObject(exp_handle, INFINITE);
+		DWORD expand_wait = WaitForSingleObject(exp_handle, INFINITE);
 		CloseHandle(exp_handle);
+		if (expand_wait != WAIT_OBJECT_0) {
+			Err("Failed to expand downloaded PDB file.\r\n");
+			return;
+		}
 
 		DeleteFile(download_path.m_strPath.GetString());
 		download_path.RemoveExtension();
@@ -2862,6 +2986,7 @@ public:
 	STDMETHOD_(ULONG, Release)() { return 0;}
 	STDMETHOD(Exception)(PEXCEPTION_RECORD64 Exception, ULONG FirstChance)
 	{
+		UNREFERENCED_PARAMETER(FirstChance);
 		const ULONG MS_VC_EXCEPTION = 0x406D1388;
 		if (Exception->ExceptionCode == MS_VC_EXCEPTION && Exception->NumberParameters == 4
 			&& Exception->ExceptionInformation[0] == 0x1000) {
@@ -2869,10 +2994,12 @@ public:
 				char name_buffer[1024] = {0};
 				if (SUCCEEDED(g_ExtInstance.log_data4_->ReadMultiByteStringVirtual(
 					Exception->ExceptionInformation[1], 1023, name_buffer, 1023, NULL)) && name_buffer[0] != 0) {
-					g_thread_names[Exception->ExceptionInformation[2]] = name_buffer;
+					if (g_thread_names.size() < 0x10000) {
+						g_thread_names[Exception->ExceptionInformation[2]] = name_buffer;
+					}
 				}
 		}
-		
+
 		return DEBUG_STATUS_NO_CHANGE;
 	}
 
@@ -2892,6 +3019,10 @@ EXT_COMMAND(carray,
 	ULONG64 addr = GetUnnamedArgU64(0);
 	ULONG length = (ULONG)GetUnnamedArgU64(1);
 
+	if (length == 0) {
+		Err("Data length must be greater than zero.\r\n");
+		return;
+	}
 	if (length > 0x10000) {
 		Err("Data length is too big.\r\n");
 		return;
@@ -2905,7 +3036,7 @@ EXT_COMMAND(carray,
 		Err("Failed to read data.\r\n");
 		return;
 	}
-	
+
 	Out("const unsigned char buffer[0x%x] = {", readlength);
 	for (ULONG i = 0; i < readlength; i++) {
 		if (i % 16 == 0) {
@@ -2918,7 +3049,8 @@ EXT_COMMAND(carray,
 }
 
 HANDLE g_raw_socket_thread = NULL;
-BOOL g_exit_sniff = TRUE;
+std::atomic_bool g_exit_sniff(true);
+std::atomic<SOCKET> g_sniff_socket(INVALID_SOCKET);
 CStringA g_ip_address;
 CStringA g_pcap_file;
 
@@ -2955,11 +3087,14 @@ BOOL Sniff(const char *ip_addr, const char* file)
 		return FALSE;
 	}
 
-	struct sockaddr_in bind_addr;
-
+	struct sockaddr_in bind_addr = {0};
 	bind_addr.sin_family = AF_INET;
 	bind_addr.sin_port = htons(0);
-	bind_addr.sin_addr.s_addr = inet_addr(ip_addr);
+	if (InetPtonA(AF_INET, ip_addr, &bind_addr.sin_addr) != 1) {
+		closesocket(sniff_socket);
+		g_Ext->Err("Error: invalid IPv4 address.\n");
+		return FALSE;
+	}
 
 	if (bind(sniff_socket, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) == SOCKET_ERROR) {
 		closesocket(sniff_socket);
@@ -2980,7 +3115,7 @@ BOOL Sniff(const char *ip_addr, const char* file)
 		NULL) == SOCKET_ERROR) {
 			closesocket(sniff_socket);
 			g_Ext->Err("Error: WSAIoctl  = %u\n", WSAGetLastError());
-			return 1;
+			return FALSE;
 	}
 
 	HANDLE pcap = CreateFileA(file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -2990,45 +3125,71 @@ BOOL Sniff(const char *ip_addr, const char* file)
 		return FALSE;
 	}
 
-	pcap_hdr_t header;
+	g_sniff_socket.store(sniff_socket);
+
+	pcap_hdr_t header = {0};
 	header.magic_number = PACP_MAGIC_TAG;
 	header.version_major = 2;
 	header.version_minor = 4;
 	header.thiszone = 0;
 	header.sigfigs = 0;
-	header.snaplen = 0x40000000;
+	header.snaplen = MAX_PACKET_SIZE;
 	header.network = 101;
 
-	WriteFile(pcap, &header, sizeof(header), &ret_length, NULL);
+	if (!WriteFile(pcap, &header, sizeof(header), &ret_length, NULL)) {
+		g_sniff_socket.store(INVALID_SOCKET);
+		CloseHandle(pcap);
+		closesocket(sniff_socket);
+		g_Ext->Err("Error: write pcap header = %u\n", GetLastError());
+		return FALSE;
+	}
 
-	pcaprec_hdr_t packet_header;
-	ULONG retval = 0;
-	while (!g_exit_sniff)
+	pcaprec_hdr_t packet_header = {0};
+	while (!g_exit_sniff.load())
 	{
-		retval = recv(sniff_socket, (char *)packet, MAX_PACKET_SIZE, 0);
-		if (retval <= 0) {
+		fd_set read_set;
+		FD_ZERO(&read_set);
+		FD_SET(sniff_socket, &read_set);
+		timeval wait_time = {0, 500000};
+		int selected = select(0, &read_set, NULL, NULL, &wait_time);
+		if (selected == SOCKET_ERROR) {
+			break;
+		}
+		if (selected == 0) {
+			continue;
+		}
+
+		int received = recv(sniff_socket, (char *)packet, MAX_PACKET_SIZE, 0);
+		if (received <= 0) {
+			if (g_exit_sniff.load()) {
+				break;
+			}
 			continue;
 		}
 
 		timeval tv = {0};
 		gettimeofday(&tv, NULL);
 
-		packet_header.ts_sec = tv.tv_sec;
-		packet_header.ts_usec = tv.tv_usec;
-		packet_header.incl_len = retval;
-		packet_header.orig_len = retval;
+		packet_header.ts_sec = static_cast<ULONG>(tv.tv_sec);
+		packet_header.ts_usec = static_cast<ULONG>(tv.tv_usec);
+		packet_header.incl_len = static_cast<ULONG>(received);
+		packet_header.orig_len = static_cast<ULONG>(received);
 
-		WriteFile(pcap, &packet_header, sizeof(packet_header), &ret_length, NULL);
-		WriteFile(pcap, packet, retval, &ret_length, NULL);
+		if (!WriteFile(pcap, &packet_header, sizeof(packet_header), &ret_length, NULL) ||
+			!WriteFile(pcap, packet, static_cast<DWORD>(received), &ret_length, NULL)) {
+			g_Ext->Err("Error: failed to write pcap data: %u\n", GetLastError());
+			break;
+		}
 	}
 
+	g_sniff_socket.store(INVALID_SOCKET);
 	CloseHandle(pcap);
 	closesocket(sniff_socket);
 	return TRUE;
 }
-
 UINT __stdcall RawSocketThreadProc(PVOID context)
 {
+	UNREFERENCED_PARAMETER(context);
 	WSAData wsa_data;
 	WSAStartup(MAKEWORD(2,2), &wsa_data);
 
@@ -3049,14 +3210,15 @@ EXT_COMMAND(rawpcap_start,
 		return;
 	}
 
-	if (!g_exit_sniff || g_raw_socket_thread != NULL) {
+	if (!g_exit_sniff.load() || g_raw_socket_thread != NULL) {
 		Err("Please call rawpcap_stop first.\r\n");
 		return;
 	}
 	g_ip_address = GetUnnamedArgStr(0);
 	g_pcap_file = GetUnnamedArgStr(1);
 
-	g_exit_sniff = FALSE;
+	g_exit_sniff.store(false);
+	g_sniff_socket.store(INVALID_SOCKET);
 	g_raw_socket_thread = (HANDLE)_beginthreadex(NULL, 0, RawSocketThreadProc, NULL, 0, NULL);
 	if (g_raw_socket_thread == NULL) {
 		Err("Create sniffer thread failed.\r\n");
@@ -3078,9 +3240,16 @@ EXT_COMMAND(rawpcap_stop,
 		Err("Please call rawpcap_start first.\r\n");
 		return;
 	}
-	g_exit_sniff = TRUE;
-	if (WaitForSingleObject(g_raw_socket_thread, 3000) == WAIT_TIMEOUT) {
-		TerminateThread(g_raw_socket_thread, 0);
+	g_exit_sniff.store(true);
+	if (WaitForSingleObject(g_raw_socket_thread, 5000) == WAIT_TIMEOUT) {
+		SOCKET socket_to_close = g_sniff_socket.exchange(INVALID_SOCKET);
+		if (socket_to_close != INVALID_SOCKET) {
+			closesocket(socket_to_close);
+		}
+		if (WaitForSingleObject(g_raw_socket_thread, 5000) == WAIT_TIMEOUT) {
+			Err("Capture thread did not stop in time.\r\n");
+			return;
+		}
 	}
 	CloseHandle(g_raw_socket_thread);
 	g_raw_socket_thread = NULL;
@@ -3108,7 +3277,7 @@ EXT_COMMAND(dttoc,
 		Err("Failed to get struct name.\r\n");
 		return;
 	}
-	
+
 	struct_name++;
 	if (get_struct_from_cmd) {
 		name = struct_name;
@@ -3143,21 +3312,21 @@ EXT_COMMAND(dttoc,
 	CStringA out_str;
 	DbgStructPrint(items, out_str);
 
-	
+
 
 	Out("struct %s {\r\n%s};\r\n", name.GetString(), out_str.GetString());
-	
+
 }
 
 EXT_COMMAND(rr,
 	"Read registers and show the information.",
 	"")
 {
-	CHAR *reg32[] = { "eax", "ebx", "ecx", "edx", 
+	const char *reg32[] = { "eax", "ebx", "ecx", "edx",
 		"esi", "edi", "eip", "esp", "ebp"
 	};
 
-	CHAR *reg64[] = { "rax", "rbx", "rcx",
+	const char *reg64[] = { "rax", "rbx", "rcx",
 		"rdx", "rsi", "rdi",
 		"rip", "rsp", "rbp",
 		"r8", "r9", "r10",
@@ -3173,7 +3342,7 @@ EXT_COMMAND(rr,
 	ULONG64 displacement = 0;
 	ULONG print_flag = 0;
 	ULONG index = 0;
-	CHAR **reg;
+	const char **reg;
 	int count = 0;
 	if (GetAddressPtrSize() == 4) {
 		reg = reg32;
@@ -3192,31 +3361,31 @@ EXT_COMMAND(rr,
 			ZeroMemory(buffer, sizeof(buffer));
 			print_flag = 0;
 
-			if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data, 
-				sym_buffer, 
-				sizeof(sym_buffer), 
-				&ret_size, 
+			if (SUCCEEDED(m_Symbols->GetNameByOffset(query_data,
+				sym_buffer,
+				sizeof(sym_buffer),
+				&ret_size,
 				&displacement))) {
 					print_flag |= 1;
 			}
 
 			ZeroMemory(unicode_buffer, sizeof(unicode_buffer));
-			if (m_Data4->ReadUnicodeStringVirtualWide(query_data, 
-				_countof(unicode_buffer) - 1, 
-				unicode_buffer, 
-				_countof(unicode_buffer) - 1, 
-				&ret_size) != E_INVALIDARG && 
+			if (m_Data4->ReadUnicodeStringVirtualWide(query_data,
+				_countof(unicode_buffer) - 1,
+				unicode_buffer,
+				_countof(unicode_buffer) - 1,
+				&ret_size) != E_INVALIDARG &&
 				wcslen(unicode_buffer) != 0 &&
 				IsPrintAbleW(unicode_buffer, (ULONG)wcslen(unicode_buffer))) {
 					print_flag |= 2;
 			}
 
 			ZeroMemory(buffer, sizeof(buffer));
-			if (m_Data4->ReadMultiByteStringVirtual(query_data, 
-				0x1000, 
-				buffer, 
-				sizeof(buffer) - 1, 
-				&ret_size) != E_INVALIDARG && 
+			if (m_Data4->ReadMultiByteStringVirtual(query_data,
+				0x1000,
+				buffer,
+				sizeof(buffer) - 1,
+				&ret_size) != E_INVALIDARG &&
 				strlen(buffer) != 0 &&
 				IsPrintAble(buffer, (ULONG)strlen(buffer))) {
 					print_flag |= 4;
@@ -3258,22 +3427,31 @@ EXT_COMMAND(rr,
 
 EXT_COMMAND(du8,
 	"Display UTF-8 string.",
-	"{;ed,r;addr;Address of the string.}")
+	"{;ed,r;addr;Address of the string.}"
+	"{;ed,o,d=1024;Length;Maximum number of bytes to read.}")
 {
 	ULONG64 addr = GetUnnamedArgU64(0);
+	ULONG length = 1024;
+	if (HasUnnamedArg(1)) {
+		length = (ULONG)GetUnnamedArgU64(1);
+	}
+	if (length == 0 || length > 0x10000) {
+		Err("Length must be between 1 and 0x10000.\r\n");
+		return;
+	}
 	ExtBuffer<char> buffer;
 	ExtRemoteData data;
-	data.Set(addr, 1024);
+	data.Set(addr, length);
 	data.GetString(&buffer);
 
-	CStringW str = CA2W(buffer.GetBuffer(), CP_UTF8);
+	CStringW str(CA2W(buffer.GetBuffer(), CP_UTF8));
 	Out(L"%p  %s\r\n", addr, str.GetString());
 }
 
 typedef struct _ACCESS_MASK_MAP
 {
 	ULONG Value;
-	CHAR *Name;
+	const char *Name;
 } ACCESS_MASK_MAP, *PACCESS_MASK_MAP;
 
 #define ACCESS_MASK_BEGIN(x) const ACCESS_MASK_MAP x##Map[] = {
@@ -3412,7 +3590,7 @@ ACCESS_MASK_END()
 
 typedef struct _ACCESS_MASK_ROOT
 {
-	CHAR *Name;
+	const char *Name;
 	PACCESS_MASK_MAP Map;
 	int Size;
 } ACCESS_MASK_ROOT, *PACCESS_MASK_ROOT;
@@ -3441,9 +3619,11 @@ EXT_COMMAND(accessmask,
 {
 	PCSTR access_mask_type = GetUnnamedArgStr(0);
 	ULONG64 access_mask_value = GetUnnamedArgU64(1);
+	bool found = false;
 	for (int i = 1; i < _countof(AccessMapRoot); i++) {
 		if (_stricmp(access_mask_type, AccessMapRoot[i].Name) == 0) {
-			Dml("Access mask: 0x%x\n", access_mask_value);
+			found = true;
+			Dml("Access mask: 0x%I64x\n", access_mask_value);
 			Dml("\nGeneric rights:\n");
 			PACCESS_MASK_ROOT root = (PACCESS_MASK_ROOT)&AccessMapRoot[0];
 			for (int j = 0; j < root->Size; j++) {
@@ -3461,6 +3641,9 @@ EXT_COMMAND(accessmask,
 			}
 			break;
 		}
+	}
+	if (!found) {
+		Err("Unknown object type '%s'.\n", access_mask_type);
 	}
 }
 
@@ -3492,6 +3675,13 @@ EXT_COMMAND(gt,
 	"{c;x,o;Cmd;Debug commands}")
 {
 	ULONG64 wait_ms = GetUnnamedArgU64(0);
+	if (wait_ms == 0) {
+		Err("Timeout must be greater than zero.\r\n");
+		return;
+	}
+	if (wait_ms > 0xFFFFFFFFUL) {
+		wait_ms = 0xFFFFFFFFUL;
+	}
 	m_Control->Execute(DEBUG_OUTCTL_ALL_CLIENTS, "g", 0);
 	HRESULT hr = m_Control->WaitForEvent(0, (ULONG)wait_ms);
 	ExtCaptureOutputA ignore_out;
@@ -3560,7 +3750,7 @@ EXT_COMMAND(cppexcrname,
 		ExtRemoteData cache_type_array(dbg_value.I64 + 0xc, sizeof(ULONG));
 		ExtRemoteData cache_type((ULONG64)cache_type_array.GetUlong() + 4, sizeof(ULONG));
 		ExtRemoteData descriptor((ULONG64)cache_type.GetUlong() + 4, sizeof(ULONG));
-		
+
 		ULONG64 except_name = descriptor.GetUlong() + 8;
 		Out("Exception name: %ma\n", except_name);
 	}
@@ -3622,11 +3812,6 @@ EXT_COMMAND(cppexcrname,
 
 }
 
-bool XEDPARSE_CALL UnknownCode(const char* text, ULONGLONG* value)
-{
-	return false;
-}
-
 EXT_COMMAND(a64,
 	"Input x64 asm code.",
 	"{;ed,r;Address;Begin address}")
@@ -3634,11 +3819,22 @@ EXT_COMMAND(a64,
 	ULONG64 base_address = GetUnnamedArgU64(0);
 	CHAR buffer[0x1000] = { 0 };
 	ULONG input_length = 0;
+	std::unique_ptr<IAssemblerBackend> backend = CreateLegacyXedBackend();
+
+	if (backend == nullptr) {
+		Err("Failed to create assembler backend.\r\n");
+		return;
+	}
 
 	Out("%p  ", base_address);
 
-	while (SUCCEEDED(m_Control4->Input(buffer, 0x1000, &input_length))) {
+	while (SUCCEEDED(m_Control4->Input(buffer, _countof(buffer) - 1, &input_length))) {
 		if (input_length == 0 || buffer[0] == 0) {
+			break;
+		}
+		if (input_length > kMaxAssemblerInstructionLength) {
+			Err("Instruction is too long. Maximum supported length is %Iu bytes.\r\n",
+				kMaxAssemblerInstructionLength);
 			break;
 		}
 
@@ -3648,33 +3844,32 @@ EXT_COMMAND(a64,
 		}
 		Out(backspace.GetString());
 
-		XEDPARSE xed = { 0 };
-		xed.x64 = true;
-		xed.cip = base_address;
-		xed.cbUnknown = UnknownCode;
-		strcpy_s(xed.instr, buffer);
-
-		if (XEDParseAssemble(&xed) != XEDPARSE_OK) {
-			Err("Cannot assemble this code.\r\n");
+		AssemblerRequest request;
+		request.instruction = buffer;
+		request.rip = base_address;
+		request.x64 = true;
+		AssemblerResult result;
+		HRESULT assemble_hr = backend->Assemble(request, result);
+		if (FAILED(assemble_hr)) {
+			Err("%s\r\n", result.error.empty() ? "Cannot assemble this code." : result.error.c_str());
 			break;
 		}
 
 		Out("%s = ", buffer);
-
-		for (unsigned int i = 0; i < xed.dest_size; i++) {
-			Out("%02x ", xed.dest[i]);
+		for (size_t i = 0; i < result.bytes.size(); i++) {
+			Out("%02x ", result.bytes[i]);
 		}
-
 		Out("\r\n\r\n");
 
 		ULONG tmp = 0;
-		m_Data->WriteVirtualUncached(base_address, xed.dest, xed.dest_size, &tmp);
-		if (tmp != xed.dest_size) {
+		HRESULT write_hr = m_Data->WriteVirtualUncached(base_address, result.bytes.data(),
+			static_cast<ULONG>(result.bytes.size()), &tmp);
+		if (FAILED(write_hr) || tmp != result.bytes.size()) {
 			Err("Cannot write to the memory space.\r\n");
 			break;
 		}
 
-		base_address += xed.dest_size;
+		base_address += result.bytes.size();
 		Out("%p  ", base_address);
 
 		buffer[0] = 0;
@@ -3708,14 +3903,30 @@ void EXT_CLASS::Uninitialize( void )
 		log_client_->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS)g_original_output_callback);
 		g_original_output_callback = NULL;
 	}
-	
+
 	g_log_callback.CloseCmdLogFile();
+
+	g_thread_names.clear();
+	g_synthetic_module_list.clear();
+	g_synthetic_symbols_list.clear();
+	g_trace_object_list.clear();
+	g_download_path.Empty();
+
+	g_exit_sniff.store(true);
+	SOCKET sniff_socket = g_sniff_socket.exchange(INVALID_SOCKET);
+	if (sniff_socket != INVALID_SOCKET) {
+		closesocket(sniff_socket);
+	}
+	if (g_raw_socket_thread != NULL) {
+		WaitForSingleObject(g_raw_socket_thread, 5000);
+		CloseHandle(g_raw_socket_thread);
+		g_raw_socket_thread = NULL;
+	}
 
 	if (g_original_event_callback != NULL) {
 		log_client_->SetEventCallbacks((PDEBUG_EVENT_CALLBACKS)g_original_event_callback);
 		g_original_event_callback = NULL;
 	}
-	
+
 	__super::Uninitialize();
 }
-

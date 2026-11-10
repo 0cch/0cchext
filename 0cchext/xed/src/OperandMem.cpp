@@ -5,6 +5,10 @@ bool HandleMemoryOperand(XEDPARSE* Parse, const char* Value, InstOperand* Operan
 {
     // Copy the prefix into a buffer
     char prefix[64];
+    if(strlen(Value) >= sizeof(prefix)) {
+        strcpy(Parse->error, "Memory operand is too long");
+        return false;
+    }
 
     strcpy(prefix, Value);
     *strchr(prefix, '[') = '\0';
@@ -76,7 +80,7 @@ bool HandleMemoryOperand(XEDPARSE* Parse, const char* Value, InstOperand* Operan
         return false;
     }
 
-    char temp[32];
+    char temp[64];
     char* ptr    = calc;
     char* base   = temp;
     bool mulFlag = false;
@@ -110,6 +114,10 @@ bool HandleMemoryOperand(XEDPARSE* Parse, const char* Value, InstOperand* Operan
             break;
 
         default:
+            if(base >= temp + sizeof(temp) - 1) {
+                strcpy(Parse->error, "Memory operand is too long");
+                return false;
+            }
             *base++ = *ptr;
             break;
         }

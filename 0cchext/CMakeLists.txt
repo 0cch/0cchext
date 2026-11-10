@@ -1,64 +1,54 @@
-project(0cchext)
+string(REPLACE "." "," EXT_VER_NUM "${0CCHEXT_VERSION}")
+set(EXT_VER_STR "${0CCHEXT_VERSION}")
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+configure_file(resource.h.in "${CMAKE_CURRENT_BINARY_DIR}/resource.h")
 
-if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "Win32")
-set(BUILD_PLATFORM "x86")
-else()
-set(BUILD_PLATFORM "amd64")
-endif()
-
-if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "Win32")
-set(PLATFORM_LIB_NAME "libxed_x86.lib")
-else()
-set(PLATFORM_LIB_NAME "libxed_x64.lib")
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd\"5040\"")
-ADD_DEFINITIONS(-DUNICODE)
-ADD_DEFINITIONS(-D_UNICODE)
-ADD_DEFINITIONS(-DXEDPARSE_STATIC)
-
-if(NOT DEFINED 0CCHEXT_VERSION)
-set(0CCHEXT_VERSION "1.0.0.1")
-endif()
-
-string(REPLACE "." "," EXT_VER_NUM ${0CCHEXT_VERSION})
-set(EXT_VER_STR ${0CCHEXT_VERSION})
-
-configure_file(resource.h.in resource.h)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-link_directories(${CMAKE_SOURCE_DIR}/${BUILD_PLATFORM}/lib)
-link_libraries(
-	dbgeng.lib
-	dbghelp.lib
-	)
-
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/xed/xed2/lib)
-link_libraries(
-	${PLATFORM_LIB_NAME}
-	)
-
-ADD_LIBRARY(0cchext SHARED 
-	${CMAKE_CURRENT_SOURCE_DIR}/inc/engextcpp.cpp
-	dllmain.cpp
-	0cchext.cpp
-	0cchext.h
-	${CMAKE_CURRENT_BINARY_DIR}/resource.h
-	stdafx.cpp
-	stdafx.h
-	struct_script.cpp
-	struct_script.h
-	targetver.h
-	util.cpp
-	util.h
-	0cchext.def
-	0cchext.rc
+add_library(0cchext SHARED
+    dllmain.cpp
+    assembler_backend.cpp
+    assembler_backend.h
+    0cchext.cpp
+    0cchext.h
+    stdafx.cpp
+    stdafx.h
+    struct_script.cpp
+    struct_script.h
+    text_utils.cpp
+    text_utils.h
+    util.cpp
+    util.h
+    targetver.h
+    0cchext.def
+    0cchext.rc
+    "${CMAKE_CURRENT_BINARY_DIR}/resource.h"
 )
 
-target_link_libraries(0cchext libxed)
+cchext_configure_project_target(0cchext)
+cchext_link_dbgeng(0cchext)
+
+target_include_directories(0cchext PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_BINARY_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/xed/src"
+)
+target_link_libraries(0cchext PRIVATE
+    libxed
+    shell32
+    shlwapi
+    version
+    winhttp
+    ws2_32
+    wbemuuid
+    psapi
+    ole32
+    oleaut32
+    uuid
+    user32
+    advapi32
+    gdi32
+    comdlg32
+    winspool
+)
+target_compile_definitions(0cchext PRIVATE XEDPARSE_STATIC)
 
 

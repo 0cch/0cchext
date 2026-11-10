@@ -64,7 +64,7 @@ public:
 		isptr = member_isptr_[index];
 		return TRUE;
 	}
-	std::string GetName() {return name_;}
+	const std::string &GetName() const { return name_; }
 
 private:
 	std::string name_;

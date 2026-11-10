@@ -1,0 +1,76 @@
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            preset: vs2022-x86
+            test_preset: vs2022-x86-release-tests
+          - arch: x64
+            preset: vs2022-x64
+            test_preset: vs2022-x64-release-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $parts = (Get-Content -LiteralPath VERSION -Raw).Trim().Split('.')
+          if ($parts.Count -ne 4 -or ($parts | Where-Object { $_ -notmatch '^\d+$' })) {
+            throw "VERSION must contain four numeric components."
+          }
+          if (${{ github.run_number }} -gt 65535) {
+            throw "Build revision exceeds the Windows file-version limit."
+          }
+          "value=$($parts[0]).$($parts[1]).$($parts[2]).${{ github.run_number }}" >> $env:GITHUB_OUTPUT
+
+      - name: Configure
+        shell: pwsh
+        run: >
+          cmake --preset ${{ matrix.preset }}
+          -D0CCHEXT_USE_INSTALLED_ENGEXTCPP=OFF
+          -D0CCHEXT_VERSION=${{ steps.version.outputs.value }}
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build --preset ${{ matrix.preset }}-relwithdebinfo --parallel 4
+
+      - name: Test
+        shell: pwsh
+        run: ctest --preset ${{ matrix.test_preset }} --output-on-failure
+
+      - name: Smoke test extension
+        shell: pwsh
+        run: ./tests/integration/cdb-smoke.ps1 -Architecture ${{ matrix.arch }} -BuildDirectory "${{ github.workspace }}/build/${{ matrix.arch }}/bin"
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: 0cchext-${{ matrix.arch }}
+          path: |
+            build/${{ matrix.arch }}/bin/0cchext.dll
+            build/${{ matrix.arch }}/bin/0cchext.pdb
+            build/${{ matrix.arch }}/bin/luadbg.dll
+            build/${{ matrix.arch }}/bin/luadbg.pdb
+          if-no-files-found: error
+          retention-days: 14

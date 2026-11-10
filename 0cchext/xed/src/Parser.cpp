@@ -135,6 +135,9 @@ char* GrabInstToken(char* Dest, char* Src, bool Operand)
     if(bufEnd)
         *bufEnd = '\0';
 
+    if(strlen(Src) >= 64)
+        return nullptr;
+
     strcpy(Dest, Src);
 
     return ((bufEnd) ? (bufEnd + 1) : nullptr);

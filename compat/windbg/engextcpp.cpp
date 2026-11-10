@@ -68,7 +68,7 @@ void WINAPI
 ExtCurrentThreadHolder::Refresh(void)
 {
     HRESULT Status;
-    
+
     if ((Status = g_Ext->m_System->
          GetCurrentThreadId(&m_ThreadId)) != S_OK)
     {
@@ -96,7 +96,7 @@ void WINAPI
 ExtCurrentProcessHolder::Refresh(void)
 {
     HRESULT Status;
-    
+
     if ((Status = g_Ext->m_System->
          GetCurrentProcessId(&m_ProcessId)) != S_OK)
     {
@@ -124,7 +124,7 @@ void WINAPI
 ExtEffectiveProcessorTypeHolder::Refresh(void)
 {
     HRESULT Status;
-    
+
     if ((Status = g_Ext->m_Control->
          GetEffectiveProcessorType(&m_ProcType)) != S_OK)
     {
@@ -153,7 +153,7 @@ void WINAPI
 ExtRadixHolder::Refresh(void)
 {
     HRESULT Status;
-    
+
     if ((Status = g_Ext->m_Control->
          GetRadix(&m_Radix)) != S_OK)
     {
@@ -284,7 +284,7 @@ ExtCommandDesc::ParseDirective(_In_ PSTR Scan)
     //
 
     PSTR Value = "";
-    
+
     if (*Scan == ':')
     {
         *Scan++ = 0;
@@ -306,7 +306,7 @@ ExtCommandDesc::ParseDirective(_In_ PSTR Scan)
     {
         m_Ext->ThrowInvalidArg("ArgDesc: Improper directive }} closure");
     }
-    
+
     // Terminate name or value.
     *Scan = 0;
     Scan += 2;
@@ -351,7 +351,7 @@ ExtCommandDesc::ParseDirective(_In_ PSTR Scan)
         m_Ext->ThrowInvalidArg("ArgDesc: {{%s}} does not have an argument",
                                Name);
     }
-    
+
     return Scan;
 }
 
@@ -376,7 +376,7 @@ ExtCommandDesc::ParseArgDesc(void)
         m_Ext->ThrowOutOfMemory();
     }
 
-    // 
+    //
     // Each argument description is
     //   {<optname>;<type,flags>;<argname>;<descstr>}
     //
@@ -389,9 +389,9 @@ ExtCommandDesc::ParseArgDesc(void)
     ArgDesc* Arg = pArgs - 1;
     ULONG NumUnOptArgs = 0;
     bool RemainderUsed = false;
-    
+
     PSTR Scan = m_ArgStrings;
-    
+
     while (*Scan)
     {
         if (*Scan != '{')
@@ -406,7 +406,7 @@ ExtCommandDesc::ParseArgDesc(void)
             Scan = ParseDirective(++Scan);
             continue;
         }
-        
+
         if (m_NumArgs >= ExtExtension::s_MaxArgs)
         {
             m_Ext->ThrowInvalidArg("ArgDesc: Argument count "
@@ -414,12 +414,12 @@ ExtCommandDesc::ParseArgDesc(void)
         }
         m_NumArgs++;
         Arg++;
-        
+
         //
         // Check for an argument name.
         // Arguments can be unnamed.
         //
-        
+
         if (*Scan == '}' ||
             *Scan == ';')
         {
@@ -442,7 +442,7 @@ ExtCommandDesc::ParseArgDesc(void)
                                            "name termination for '%s'",
                                            Arg->Name);
                 }
-                
+
                 Scan++;
             }
             if (*Scan != '}')
@@ -464,12 +464,12 @@ ExtCommandDesc::ParseArgDesc(void)
         //
 
         PCSTR TypeName = "ERROR";
-        
+
         Arg->Boolean = false;
         Arg->Expression = false;
         Arg->String = false;
         Arg->StringRemainder = false;
-        
+
         switch(*Scan)
         {
         case 'x':
@@ -583,10 +583,10 @@ ExtCommandDesc::ParseArgDesc(void)
         //
 
         PSTR NeedTerm = NULL;
-        
+
         Arg->Default = NULL;
         Arg->DefaultSilent = false;
-        
+
         // Unnamed arguments default to
         // required as a required argument
         // tail is a very common pattern.
@@ -599,7 +599,7 @@ ExtCommandDesc::ParseArgDesc(void)
                 *NeedTerm = 0;
                 NeedTerm = NULL;
             }
-                
+
             Scan++;
             switch(*Scan)
             {
@@ -667,7 +667,7 @@ ExtCommandDesc::ParseArgDesc(void)
             *NeedTerm = 0;
             NeedTerm = NULL;
         }
-                
+
         if (!Arg->Name)
         {
             if (Arg->Boolean)
@@ -700,7 +700,7 @@ ExtCommandDesc::ParseArgDesc(void)
                                            "unnamed arguments");
                 }
             }
-        
+
             if (RemainderUsed)
             {
                 m_Ext->ThrowInvalidArg("ArgDesc: "
@@ -713,7 +713,7 @@ ExtCommandDesc::ParseArgDesc(void)
                 RemainderUsed = true;
             }
         }
-        
+
         //
         // Check for a short descriptive argument name.
         //
@@ -743,7 +743,7 @@ ExtCommandDesc::ParseArgDesc(void)
                                            Arg->Name ?
                                            Arg->Name : "<unnamed>");
                 }
-                
+
                 Scan++;
             }
             if (*Scan != '}')
@@ -755,7 +755,7 @@ ExtCommandDesc::ParseArgDesc(void)
         //
         // Check for a long argument description.
         //
-        
+
         if (*Scan == '}')
         {
             Arg->DescLong = NULL;
@@ -773,7 +773,7 @@ ExtCommandDesc::ParseArgDesc(void)
                                            Arg->Name ?
                                            Arg->Name : "<unnamed>");
                 }
-                
+
                 Scan++;
             }
         }
@@ -783,7 +783,7 @@ ExtCommandDesc::ParseArgDesc(void)
         // Terminate whatever was the last string
         // in the description.
         //
-        
+
         if (*Scan != '}')
         {
             m_Ext->ThrowInvalidArg("ArgDesc: Expecting } at '%s'", Scan);
@@ -802,7 +802,7 @@ ExtCommandDesc::ParseArgDesc(void)
         }
         memcpy(m_Args, pArgs, m_NumArgs * sizeof(m_Args[0]));
     }
-    
+
     m_ArgsInitialized = true;
 
    free(pArgs);
@@ -812,7 +812,7 @@ void WINAPI
 ExtCommandDesc::ExInitialize(_In_ ExtExtension* Ext)
 {
     m_Ext = Ext;
-    
+
     if (!m_ArgsInitialized)
     {
         try
@@ -841,7 +841,7 @@ ExtCommandDesc::FindArg(_In_ PCSTR Name)
     }
     return NULL;
 }
-    
+
 ExtCommandDesc::ArgDesc* WINAPI
 ExtCommandDesc::FindUnnamedArg(_In_ ULONG Index)
 {
@@ -914,7 +914,7 @@ ExtExtension::ExtExtension(void)
 
     m_KnownStructs = NULL;
     m_ProvidedValues = NULL;
-    
+
     m_ExInitialized = false;
     m_OutMask = DEBUG_OUTPUT_NORMAL;
     m_CurChar = 0;
@@ -923,7 +923,7 @@ ExtExtension::ExtExtension(void)
     m_TestWrap = 0;
 
     m_CurCommand = NULL;
-    
+
     m_AppendBuffer = NULL;
     m_AppendBufferChars = 0;
     m_AppendAt = NULL;
@@ -943,13 +943,13 @@ ExtExtension::BaseInitialize(_In_ HMODULE ExtDllModule,
     s_Module = ExtDllModule;
     g_ExtInstancePtr = this;
     g_Ext = this;
-    
+
     // Pass registered commands to the extension
     // so that further references are confined to
     // extension class data.
     ExtCommandDesc::Transfer(&m_Commands,
                              &m_LongestCommandName);
-    
+
     if ((Status = Initialize()) != S_OK)
     {
         return Status;
@@ -1220,7 +1220,7 @@ ExtExtension::OutWrapStr(_In_ PCSTR String)
         m_TestWrapChars += static_cast<ULONG>(strlen(String));
         return;
     }
-    
+
     while (*String)
     {
         //
@@ -1240,7 +1240,7 @@ ExtExtension::OutWrapStr(_In_ PCSTR String)
             {
                 LastSpace = Scan;
             }
-            
+
             m_CurChar++;
             Scan++;
         }
@@ -1265,7 +1265,7 @@ ExtExtension::OutWrapStr(_In_ PCSTR String)
         //
         // Wrap to the next line.
         //
-        
+
         WrapLine();
         String = Scan + 1;
         while (*String == ' ')
@@ -1288,7 +1288,7 @@ ExtExtension::OutWrap(_In_ PCSTR Format,
                       ...)
 {
     va_list Args;
-    
+
     va_start(Args, Format);
     OutWrapVa(Format, Args);
     va_end(Args);
@@ -1319,7 +1319,7 @@ ExtExtension::CopyCircleString(_In_ PCSTR Str)
 {
     PSTR Buf;
     ULONG Chars;
-    
+
     Chars = static_cast<ULONG>(strlen(Str) + 1);
     Buf = RequestCircleString(Chars);
     memcpy(Buf, Str, Chars * sizeof(*Str));
@@ -1346,7 +1346,7 @@ ExtExtension::PrintCircleString(_In_ PCSTR Format,
     va_end(Args);
     return Str;
 }
-    
+
 void WINAPI
 ExtExtension::SetAppendBuffer(_In_reads_(BufferChars) PSTR Buffer,
                               _In_ ULONG BufferChars)
@@ -1360,7 +1360,7 @@ void WINAPI
 ExtExtension::AppendBufferString(_In_ PCSTR Str)
 {
     size_t Chars;
-    
+
     Chars = strlen(Str) + 1;
     if (Chars > m_AppendBufferChars ||
         (ULONG_PTR)(m_AppendAt - m_AppendBuffer) > m_AppendBufferChars - Chars)
@@ -1384,7 +1384,7 @@ ExtExtension::AppendStringVa(_In_ PCSTR Format,
     {
         ThrowInvalidArg("Append string buffer cannot use s_String");
     }
-    
+
     StringCbVPrintfA(s_String, sizeof(s_String), Format, Args);
     AppendBufferString(s_String);
 }
@@ -1399,7 +1399,7 @@ ExtExtension::AppendString(_In_ PCSTR Format,
     AppendStringVa(Format, Args);
     va_end(Args);
 }
-    
+
 void WINAPI
 ExtExtension::SetCallStatus(_In_ HRESULT Status)
 {
@@ -1445,7 +1445,7 @@ ExtExtension::GetCachedSymbolTypeId(_Inout_ PULONG64 Cookie,
     //
     // Check for an existing cache entry.
     //
-        
+
     if ((Status = m_Advanced2->
          Request(DEBUG_REQUEST_GET_CACHED_SYMBOL_INFO,
                  Cookie,
@@ -1463,9 +1463,9 @@ ExtExtension::GetCachedSymbolTypeId(_Inout_ PULONG64 Cookie,
     //
 
     ZeroMemory(&Info, sizeof(Info));
-    
+
     if ((Status = m_Symbols->
-         GetSymbolTypeId(Symbol, 
+         GetSymbolTypeId(Symbol,
                          &Info.Id,
                          &Info.ModBase)) != S_OK)
     {
@@ -1474,7 +1474,7 @@ ExtExtension::GetCachedSymbolTypeId(_Inout_ PULONG64 Cookie,
     }
 
     *ModBase = Info.ModBase;
-    
+
     //
     // Add recovered info to cache.
     // We don't care if this fails as
@@ -1509,7 +1509,7 @@ ExtExtension::GetCachedFieldOffset(_Inout_ PULONG64 Cookie,
     //
     // Check for an existing cache entry.
     //
-        
+
     if ((Status = m_Advanced2->
          Request(DEBUG_REQUEST_GET_CACHED_SYMBOL_INFO,
                  Cookie,
@@ -1534,9 +1534,9 @@ ExtExtension::GetCachedFieldOffset(_Inout_ PULONG64 Cookie,
     //
 
     ZeroMemory(&Info, sizeof(Info));
-    
+
     if ((Status = m_Symbols->
-         GetSymbolTypeId(Type, 
+         GetSymbolTypeId(Type,
                          &Info.Id,
                          &Info.ModBase)) != S_OK)
     {
@@ -1552,7 +1552,7 @@ ExtExtension::GetCachedFieldOffset(_Inout_ PULONG64 Cookie,
         ThrowStatus(Status, "Unable to get field '%s.%s'",
                     Type, Field);
     }
-    
+
     if (TypeModBase)
     {
         *TypeModBase = Info.ModBase;
@@ -1588,7 +1588,7 @@ ExtExtension::GetCachedSymbolInfo(_In_ ULONG64 Cookie,
                                   _Out_ PDEBUG_CACHED_SYMBOL_INFO Info)
 {
     HRESULT Status;
-    
+
     if ((Status = m_Advanced2->
          Request(DEBUG_REQUEST_GET_CACHED_SYMBOL_INFO,
                  &Cookie,
@@ -1599,7 +1599,7 @@ ExtExtension::GetCachedSymbolInfo(_In_ ULONG64 Cookie,
     {
         return true;
     }
-    
+
     return false;
 }
 
@@ -1609,7 +1609,7 @@ ExtExtension::AddCachedSymbolInfo(_In_ PDEBUG_CACHED_SYMBOL_INFO Info,
                                   _Out_ PULONG64 Cookie)
 {
     HRESULT Status;
-    
+
     if ((Status = m_Advanced2->
          Request(DEBUG_REQUEST_ADD_CACHED_SYMBOL_INFO,
                  Info,
@@ -1620,7 +1620,7 @@ ExtExtension::AddCachedSymbolInfo(_In_ PDEBUG_CACHED_SYMBOL_INFO Info,
     {
         return true;
     }
-    
+
     if (ThrowFailure)
     {
         ThrowStatus(Status, "Unable to cache symbol info");
@@ -1681,7 +1681,7 @@ ExtExtension::GetOffsetSymbol(_In_ ULONG64 Offs,
             if (AddDisp)
             {
                 const ULONG DispChars = 19;
-                
+
                 Name->Require(Need, DispChars);
                 StringCchPrintfA(Name->GetBuffer() + (Need - 1),
                                  DispChars,
@@ -1732,7 +1732,7 @@ ExtExtension::FindFirstModule(_In_ PCSTR Pattern,
                 StartIndex++;
                 continue;
             }
-            
+
             if (Name)
             {
                 LocalName.SetEltsUsed(Need);
@@ -1759,7 +1759,7 @@ ExtExtension::GetModuleImagehlpInfo(_In_ ULONG64 ModBase,
 
     ZeroMemory(Info, sizeof(*Info));
     Info->SizeOfStruct = sizeof(*Info);
-    
+
     if ((Status = m_Advanced2->
          GetSymbolInformation(DEBUG_SYMINFO_IMAGEHLP_MODULEW64,
                               ModBase,
@@ -1800,7 +1800,7 @@ ExtExtension::ModuleHasTypeInfo(_In_ ULONG64 ModBase)
     {
         return FALSE;
     }
-    
+
     GetModuleImagehlpInfo(ModBase, pInfo);
     bool const hasTypeInfo = pInfo->TypeInfo != FALSE;
 
@@ -1836,7 +1836,7 @@ ExtExtension::CallDebuggeeBase(_In_ PCSTR CommandString,
     // Eventually .call will get a quiet mode and then
     // at least the return value output can be hidden.
     IgnoreOut.Start();
-    
+
     if ((Status = m_Control->SetExecutionStatus(DEBUG_STATUS_GO)) == S_OK)
     {
         Status = m_Control->WaitForEvent(DEBUG_WAIT_DEFAULT,
@@ -1852,14 +1852,14 @@ ExtExtension::CallDebuggeeBase(_In_ PCSTR CommandString,
                            ".call -c",
                            DEBUG_EXECUTE_NOT_LOGGED |
                            DEBUG_EXECUTE_NO_REPEAT);
-        
+
         ThrowStatus(Status, "Unable to wait for debuggee to run");
     }
     else if (Status != S_OK)
     {
         // Try and get control back.
         m_Control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE);
-        
+
         ThrowStatus(E_FAIL,
                     "DANGEROUS FAILURE: "
                     "Debuggee took longer than %g seconds to run "
@@ -1872,7 +1872,7 @@ ExtExtension::CallDebuggeeBase(_In_ PCSTR CommandString,
     }
 
     ULONG64 RetVal;
-    
+
     GetExprU64("@$callret", (ULONG64)-1, &RetVal);
     return RetVal;
 }
@@ -1883,7 +1883,7 @@ ExtExtension::FindRegister(_In_ PCSTR Name,
 {
     HRESULT Status;
     ULONG Index;
-    
+
     if (IndexCache != NULL &&
         *IndexCache != DEBUG_ANY_ID)
     {
@@ -1948,7 +1948,7 @@ ExtExtension::FindPseudoRegister(_In_ PCSTR Name,
 {
     HRESULT Status;
     ULONG Index;
-    
+
     if (IndexCache != NULL &&
         *IndexCache != DEBUG_ANY_ID)
     {
@@ -2094,7 +2094,7 @@ ExtExtension::SetUnnamedArg(_In_ ULONG Index,
     }
 
     ArgVal* Val = NULL;
-    
+
     if (HasUnnamedArg(Index))
     {
         if (OnlyIfUnset)
@@ -2269,7 +2269,7 @@ ExtExtension::QueryMachineInfo(void)
     {
         m_TempRegIndex[i] = DEBUG_ANY_ID;
     }
-    
+
     return S_OK;
 }
 
@@ -2298,7 +2298,7 @@ ExtExtension::Query(_In_ PDEBUG_CLIENT Start)
     }
 
     m_ArgCopy = NULL;
-    
+
     REQ_IF(IDebugAdvanced, m_Advanced);
     REQ_IF(IDebugClient, m_Client);
     REQ_IF(IDebugControl, m_Control);
@@ -2306,7 +2306,7 @@ ExtExtension::Query(_In_ PDEBUG_CLIENT Start)
     REQ_IF(IDebugRegisters, m_Registers);
     REQ_IF(IDebugSymbols, m_Symbols);
     REQ_IF(IDebugSystemObjects, m_System);
-    
+
     OPT_IF(IDebugAdvanced2, m_Advanced2);
     OPT_IF(IDebugAdvanced3, m_Advanced3);
     OPT_IF(IDebugClient2, m_Client2);
@@ -2337,7 +2337,7 @@ ExtExtension::Query(_In_ PDEBUG_CLIENT Start)
     {
         m_DumpFormatFlags = 0;
     }
-    
+
     if ((Status = m_Control->
          GetDebuggeeType(&m_DebuggeeClass,
                          &m_DebuggeeQual)) != S_OK ||
@@ -2355,7 +2355,7 @@ ExtExtension::Query(_In_ PDEBUG_CLIENT Start)
     {
         m_NumProcessors = 0;
     }
-        
+
     ExtensionApis.nSize = sizeof(ExtensionApis);
     Status = m_Control->GetWindbgExtensionApis64(&ExtensionApis);
     if (Status == RPC_E_CALL_REJECTED)
@@ -2452,7 +2452,7 @@ ExtExtension::CallExtCodeCEH(_In_opt_ ExtCommandDesc* Desc,
     {
         Name = NULL;
     }
-    
+
     try
     {
         ExInitialize();
@@ -2462,7 +2462,7 @@ ExtExtension::CallExtCodeCEH(_In_opt_ ExtCommandDesc* Desc,
             Desc->ExInitialize(this);
             ParseArgs(Desc, Args);
         }
-        
+
         m_CallStatus = S_OK;
         // Release NULLs this out.
         m_CurCommand = Desc;
@@ -2525,7 +2525,7 @@ ExtExtension::CallExtCodeCEH(_In_opt_ ExtCommandDesc* Desc,
                        "ERROR: %s%s: extension exception 0x%08x.\n",
                        PreName, Name, Ex.GetStatus());
         }
-        
+
         Status = Ex.GetStatus();
     }
 
@@ -2570,12 +2570,12 @@ ExtExtension::CallKnownStructMethod(_In_ ExtKnownStruct* Struct,
                                     _Inout_ PULONG BufferChars)
 {
     HRESULT Status;
-    
+
     try
     {
         ExInitialize();
         SetAppendBuffer(Buffer, *BufferChars);
-        
+
         m_CallStatus = S_OK;
 
         (this->*Struct->Method)(Struct->TypeName, Flags, Offset);
@@ -2629,13 +2629,13 @@ ExtExtension::HandleKnownStruct(_In_ PDEBUG_CLIENT Client,
 {
     HRESULT Status;
     ExtKnownStruct* Struct = m_KnownStructs;
-    
+
     if (Flags == DEBUG_KNOWN_STRUCT_GET_NAMES &&
         Buffer != NULL &&
         *BufferChars > 0)
     {
         ULONG CharsNeeded;
-        
+
         //
         // Return names of known structs packed in
         // the output buffer.
@@ -2650,7 +2650,7 @@ ExtExtension::HandleKnownStruct(_In_ PDEBUG_CLIENT Client,
         {
             ULONG Chars = static_cast<ULONG>(strlen(Struct->TypeName) + 1);
             CharsNeeded += Chars;
-            
+
             if (Status != S_OK || *BufferChars < Chars)
             {
                 Status = S_FALSE;
@@ -2661,7 +2661,7 @@ ExtExtension::HandleKnownStruct(_In_ PDEBUG_CLIENT Client,
                 Buffer += Chars;
                 (*BufferChars) -= Chars;
             }
-            
+
             Struct++;
         }
 
@@ -2732,10 +2732,10 @@ ExtExtension::HandleQueryValueNames(_In_ PDEBUG_CLIENT Client,
     {
         return E_INVALIDARG;
     }
-    
+
     ExtProvidedValue* ExtVal = m_ProvidedValues;
     ULONG CharsNeeded;
-        
+
     //
     // Return names of values packed in
     // the output buffer.
@@ -2750,7 +2750,7 @@ ExtExtension::HandleQueryValueNames(_In_ PDEBUG_CLIENT Client,
     {
         ULONG Chars = static_cast<ULONG>(wcslen(ExtVal->ValueName) + 1);
         CharsNeeded += Chars;
-            
+
         if (Status != S_OK || BufferChars < Chars)
         {
             Status = S_FALSE;
@@ -2761,7 +2761,7 @@ ExtExtension::HandleQueryValueNames(_In_ PDEBUG_CLIENT Client,
             Buffer += Chars;
             BufferChars -= Chars;
         }
-            
+
         ExtVal++;
     }
 
@@ -2780,11 +2780,11 @@ ExtExtension::CallProvideValueMethod(_In_ ExtProvidedValue* ExtVal,
                                      _Out_ PULONG TypeFlags)
 {
     HRESULT Status;
-    
+
     try
     {
         ExInitialize();
-        
+
         m_CallStatus = S_OK;
 
         (this->*ExtVal->Method)(Flags, ExtVal->ValueName,
@@ -2866,7 +2866,7 @@ ExtExtension::FindArg(_In_ PCSTR Name,
     {
         ThrowInvalidArg("No argument /%s was provided", Name);
     }
-    
+
     return NULL;
 }
 
@@ -2942,7 +2942,7 @@ ExtExtension::SetRawArgVal(_In_ ExtCommandDesc::ArgDesc* Check,
         {
             PSTR StrEnd = NULL;
             char StrEndChar = 0;
-            
+
             if (Check->ExpressionDelimited)
             {
                 StrEnd = (PSTR)StrVal;
@@ -2963,7 +2963,7 @@ ExtExtension::SetRawArgVal(_In_ ExtCommandDesc::ArgDesc* Check,
                     // can provide a properly-terminated expression,
                     // so don't support copying.
                     //
-                    
+
                     if (!StrWritable)
                     {
                         ThrowInvalidArg("Delimited expressions can "
@@ -2983,7 +2983,7 @@ ExtExtension::SetRawArgVal(_In_ ExtCommandDesc::ArgDesc* Check,
             }
 
             ExtRadixHolder HoldRadix;
-            
+
             if (Check->ExpressionRadix != 0)
             {
                 HoldRadix.Refresh();
@@ -2996,7 +2996,7 @@ ExtExtension::SetRawArgVal(_In_ ExtCommandDesc::ArgDesc* Check,
                                            Check->ExpressionEvaluator,
                                            StrVal);
             }
-            
+
             StrVal = GetExpr64(StrVal,
                                Check->ExpressionSigned != 0,
                                (0xffffffffffffffffUI64 >>
@@ -3058,12 +3058,12 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
     {
         return;
     }
-    
+
     PSTR Scan = m_ArgCopy;
     bool ImplicitNamedArg = false;
     ULONG i;
     ExtCommandDesc::ArgDesc* Check;
-    
+
     Check = Desc->m_Args;
     for (i = 0; i < Desc->m_NumArgs; i++, Check++)
     {
@@ -3103,7 +3103,7 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
                     throw ExtStatusException(S_OK);
                 }
             }
-            
+
             PSTR Start = Scan++;
             while (*Scan && !IsSpace(*Scan))
             {
@@ -3125,7 +3125,7 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
                     {
                         continue;
                     }
-                
+
                     if (!strcmp(Start, Check->Name))
                     {
                         break;
@@ -3155,7 +3155,7 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
                     {
                         continue;
                     }
-                
+
                     if (*Start == Check->Name[0] &&
                         !Check->Name[1])
                     {
@@ -3183,12 +3183,12 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
                 ThrowInvalidArg("Duplicate argument '%s'",
                                 Start);
             }
-            
+
             //
             // Argument is valid, fix up the scan string
             // and move to value processing.
             //
-            
+
             *Scan = Save;
             if (ImplicitNamedArg)
             {
@@ -3226,7 +3226,7 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
     //
     // Fill in default values where needed.
     //
-    
+
     Check = Desc->m_Args;
     for (i = 0; i < Desc->m_NumArgs; i++, Check++)
     {
@@ -3249,7 +3249,7 @@ ExtExtension::ParseArgs(_In_ ExtCommandDesc* Desc,
         {
             NumUnPresent++;
         }
-        
+
         if (Check->Required &&
             !Check->Present)
         {
@@ -3282,7 +3282,7 @@ ExtExtension::OutCommandArg(_In_ ExtCommandDesc::ArgDesc* Arg,
         {
             OutWrapStr("/");
         }
-        
+
         OutWrapStr(Arg->Name);
 
         if (!Arg->Boolean)
@@ -3309,7 +3309,7 @@ ExtExtension::HelpCommandArgsSummary(_In_ ExtCommandDesc* Desc)
         OutWrapStr(Desc->m_CustomArgDescShort);
         return;
     }
-    
+
     //
     // In order to try and make things pretty we make
     // several passes over the arguments.
@@ -3340,7 +3340,7 @@ ExtExtension::HelpCommandArgsSummary(_In_ ExtCommandDesc* Desc)
         OutWrapStr("]");
         AllowWrap(true);
     }
-    
+
     //
     // Display all optional multi-char booleans.
     //
@@ -3353,7 +3353,7 @@ ExtExtension::HelpCommandArgsSummary(_In_ ExtCommandDesc* Desc)
             OutWrap(" [/%s]", Arg->Name);
         }
     }
-    
+
     //
     // Display all required single-char booleans as a collection.
     //
@@ -3476,7 +3476,7 @@ void WINAPI
 ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
 {
     bool First = true;
-    
+
     if (Arg->Default &&
         !Arg->DefaultSilent)
     {
@@ -3493,7 +3493,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrapStr("signed");
             First = false;
         }
@@ -3503,7 +3503,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrapStr("space-delimited");
             First = false;
         }
@@ -3513,7 +3513,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrap("%u-bit max", Arg->ExpressionBits);
             First = false;
         }
@@ -3523,7 +3523,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrap("base %u", Arg->ExpressionRadix);
             First = false;
         }
@@ -3533,7 +3533,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrapStr(Arg->ExpressionEvaluator);
             OutWrapStr(" syntax");
             First = false;
@@ -3548,7 +3548,7 @@ ExtExtension::OutArgDescOptions(_In_ ExtCommandDesc::ArgDesc* Arg)
             {
                 OutWrapStr(", ");
             }
-            
+
             OutWrapStr("consumes remainder of input string");
             First = false;
         }
@@ -3561,7 +3561,7 @@ ExtExtension::HelpCommand(_In_ ExtCommandDesc* Desc)
     ULONG i;
 
     Desc->ExInitialize(this);
-    
+
     m_CurChar = 0;
     OutWrap("!%s", Desc->m_Name);
     m_LeftIndent = m_CurChar + 1;
@@ -3584,12 +3584,12 @@ ExtExtension::HelpCommand(_In_ ExtCommandDesc* Desc)
         {
             OutWrapStr("  ");
             OutCommandArg(Arg, true);
-            
+
             if (Arg->DescLong)
             {
                 OutWrapStr(" - ");
                 m_LeftIndent = m_CurChar;
-                
+
                 OutWrapStr(Arg->DescLong);
 
                 if (Arg->NeedsOptionsOutput())
@@ -3605,13 +3605,13 @@ ExtExtension::HelpCommand(_In_ ExtCommandDesc* Desc)
                 m_LeftIndent = m_CurChar;
                 OutArgDescOptions(Arg);
             }
-            
+
             m_LeftIndent = 0;
             OutWrapStr("\n");
             Arg++;
         }
     }
-    
+
     OutWrapStr(Desc->m_Desc);
     Out("\n");
 }
@@ -3650,7 +3650,7 @@ ExtExtension::HelpAll(void)
 
     Out("Commands for %s:\n", ModName);
     m_CurChar = 0;
-    
+
     ExtCommandDesc* Desc = m_Commands;
     while (Desc)
     {
@@ -3764,7 +3764,7 @@ void WINAPI
 ExtRemoteData::Read(void)
 {
     g_Ext->ThrowInterrupt();
-    
+
     // Zero data so that unread bytes have a known state.
     ULONG64 NewData = 0;
 
@@ -3785,7 +3785,7 @@ void WINAPI
 ExtRemoteData::Write(void)
 {
     g_Ext->ThrowInterrupt();
-    
+
     if (m_Bytes > sizeof(m_Data))
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -3804,7 +3804,7 @@ ULONG64 WINAPI
 ExtRemoteData::GetData(_In_ ULONG Request)
 {
     g_Ext->ThrowInterrupt();
-    
+
     if (m_Bytes != Request)
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -3825,7 +3825,7 @@ ExtRemoteData::SetData(_In_ ULONG64 Data,
                        _In_ bool NoWrite) throw(...)
 {
     g_Ext->ThrowInterrupt();
-    
+
     if (m_Bytes != Request)
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -3850,7 +3850,7 @@ ExtRemoteData::ReadBuffer(_Out_writes_bytes_(Bytes) PVOID Buffer,
     ULONG Done;
 
     g_Ext->ThrowInterrupt();
-    
+
     if (!Bytes)
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -3955,9 +3955,9 @@ ExtRemoteData::GetString(_Out_writes_opt_(BufferChars) PSTR Buffer,
                          _Out_opt_ PULONG NeedChars)
 {
     HRESULT Status;
-    
+
     g_Ext->ThrowInterrupt();
-    
+
     if (!m_ValidOffset)
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -3971,7 +3971,7 @@ ExtRemoteData::GetString(_Out_writes_opt_(BufferChars) PSTR Buffer,
     }
 
     ULONG Need;
-    
+
     if (FAILED(Status = g_Ext->m_Data4->
                ReadMultiByteStringVirtual(m_Offset, MaxChars * sizeof(*Buffer),
                                           Buffer, BufferChars, &Need)))
@@ -4001,9 +4001,9 @@ ExtRemoteData::GetString(_Out_writes_opt_(BufferChars) PWSTR Buffer,
                          _Out_opt_ PULONG NeedChars)
 {
     HRESULT Status;
-    
+
     g_Ext->ThrowInterrupt();
-    
+
     if (!m_ValidOffset)
     {
         g_Ext->ThrowRemote(E_INVALIDARG,
@@ -4017,7 +4017,7 @@ ExtRemoteData::GetString(_Out_writes_opt_(BufferChars) PWSTR Buffer,
     }
 
     ULONG Need;
-    
+
     if (FAILED(Status = g_Ext->m_Data4->
                ReadUnicodeStringVirtualWide(m_Offset,
                                             MaxChars * sizeof(*Buffer),
@@ -4110,7 +4110,7 @@ ExtRemoteTyped::Set(_In_ PCSTR Expr)
 {
     EXT_TDOP Op;
     ULONG Flags = ErtOut;
-    
+
     // If we have a valid value let it be used
     // in the expression if desired.
     if (m_Release)
@@ -4161,7 +4161,7 @@ ExtRemoteTyped::Set(_In_ bool PtrTo,
     ExtData.InData.ModBase = TypeModBase;
     ExtData.InData.TypeId = TypeId;
     ExtData.InData.Offset = Offset;
-    
+
     Status = g_Ext->m_Advanced2->
         Request(DEBUG_REQUEST_EXT_TYPED_DATA_ANSI,
                 &ExtData, sizeof(ExtData),
@@ -4194,11 +4194,11 @@ ExtRemoteTyped::Set(_In_ PCSTR Type,
     HRESULT Status;
     ULONG64 TypeModBase;
     ULONG TypeId;
-    
+
     if (!CacheCookie)
     {
         if ((Status = g_Ext->m_Symbols->
-             GetSymbolTypeId(Type, 
+             GetSymbolTypeId(Type,
                              &TypeId,
                              &TypeModBase)) != S_OK)
         {
@@ -4227,7 +4227,7 @@ ExtRemoteTyped::Set(_In_ PCSTR Type,
                                                   &TypeModBase);
         }
     }
-        
+
     Set(PtrTo, TypeModBase, TypeId, Offset);
 }
 
@@ -4237,7 +4237,7 @@ ExtRemoteTyped::SetPrint(_In_ PCSTR Format,
 {
     HRESULT Status;
     va_list Args;
-    
+
     va_start(Args, Format);
     Status = StringCbVPrintfA(ExtExtension::s_String, sizeof(ExtExtension::s_String),
                               Format, Args);
@@ -4267,7 +4267,7 @@ ExtRemoteTyped WINAPI
 ExtRemoteTyped::Field(_In_ PCSTR Field)
 {
     ExtRemoteTyped Ret;
-    
+
     PSTR Msg = g_Ext->
         PrintCircleString("Field: unable to retrieve field '%s' at %I64x",
                           Field, m_Offset);
@@ -4312,7 +4312,7 @@ ExtRemoteTyped WINAPI
 ExtRemoteTyped::Eval(_In_ PCSTR Expr)
 {
     ExtRemoteTyped Ret;
-    
+
     PSTR Msg = g_Ext->
         PrintCircleString("Eval: unable to evaluate '%s'",
                           Expr);
@@ -4399,7 +4399,7 @@ ExtRemoteTyped::ErtIoctl(_In_ PCSTR Message,
 
     ExtData = (EXT_TYPED_DATA*)DataHolder.Get(ExtDataBytes);
     ExtraData = (PBYTE)(ExtData + 1);
-    
+
     ZeroMemory(ExtData, sizeof(*ExtData));
     ExtData->Operation = Op;
     if (m_Physical)
@@ -4420,7 +4420,7 @@ ExtRemoteTyped::ErtIoctl(_In_ PCSTR Message,
         ExtData->StrBufferChars = StrBufferChars;
         ExtraData += StrBufferChars * sizeof(*StrBuffer);
     }
-    
+
     if ((Flags & (ErtIn | ErtUncheckedIn)) != 0)
     {
         if ((Flags & ErtIn) != 0 && !m_Release)
@@ -4467,7 +4467,7 @@ ExtRemoteTyped::ErtIoctl(_In_ PCSTR Message,
         memcpy(StrBuffer, (PBYTE)ExtData + ExtData->StrBufferIndex,
                StrBufferChars * sizeof(*StrBuffer));
     }
-    
+
     if (Out32)
     {
         *Out32 = ExtData->Out32;
@@ -4522,7 +4522,7 @@ ExtNtOsInformation::GetKernelLoadedModuleList(void)
     List.m_MaxIter = 1000;
     return List;
 }
-    
+
 ExtRemoteTyped WINAPI
 ExtNtOsInformation::GetKernelLoadedModule(_In_ ULONG64 Offset)
 {
@@ -4616,7 +4616,7 @@ ExtNtOsInformation::GetUserLoadedModuleListHead(_In_ bool NativeOnly)
         !g_Ext->Is32On64())
     {
         DEBUG_VALUE Data;
-    
+
         if (FAILED(Status = g_Ext->m_Control->
                    Evaluate("@@c++(&@$peb->Ldr->InLoadOrderModuleList)",
                             DEBUG_VALUE_INT64, &Data, NULL)))
@@ -4816,7 +4816,7 @@ ExtNtOsInformation::GetCurTeb(_In_ ULONG64 Offset)
     return g_Ext->Is32On64() ?
         GetAltTeb(Offset) : GetOsTeb(Offset);
 }
-    
+
 ULONG64 WINAPI
 ExtNtOsInformation::GetNtDebuggerData(_In_ ULONG DataOffset,
                                       _In_ PCSTR Symbol,
@@ -4829,7 +4829,7 @@ ExtNtOsInformation::GetNtDebuggerData(_In_ ULONG DataOffset,
     //
     // First check the kernel's data block.
     //
-    
+
     if (g_Ext->m_Data->
         ReadDebuggerData(DataOffset, &Data, sizeof(Data), NULL) == S_OK)
     {
@@ -4923,7 +4923,7 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
     {
         g_Ext->OutWrap("%016I64x", Value);
     }
-    
+
     if ((m_Flags & Bitwise) != 0)
     {
         if (!Value)
@@ -4936,7 +4936,7 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
         else
         {
             bool First = true;
-            
+
             while (Value)
             {
                 ExtDefine* Define = Map(Value);
@@ -4948,7 +4948,7 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
                     // Value already displayed.
                     break;
                 }
-                    
+
                 if (!First)
                 {
                     g_Ext->OutWrapStr(" | ");
@@ -4959,10 +4959,10 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
                     {
                         g_Ext->OutWrapStr(" ");
                     }
-                    
+
                     First = false;
                 }
-                
+
                 if (Define)
                 {
                     g_Ext->OutWrapStr(Define->Name);
@@ -4992,7 +4992,7 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
             {
                 g_Ext->OutWrapStr(" ");
             }
-            
+
             g_Ext->OutWrapStr(MapStr(Value, InvalidStr));
         }
         else
@@ -5008,7 +5008,7 @@ ExtDefineMap::Out(_In_ ULONG64 Value,
                 {
                     g_Ext->OutWrapStr(" ");
                 }
-                
+
                 g_Ext->OutWrapStr(InvalidStr);
             }
         }
@@ -5037,7 +5037,7 @@ DllMain(HANDLE Instance, ULONG Reason, PVOID Reserved)
     {
         return g_ExtDllMain(Instance, Reason, Reserved);
     }
-    
+
     return TRUE;
 }
 

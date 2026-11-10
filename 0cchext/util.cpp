@@ -65,7 +65,7 @@ PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num)
 	i = 0;
 	j = 0;
 
-	while( a = cmd_line[i] ) {
+	while( (a = cmd_line[i]) != 0 ) {
 		if(in_QM) {
 			if(a == '\'') {
 				in_QM = FALSE;
@@ -116,60 +116,18 @@ PCHAR* WdbgCommandLineToArgv(PCHAR cmd_line, int* arg_num)
 	return argv;
 }
 
-std::string ReadLines(PCSTR start_pos, PCSTR str, int lines)
-{
-	std::string buf;
-	int cur_lines = 0;
-	while (*str != '\n' && str >= start_pos) {
-		str--;
-	}
-	str++;
-
-	while (*str != 0) {
-		if (*str == '\n') {
-			cur_lines++;
-		}
-
-		if (cur_lines >= lines) {
-			break;
-		}
-
-		buf += *str;
-		str++;
-	}
-
-	return buf;
-}
-
-void ReadLines(PCSTR str, std::vector<std::string> &str_vec)
-{
-	std::string buf;
-	while (*str != 0) {
-		if (*str == '\n') {
-			str_vec.push_back(buf);
-			buf.clear();
-		}
-		else if (*str == '\r') {
-			
-		}
-		else {
-			buf += *str;
-		}
-		str++;
-	}
-
-	if (!buf.empty()) {
-		str_vec.push_back(buf);
-		buf.clear();
-	}
-}
-
 BOOL GetTxtFileDataA(LPCSTR file, std::string &data)
 {
-	std::ifstream ifs(file);
+	std::ifstream ifs(file, std::ios::binary);
 	if (!ifs.is_open()) {
 		return FALSE;
 	}
+	ifs.seekg(0, std::ios::end);
+	std::streamoff file_size = ifs.tellg();
+	if (file_size < 0 || file_size > 16 * 1024 * 1024) {
+		return FALSE;
+	}
+	ifs.seekg(0, std::ios::beg);
 
 	std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 	data = str;
@@ -193,7 +151,7 @@ BOOL CIMDateTimetoFileTime(LPCWSTR cimdatetime, LPFILETIME filetime, BOOL localt
 					&bstrFileTime);
 				if (SUCCEEDED(hr)) {
 					ULARGE_INTEGER temp_file_time;
-					temp_file_time.QuadPart = _wtoi64(bstrFileTime); 
+					temp_file_time.QuadPart = _wtoi64(bstrFileTime);
 					filetime->dwLowDateTime = temp_file_time.LowPart;
 					filetime->dwHighDateTime = temp_file_time.HighPart;
 					SysFreeString(bstrFileTime);
@@ -218,7 +176,7 @@ void WmiTimeToString(LPCWSTR cimdatetime, CString &datatime_str)
 	SYSTEMTIME st;
 	FileTimeToSystemTime(&tm, &st);
 
-	datatime_str.Format(L"%04u-%02u-%02u %02u:%02u:%02u.%03u", 
+	datatime_str.Format(L"%04u-%02u-%02u %02u:%02u:%02u.%03u",
 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 }
 
@@ -231,10 +189,10 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 		flavor_str = TEXT("system");
 		break;
 	case WBEM_FLAVOR_ORIGIN_PROPAGATED:
-		flavor_str = TEXT("inherited"); 
+		flavor_str = TEXT("inherited");
 		break;
 	case WBEM_FLAVOR_ORIGIN_LOCAL:
-		flavor_str = TEXT("local"); 
+		flavor_str = TEXT("local");
 		break;
 	}
 
@@ -262,14 +220,14 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 		SafeArrayAccessData(V_ARRAY(&value), &array_raw_data);
 	}
 
-	
+
 
 	switch (type)
 	{
 	case CIM_EMPTY: break;
 		line.Append(TEXT("\r\n"));
 		break;
-	case CIM_SINT8: 
+	case CIM_SINT8:
 		if (cim_array) {
 			if (value.vt == (VT_I2 | VT_ARRAY) && array_raw_data != NULL) {
 				SHORT *data = (SHORT *)array_raw_data;
@@ -285,10 +243,10 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_UINT8: 
+	case CIM_UINT8:
 		if (cim_array) {
 			if (value.vt == (VT_UI1 | VT_ARRAY) && array_raw_data != NULL) {
-				USHORT *data = (USHORT *)array_raw_data;
+				BYTE *data = (BYTE *)array_raw_data;
 				line.AppendFormat(TEXT("CIM_UINT8[%u]\r\n"), array_count);
 				for (LONG i = 0; i < array_count; i++) {
 					line.AppendFormat(TEXT("%*s[%u]  %u\r\n"), 58, TEXT(" "), i, data[i]);
@@ -317,7 +275,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_UINT16: 
+	case CIM_UINT16:
 		if (cim_array) {
 			if (value.vt == (VT_I4 | VT_ARRAY) && array_raw_data != NULL) {
 				ULONG *data = (ULONG *)array_raw_data;
@@ -333,7 +291,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_SINT32: 
+	case CIM_SINT32:
 		if (cim_array) {
 			if (value.vt == (VT_I4 | VT_ARRAY) && array_raw_data != NULL) {
 				LONG *data = (LONG *)array_raw_data;
@@ -349,7 +307,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_UINT32: 
+	case CIM_UINT32:
 		if (cim_array) {
 			if (value.vt == (VT_I4 | VT_ARRAY) && array_raw_data != NULL) {
 				ULONG *data = (ULONG *)array_raw_data;
@@ -365,7 +323,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_SINT64: 
+	case CIM_SINT64:
 		if (cim_array) {
 			if (value.vt == (VT_BSTR | VT_ARRAY) && array_raw_data != NULL) {
 				BSTR *data = (BSTR *)array_raw_data;
@@ -378,10 +336,10 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 		else {
 			if (value.vt == VT_BSTR) {
 				line.AppendFormat(TEXT("CIM_SINT64  %s\r\n"), value.bstrVal);
-			}	
+			}
 		}
 		break;
-	case CIM_UINT64: 
+	case CIM_UINT64:
 		if (cim_array) {
 			if (value.vt == (VT_BSTR | VT_ARRAY) && array_raw_data != NULL) {
 				BSTR *data = (BSTR *)array_raw_data;
@@ -397,7 +355,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_REAL32: 
+	case CIM_REAL32:
 		if (cim_array) {
 			if (value.vt == (VT_R4 | VT_ARRAY) && array_raw_data != NULL) {
 				FLOAT *data = (FLOAT *)array_raw_data;
@@ -413,7 +371,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_REAL64: 
+	case CIM_REAL64:
 		if (cim_array) {
 			if (value.vt == (VT_R8 | VT_ARRAY) && array_raw_data != NULL) {
 				DOUBLE *data = (DOUBLE *)array_raw_data;
@@ -429,7 +387,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_BOOLEAN: 
+	case CIM_BOOLEAN:
 		if (cim_array) {
 			if (value.vt == (VT_BOOL | VT_ARRAY) && array_raw_data != NULL) {
 				VARIANT_BOOL *data = (VARIANT_BOOL *)array_raw_data;
@@ -461,7 +419,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_DATETIME: 
+	case CIM_DATETIME:
 		if (cim_array) {
 			if (value.vt == (VT_BSTR | VT_ARRAY) && array_raw_data != NULL) {
 				BSTR *data = (BSTR *)array_raw_data;
@@ -481,7 +439,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_REFERENCE: 
+	case CIM_REFERENCE:
 		if (cim_array) {
 			if (value.vt == (VT_BSTR | VT_ARRAY) && array_raw_data != NULL) {
 				BSTR *data = (BSTR *)array_raw_data;
@@ -513,7 +471,7 @@ void ParseCIMValueToString(LPCTSTR name, CIMTYPE type, VARIANT &value, LONG flav
 			}
 		}
 		break;
-	case CIM_OBJECT: 
+	case CIM_OBJECT:
 		if (cim_array) {
 			if (value.vt == (VT_UNKNOWN | VT_ARRAY) && array_raw_data != NULL) {
 				IUnknown **data = (IUnknown **)array_raw_data;
@@ -546,9 +504,9 @@ BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result)
 	CComPtr<IWbemLocator> locator;
 	CComPtr<IWbemServices> services;
 	hr = CoCreateInstance(
-		CLSID_WbemLocator,             
-		0, 
-		CLSCTX_INPROC_SERVER, 
+		CLSID_WbemLocator,
+		0,
+		CLSCTX_INPROC_SERVER,
 		IID_IWbemLocator, (LPVOID *) &locator);
 
 	if (FAILED(hr))	{
@@ -583,9 +541,9 @@ BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result)
 
 	CComPtr<IEnumWbemClassObject> enumerator;
 	hr = services->ExecQuery(
-		bstr_t("WQL"), 
+		bstr_t("WQL"),
 		bstr_t(query_str),
-		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, 
+		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
 		NULL,
 		&enumerator);
 
@@ -598,7 +556,7 @@ BOOL WmiQueryInfoImpl(LPCWSTR query_str, CString &query_result)
 		CComPtr<IWbemClassObject> class_obj;
 		ULONG return_length = 0;
 
-		hr = enumerator->Next(WBEM_INFINITE, 1, 
+		hr = enumerator->Next(WBEM_INFINITE, 1,
 			&class_obj, &return_length);
 
 		if(0 == return_length) {
@@ -656,7 +614,7 @@ BOOL FindMessage(PVOID dll, ULONG id, CStringW &message)
 			return FALSE;
 		}
 	}
-	
+
 	PMESSAGE_RESOURCE_ENTRY msg = NULL;
 	LONG ns = RtlFindMessage(dll, 0xb, 0, id, &msg);
 	if (ns < 0) {
@@ -675,193 +633,216 @@ BOOL FindMessage(PVOID dll, ULONG id, CStringW &message)
 
 BOOL HttpDownloader::Create(LPCTSTR agent, LPCTSTR proxy /*= NULL*/)
 {
-	if (proxy == NULL) {
-		sesstion_ = InternetOpen(agent, 
-			INTERNET_OPEN_TYPE_PRECONFIG,
-			NULL, 
-			NULL, 
-			0);
-	}
-	else {
-		CString proxy_str(TEXT("http="));
-		proxy_str.Append(proxy);
-		sesstion_ = InternetOpen(agent, 
-			INTERNET_OPEN_TYPE_PROXY,
-			proxy_str, 
-			NULL, 
-			0);
-	}
-	
+	const WCHAR *proxy_name = proxy != NULL && proxy[0] != L'\0' ? proxy : WINHTTP_NO_PROXY_NAME;
+	DWORD access_type = proxy != NULL && proxy[0] != L'\0' ? WINHTTP_ACCESS_TYPE_NAMED_PROXY : WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+	sesstion_ = WinHttpOpen(agent, access_type, proxy_name, WINHTTP_NO_PROXY_BYPASS, 0);
 	return sesstion_ != NULL;
 }
 
 void HttpDownloader::Close()
 {
 	if (sesstion_ != NULL) {
-		InternetCloseHandle(sesstion_);
+		WinHttpCloseHandle(sesstion_);
 		sesstion_ = NULL;
 	}
 }
 
-HRESULT HttpDownloader::DownloadFile(LPCTSTR server_name, 
-	INTERNET_PORT server_port, 
-	LPCTSTR refer, 
-	LPCTSTR remote_file, 
+HRESULT HttpDownloader::DownloadFile(LPCTSTR server_name,
+	INTERNET_PORT server_port,
+	LPCTSTR refer,
+	LPCTSTR remote_file,
 	LPCTSTR download_file,
 	ULONG pos,
 	DOWNLOAD_CALLBACK pfn,
 	PVOID context,
 	ULONG timeout)
 {
-	ULONG last_error = ERROR_SUCCESS;
-	HINTERNET connect_handle = InternetConnect(sesstion_, 
-		server_name,
-		server_port, 
-		NULL, 
-		NULL, 
-		INTERNET_SERVICE_HTTP, 
-		0, 
-		0);
-	if (NULL == connect_handle) {
-		return __HRESULT_FROM_WIN32(GetLastError());
-	}
-
-	PCTSTR accept[] = {TEXT("accept: */*"), NULL};
-	HINTERNET request_handle = HttpOpenRequest(
-		connect_handle, 
-		TEXT("GET"), 
-		remote_file, 
-		NULL, 
-		refer,
-		accept, 
-		0, 
-		0);
-	if (NULL == request_handle) {
-		last_error = GetLastError();
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(last_error);
+	if (sesstion_ == NULL) {
+		return E_UNEXPECTED;
 	}
 
 	if (timeout != 0) {
-		InternetSetOption(request_handle, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
-		InternetSetOption(request_handle, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
-	}
-	
-
-	TCHAR header_str[64] = { 0 };
-	_stprintf_s(header_str, TEXT("Range:bytes=%u-\r\n"), pos);
-	if (!HttpSendRequest(request_handle, header_str, (ULONG)_tcslen(header_str), NULL, 0)) {
-		last_error = GetLastError();
-		InternetCloseHandle(request_handle);
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(last_error);
+		WinHttpSetTimeouts(sesstion_, timeout, timeout, timeout, timeout);
 	}
 
-	ULONG status_code = 0;
-	ULONG bytes_returned = sizeof(status_code);
-
-	HttpQueryInfo(request_handle,
-		HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
-		&status_code, 
-		&bytes_returned, 
-		NULL);
-
-	if (status_code == HTTP_STATUS_NOT_FOUND) {
-		InternetCloseHandle(request_handle);
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	HINTERNET connect_handle = WinHttpConnect(sesstion_, server_name, server_port, 0);
+	if (connect_handle == NULL) {
+		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
-	ULONG content_length = 0;
-	bytes_returned = sizeof(content_length);
-	HttpQueryInfo(request_handle,
-		HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
-		&content_length, 
-		&bytes_returned, 
-		NULL);
-
-	if (content_length == 0) {
-		InternetCloseHandle(request_handle);
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	DWORD flags = server_port == INTERNET_DEFAULT_HTTPS_PORT ? WINHTTP_FLAG_SECURE : 0;
+	HINTERNET request_handle = WinHttpOpenRequest(connect_handle, L"GET", remote_file, NULL,
+		refer, NULL, flags);
+	if (request_handle == NULL) {
+		HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+		WinHttpCloseHandle(connect_handle);
+		return hr;
 	}
 
+	DWORD redirect_policy = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
+	WinHttpSetOption(request_handle, WINHTTP_OPTION_REDIRECT_POLICY,
+		&redirect_policy, sizeof(redirect_policy));
 
-	HANDLE download_file_handle = CreateFile(download_file, 
-		GENERIC_WRITE, 
-		0, 
-		NULL, 
-		OPEN_ALWAYS,
-		FILE_ATTRIBUTE_ARCHIVE, 
-		NULL);
-	if (INVALID_HANDLE_VALUE == download_file_handle) {
-		last_error = GetLastError();
-		InternetCloseHandle(request_handle);
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(last_error);
+	WCHAR range_header[64] = {0};
+	if (pos != 0) {
+		swprintf_s(range_header, L"Range: bytes=%u-\r\n", pos);
+	}
+	if (!WinHttpSendRequest(request_handle,
+		pos != 0 ? range_header : WINHTTP_NO_ADDITIONAL_HEADERS,
+		pos != 0 ? static_cast<DWORD>(-1L) : 0,
+		WINHTTP_NO_REQUEST_DATA, 0, 0, 0) ||
+		!WinHttpReceiveResponse(request_handle, NULL)) {
+		HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return hr;
 	}
 
-	SetFilePointer(download_file_handle, pos, NULL, FILE_BEGIN);
+	DWORD status_code = 0;
+	DWORD status_size = sizeof(status_code);
+	if (!WinHttpQueryHeaders(request_handle,
+		WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+		WINHTTP_HEADER_NAME_BY_INDEX, &status_code, &status_size, WINHTTP_NO_HEADER_INDEX)) {
+		HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return hr;
+	}
 
-	const ULONG download_unit_size = 0x1000;
-	PVOID cache_buffer = HeapAlloc(GetProcessHeap(), 0, download_unit_size);
-	if (cache_buffer == NULL) {
-		last_error = GetLastError();
+	if (status_code != HTTP_STATUS_OK && status_code != HTTP_STATUS_PARTIAL_CONTENT) {
+		HRESULT hr = HRESULT_FROM_WIN32(status_code == HTTP_STATUS_NOT_FOUND
+			? ERROR_FILE_NOT_FOUND : ERROR_INVALID_DATA);
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return hr;
+	}
+	if (pos != 0 && status_code != HTTP_STATUS_PARTIAL_CONTENT) {
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+
+	ULONGLONG content_length = 0;
+	DWORD content_length_size = sizeof(content_length);
+	if (!WinHttpQueryHeaders(request_handle,
+		WINHTTP_QUERY_CONTENT_LENGTH | WINHTTP_QUERY_FLAG_NUMBER,
+		WINHTTP_HEADER_NAME_BY_INDEX, &content_length, &content_length_size,
+		WINHTTP_NO_HEADER_INDEX)) {
+		content_length = 0;
+	}
+
+	DWORD creation_disposition = pos == 0 ? CREATE_ALWAYS : OPEN_ALWAYS;
+	HANDLE download_file_handle = CreateFile(download_file,
+		GENERIC_WRITE, 0, NULL, creation_disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (download_file_handle == INVALID_HANDLE_VALUE) {
+		HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return hr;
+	}
+
+	LARGE_INTEGER file_position = {0};
+	file_position.QuadPart = pos;
+	if (!SetFilePointerEx(download_file_handle, file_position, NULL, FILE_BEGIN)) {
+		HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
 		CloseHandle(download_file_handle);
-		InternetCloseHandle(request_handle);
-		InternetCloseHandle(connect_handle);
-		return __HRESULT_FROM_WIN32(last_error);
+		WinHttpCloseHandle(request_handle);
+		WinHttpCloseHandle(connect_handle);
+		return hr;
 	}
 
-	ULONG bytes_left = content_length;
-	ULONG bytes_written = 0;
+	const DWORD download_unit_size = 0x10000;
+	std::vector<BYTE> cache_buffer(download_unit_size);
+	ULONGLONG total_read = 0;
+	HRESULT result = S_OK;
+	bool reached_eof = false;
 
 	for (;;) {
-		if (!InternetReadFile(request_handle, cache_buffer, download_unit_size, &bytes_returned)) {
+		DWORD available = 0;
+		if (!WinHttpQueryDataAvailable(request_handle, &available)) {
+			result = HRESULT_FROM_WIN32(GetLastError());
 			break;
 		}
-		
+		if (available == 0) {
+			reached_eof = true;
+			break;
+		}
+
+		DWORD bytes_to_read = available < download_unit_size ? available : download_unit_size;
+		DWORD bytes_read = 0;
+		if (!WinHttpReadData(request_handle, cache_buffer.data(), bytes_to_read, &bytes_read)) {
+			result = HRESULT_FROM_WIN32(GetLastError());
+			break;
+		}
+		if (bytes_read == 0) {
+			reached_eof = true;
+			break;
+		}
+
+		DWORD written_total = 0;
+		while (written_total < bytes_read) {
+			DWORD written = 0;
+			if (!WriteFile(download_file_handle, cache_buffer.data() + written_total,
+				bytes_read - written_total, &written, NULL) || written == 0) {
+				result = HRESULT_FROM_WIN32(GetLastError());
+				break;
+			}
+			written_total += written;
+		}
+		if (FAILED(result)) {
+			break;
+		}
+
+		total_read += bytes_read;
+		if (content_length != 0 && total_read > content_length) {
+			result = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+			break;
+		}
 		if (pfn != NULL) {
-			pfn(bytes_returned, content_length, context);
-		}
-
-		bytes_left -= bytes_returned;
-		if (bytes_returned > 0) {
-			WriteFile(download_file_handle, cache_buffer, bytes_returned, &bytes_written, NULL);
-		}
-
-		if (bytes_left == 0) {
-			break;
+			ULONGLONG progress_total_value = content_length != 0 ? content_length : total_read;
+			ULONG progress_total = progress_total_value > 0xFFFFFFFFULL
+				? 0xFFFFFFFFUL : static_cast<ULONG>(progress_total_value);
+			ULONG progress_read = total_read > 0xFFFFFFFFULL
+				? 0xFFFFFFFFUL : static_cast<ULONG>(total_read);
+			pfn(progress_read, progress_total, context);
 		}
 	}
 
-	last_error = GetLastError();
+	if (SUCCEEDED(result) && content_length != 0 && total_read != content_length) {
+		result = HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
+	}
+	if (SUCCEEDED(result) && !reached_eof) {
+		result = HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
+	}
+	if (SUCCEEDED(result) && !SetEndOfFile(download_file_handle)) {
+		result = HRESULT_FROM_WIN32(GetLastError());
+	}
 
 	CloseHandle(download_file_handle);
-	InternetCloseHandle(request_handle);
-	InternetCloseHandle(connect_handle);
-	HeapFree(GetProcessHeap(), 0, cache_buffer);
-	return __HRESULT_FROM_WIN32(last_error);
+	WinHttpCloseHandle(request_handle);
+	WinHttpCloseHandle(connect_handle);
+	return result;
 }
 
-HRESULT HttpDownloader::UrlDownloadFile( LPCTSTR full_uri, LPCTSTR download_file, ULONG pos, DOWNLOAD_CALLBACK pfn, PVOID context, ULONG timeout )
+HRESULT HttpDownloader::UrlDownloadFile(LPCTSTR full_uri, LPCTSTR download_file, ULONG pos,
+	DOWNLOAD_CALLBACK pfn, PVOID context, ULONG timeout)
 {
 	URL_COMPONENTS url_components = {0};
 	url_components.dwStructSize = sizeof(url_components);
-	TCHAR host_name[INTERNET_MAX_HOST_NAME_LENGTH];
+	TCHAR host_name[INTERNET_MAX_HOST_NAME_LENGTH] = {0};
+	TCHAR url_path[INTERNET_MAX_PATH_LENGTH] = {0};
 	url_components.lpszHostName = host_name;
-	url_components.dwHostNameLength = INTERNET_MAX_HOST_NAME_LENGTH;
-	TCHAR url_path[INTERNET_MAX_PATH_LENGTH];
+	url_components.dwHostNameLength = _countof(host_name);
 	url_components.lpszUrlPath = url_path;
-	url_components.dwUrlPathLength = INTERNET_MAX_PATH_LENGTH;
-	if (!InternetCrackUrl(full_uri, _tcslen(full_uri), 0, &url_components)) {
-		return __HRESULT_FROM_WIN32(GetLastError());
+	url_components.dwUrlPathLength = _countof(url_path);
+	if (!WinHttpCrackUrl(full_uri, 0, 0, &url_components)) {
+		return HRESULT_FROM_WIN32(GetLastError());
 	}
-	
-	return DownloadFile(host_name, url_components.nPort, NULL, url_path, download_file, pos, pfn, context, timeout);
+	return DownloadFile(host_name, url_components.nPort, NULL, url_path, download_file,
+		pos, pfn, context, timeout);
 }
 
-CStringW GUIDToWstring(GUID* guid) 
+CStringW GUIDToWstring(GUID* guid)
 {
 	WCHAR guid_string[64];
 	swprintf_s(
@@ -909,7 +890,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 	return 0;
 }
 
-BOOL IsElevated() 
+BOOL IsElevated()
 {
 	BOOL retval = FALSE;
 	HANDLE token = NULL;

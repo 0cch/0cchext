@@ -26,7 +26,7 @@ char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err, s
 			return str;
 		}
 
-		switch (state) { 
+		switch (state) {
 
 		case LEX_START:
 			if (isdigit(c)) {
@@ -149,7 +149,7 @@ char * GetToken(char *str, std::string &token, LEX_TOKEN_TYPE &type, int &err, s
 	}
 
 	return str;
-} 
+}
 
 
 static char s_err_info[64];
@@ -192,10 +192,10 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 			if (type == TK_ST_END) {
 				break;
 			}
-			else if (type != TK_TYPE_BYTE && 
-				type != TK_TYPE_WORD && 
+			else if (type != TK_TYPE_BYTE &&
+				type != TK_TYPE_WORD &&
 				type != TK_TYPE_DWORD &&
-				type != TK_TYPE_QWORD && 
+				type != TK_TYPE_QWORD &&
 				type != TK_TYPE_CHAR &&
 				type != TK_TYPE_WCHAR &&
 				type != TK_TYPE_UDT) {
@@ -205,7 +205,7 @@ BOOL ParseStructScript(const char *str, std::vector<StructInfo> &struct_array)
 
 			LEX_TOKEN_TYPE member_type = type;
 			std::string member_udt_name(token);
-			
+
 			pos = GetToken(pos, token, type, err, struct_array);
 			if (err != 0) {
 				break;
@@ -439,7 +439,7 @@ void DbgStructPrint(std::map<ULONG, std::vector<dtLexItem>> &items, CStringA &ou
 			}
 			else {
 				out_str.AppendFormat("\t%s", sub_item.type_name_.GetString());
-				for (ULONG i = 0; i < sub_item.ptr_count_; i++) {
+				for (ULONG ptr_index = 0; ptr_index < sub_item.ptr_count_; ptr_index++) {
 					out_str.Append("*");
 				}
 
@@ -470,7 +470,7 @@ void DbgStructPrint(std::map<ULONG, std::vector<dtLexItem>> &items, CStringA &ou
 					dtLexItem &sub_item = union_items[i];
 
 					out_str.AppendFormat("\t\t%s", sub_item.type_name_.GetString());
-					for (ULONG i = 0; i < sub_item.ptr_count_; i++) {
+					for (ULONG ptr_index = 0; ptr_index < sub_item.ptr_count_; ptr_index++) {
 						out_str.Append("*");
 					}
 
@@ -528,7 +528,7 @@ void DbgStructPrint(std::map<ULONG, std::vector<dtLexItem>> &items, CStringA &ou
 					dtLexItem &sub_item = union_items[i];
 
 					out_str.AppendFormat("\t\t%s", sub_item.type_name_.GetString());
-					for (ULONG i = 0; i < sub_item.ptr_count_; i++) {
+					for (ULONG ptr_index = 0; ptr_index < sub_item.ptr_count_; ptr_index++) {
 						out_str.Append("*");
 					}
 

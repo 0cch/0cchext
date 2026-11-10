@@ -9,6 +9,7 @@ EXPORTS
 	dpx
 	grep
 	version
+	diag
 	url
 	favcmd
 	dtx

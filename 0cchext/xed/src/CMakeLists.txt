@@ -1,15 +1,9 @@
-project(libxed)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd\"4996\"")
-
-ADD_DEFINITIONS(-DUNICODE)
-ADD_DEFINITIONS(-D_UNICODE)
-ADD_DEFINITIONS(-DXEDPARSE_STATIC)
-
-ADD_LIBRARY(libxed STATIC 
+add_library(libxed STATIC
+    BranchInst.cpp
+    BranchInst.h
+    MnemonicTable.cpp
+    MnemonicTable.h
+    Operand.cpp
     Operand.h
     OperandMem.cpp
     OperandMem.h
@@ -32,9 +26,19 @@ ADD_LIBRARY(libxed STATIC
     Validator.h
     XEDParse.cpp
     XEDParse.h
-    BranchInst.cpp
-    BranchInst.h
-    MnemonicTable.cpp
-    MnemonicTable.h
-    Operand.cpp
+)
+
+target_compile_features(libxed PUBLIC cxx_std_17)
+target_compile_definitions(libxed PUBLIC XEDPARSE_STATIC PRIVATE UNICODE _UNICODE)
+target_include_directories(libxed PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(libxed PUBLIC xed_runtime)
+if(0CCHEXT_USE_XED_2026)
+    target_compile_definitions(libxed PUBLIC XEDPARSE_NEW_XED)
+    add_dependencies(libxed xed2026_build)
+endif()
+target_compile_options(libxed PRIVATE /W3 /utf-8 /wd4996 /wd4267 /wd4244 /wd4334)
+set_target_properties(libxed PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
