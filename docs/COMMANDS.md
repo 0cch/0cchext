@@ -44,11 +44,25 @@ r @eip=@$t0
 
 ----------------------------------
 
+### !grep
+
+Search captured debugger command output for matching lines.
+
+```text
+!grep [-i] [-F] [-a] [-o] <command> <pattern> [lines]
+```
+
+- `-i` performs a case-insensitive search.
+- `-F` treats the pattern as literal text and is the safer/faster option for normal strings.
+- `-a` exports the number of matches through `@#GrepCount`; regex capture groups are exposed as `@#Grep_<match>_<group>`.
+- `-o` suppresses matching lines and is useful when only aliases or the count are needed.
+
+Output is capped at 4 MiB to prevent a runaway search from freezing the debugger.
 ### !autocmd
 > !autocmd         - Execute the debugger commands.(The config file is
                      autocmd.ini)
 
-This command execute other commands automatically. Sometimes I want to attach the debugger to process or run a program with debugger, then execute a series of commands. Although this may be performed by the script, but still too complex for me. So I can use this command. create autocmd.ini file at 0cchext.dll directory, , and then enter the following text:
+This command execute other commands automatically. Sometimes I want to attach the debugger to process or run a program with debugger, then execute a series of commands. Although this may be performed by the script, but still too complex for me. So I can use this command. create `autocmd.ini` in `%USERPROFILE%\.0cchext` or the extension directory, then enter the following text:
 
 ```
 [all]
@@ -89,7 +103,7 @@ This command is very simple, just use bing and google to search for a specified 
 > !favcmd           - Display the favorite debugger commands.(The config file is
                      favcmd.ini)
 
-This command is simple, just put your favorite commands in favcmd.ini file, which must in the 0cchext.dll directory.  This command will put your favorite commands on WinDbg, you can use the mouse to select commands to execute.
+This command is simple, just put your favorite commands in `favcmd.ini` under `%USERPROFILE%\.0cchext` or the extension directory.  This command will put your favorite commands on WinDbg, you can use the mouse to select commands to execute.
 
 For example:
 >~*k
@@ -219,7 +233,7 @@ This command merged 'dps' 'dpa' and 'dpu' commands.
 > !dtx             - Displays information about structures. (The config file is
                      struct.ini)
 
-This command is a reverse engineering command. Because we cannot load symbols when we reverse something. In IDA, we can set structures to help us analyze code. But in WinDbg, there is no command can help us do the same thing. So I develop this command to solve this problem. We can write the structure to the struct.ini file, then print memory data by this command. Of course, this file must be in 0cchext.dll directory.
+This command is a reverse engineering command. Because we cannot load symbols when we reverse something. In IDA, we can set structures to help us analyze code. But in WinDbg, there is no command can help us do the same thing. So I develop this command to solve this problem. We can write the structure to the struct.ini file, then print memory data by this command. Of course, this file is searched under `%USERPROFILE%\.0cchext` and then the extension directory.
 
 [![20151005172455](http://0cch.com/uploads/2015/10/20151005172455.png)](/uploads/2015/10/20151005172455.png)
 
@@ -254,7 +268,7 @@ Handle 1c
 ### !stackstat
 > !stackstat       - Statistics duplicate stack data.
 
-This command can statistic duplicate stack data, this is useful for troubleshooting thread leak.
+This command can statistic duplicate stack data, this is useful for troubleshooting thread leak. Use `-t N` to limit the number of groups.
 
 ```
 
@@ -294,7 +308,7 @@ Duplicate threads stack:
 ### !memstat
 > !memstat       - Statistics virtual memory allocation.
 
-This command can statistic virtual memory leak.
+This command can statistic virtual memory leak. Use `-t N` to limit output and `-m` to sort by total memory.
 
 ```
 0:000:x86> !memstat

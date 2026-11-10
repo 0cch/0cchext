@@ -35,16 +35,21 @@ $luaScriptName = [System.IO.Path]::GetFileNameWithoutExtension($luaScript)
 $badLuaScript = Join-Path $env:TEMP ("0cchext-bad-lua-" + [guid]::NewGuid().ToString("N") + ".lua")
 Set-Content -Encoding ascii $badLuaScript "function bad("
 $badLuaScriptCommandPath = $badLuaScript.Replace("\", "/")
+$cycleLuaScript = Join-Path $env:TEMP ("0cchext-cycle-lua-" + [guid]::NewGuid().ToString("N") + ".lua")
+Set-Content -Encoding ascii $cycleLuaScript "cycle = {}; cycle.self = cycle"
+$cycleLuaScriptCommandPath = $cycleLuaScript.Replace("\", "/")
+$cycleLuaScriptName = [System.IO.Path]::GetFileNameWithoutExtension($cycleLuaScript)
 $scriptPath = Join-Path $env:TEMP ("0cchext-cdb-" + [guid]::NewGuid().ToString("N") + ".txt")
 $outputPath = Join-Path $env:TEMP ("0cchext-cdb-" + [guid]::NewGuid().ToString("N") + ".log")
 @"
 .load "$dllCommandPath"
 !0cchext.version
 !0cchext.diag
+!0cchext.grep -F lm cmd
 !0cchext.accessmask process 0x1fffff
 !0cchext.carray $stackPointer 16
-!0cchext.stackstat
-!0cchext.memstat
+!0cchext.stackstat -t 2
+!0cchext.memstat -t 5
 !0cchext.url ftp://example.com
 .load "$luaDllCommandPath"
 !luadbg.lua "$luaScriptCommandPath"
@@ -53,6 +58,9 @@ $outputPath = Join-Path $env:TEMP ("0cchext-cdb-" + [guid]::NewGuid().ToString("
 !luadbg.luaunload "$luaScriptName"
 !luadbg.luaload "$badLuaScriptCommandPath"
 !luadbg.lualist
+!luadbg.luaload "$cycleLuaScriptCommandPath"
+!luadbg.lualist
+!luadbg.luaunload "$cycleLuaScriptName"
 q
 "@ | Set-Content -Encoding ascii $scriptPath
 
@@ -68,5 +76,5 @@ try {
     }
 }
 finally {
-    Remove-Item -LiteralPath $scriptPath, $outputPath, $luaScript, $badLuaScript -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $scriptPath, $outputPath, $luaScript, $badLuaScript, $cycleLuaScript -Force -ErrorAction SilentlyContinue
 }

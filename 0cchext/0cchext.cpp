@@ -5,6 +5,37 @@
 #include "struct_script.h"
 #include "assembler_backend.h"
 
+constexpr size_t kMaxGrepCommandLength = 8192;
+constexpr size_t kMaxGrepPatternLength = 4096;
+constexpr size_t kMaxGrepOutputBytes = 4 * 1024 * 1024;
+
+static bool FindConfigPath(const char *file_name, std::string &config_path)
+{
+	if (file_name == NULL || file_name[0] == '\0') {
+		return false;
+	}
+
+	char profile_path[MAX_PATH] = {0};
+	if (GetEnvironmentVariableA("USERPROFILE", profile_path, _countof(profile_path)) != 0) {
+		config_path = profile_path;
+		config_path += "\\.0cchext\\";
+		config_path += file_name;
+		if (PathFileExistsA(config_path.c_str()) != FALSE) {
+			return true;
+		}
+	}
+
+	char module_path[MAX_PATH] = {0};
+	if (GetModuleFileNameA(ExtExtension::s_Module, module_path, _countof(module_path)) == 0) {
+		return false;
+	}
+	PathRemoveFileSpecA(module_path);
+	config_path = module_path;
+	config_path += "\\";
+	config_path += file_name;
+	return PathFileExistsA(config_path.c_str()) != FALSE;
+}
+
 
 class EXT_CLASS : public ExtExtension
 {
@@ -401,6 +432,23 @@ EXT_COMMAND(dpx,
 
 }
 
+static bool FindLiteralText(const char *text, const char *pattern, bool case_insensitive, size_t &offset)
+{
+	const size_t pattern_length = strlen(pattern);
+	if (pattern_length == 0) {
+		return false;
+	}
+
+	for (const char *cursor = text; *cursor != '\0'; ++cursor) {
+		if (case_insensitive ? _strnicmp(cursor, pattern, pattern_length) == 0
+			: strncmp(cursor, pattern, pattern_length) == 0) {
+			offset = cursor - text;
+			return true;
+		}
+	}
+	return false;
+}
+
 EXT_COMMAND(grep,
 	"Search plain-text data sets for lines matching a regular expression.",
 	"{{custom}}{{s: [/i] <Command> <Regexp> [<Lines>]}}{{l:<Command> - Windbg command to execute.\n"
@@ -408,6 +456,7 @@ EXT_COMMAND(grep,
 	"<Lines> - The number of lines to print.\n"
 	"/a - Set aliases, like @#Grep_<result_index>_<group_index>\n"
 	"/i - Make matches case-insensitive.\n"
+	"/F - Treat the pattern as literal text instead of a regular expression.\n"
 	"/o - Omit output information.}}"
 	)
 {
@@ -429,6 +478,7 @@ EXT_COMMAND(grep,
 	BOOL case_insensitive = FALSE;
 	BOOL omit_output = FALSE;
 	BOOL set_alias = FALSE;
+	BOOL fixed_string = FALSE;
 	LPCSTR cmd_text = NULL;
 	LPCSTR pattern_text = NULL;
 	for (int i = 0; i < argc; i++) {
@@ -440,6 +490,9 @@ EXT_COMMAND(grep,
 		}
 		else if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "/a") == 0) {
 			set_alias = TRUE;
+		}
+		else if (strcmp(argv[i], "-F") == 0 || strcmp(argv[i], "/F") == 0) {
+			fixed_string = TRUE;
 		}
 		else {
 			if (cmd_text == NULL) {
@@ -465,8 +518,15 @@ EXT_COMMAND(grep,
 		}
 	}
 
-	if (cmd_text == NULL || pattern_text == NULL) {
+	if (cmd_text == NULL || pattern_text == NULL ||
+		cmd_text[0] == '\0' || pattern_text[0] == '\0') {
 		Err("Failed to parse command line(3)\n");
+		LocalFree(argv);
+		return;
+	}
+	if (strlen(cmd_text) > kMaxGrepCommandLength ||
+		strlen(pattern_text) > kMaxGrepPatternLength) {
+		Err("Search command or pattern is too long.\n");
 		LocalFree(argv);
 		return;
 	}
@@ -478,45 +538,78 @@ EXT_COMMAND(grep,
 	ExtCaptureOutputA capture_exec;
 	capture_exec.Execute(cmd_text);
 	LPCSTR out_text = capture_exec.GetTextNonNull();
+	if (out_text == NULL) {
+		Err("Failed to capture debugger output.\n");
+		LocalFree(argv);
+		return;
+	}
+	const size_t output_length = strnlen_s(out_text, kMaxGrepOutputBytes);
+	if (output_length == kMaxGrepOutputBytes) {
+		Err("Command output is too large; limit is %Iu bytes.\n", kMaxGrepOutputBytes);
+		LocalFree(argv);
+		return;
+	}
 	BOOL except_error = FALSE;
-	std::cmatch result;
-	LPCSTR cur_text = out_text;
 	try {
-		std::regex pattern(pattern_text,
-			case_insensitive ? std::regex::icase | std::regex::ECMAScript : std::regex::ECMAScript);
-
 		ULONG count = 0;
 		CHAR alias[64];
-		while (std::regex_search(cur_text, result, pattern)) {
-			count++;
-			if (count > 0x10000) {
-				Err("Too many matches; stopping at 0x10000.\n");
-				break;
-			}
-
+		auto print_match = [&](LPCSTR match) {
 			if (!omit_output) {
-				std::string str = ReadLines(out_text, cur_text + result.position(0), print_lines);
+				std::string str = ReadLines(out_text, match, print_lines);
 				Dml("%s\n", str.c_str());
 			}
+		};
 
-			cur_text += result.position(0) + result.length();
+		if (fixed_string) {
+			const size_t pattern_length = strlen(pattern_text);
+			LPCSTR cursor = out_text;
+			for (;;) {
+				size_t offset = 0;
+				if (!FindLiteralText(cursor, pattern_text, case_insensitive != FALSE, offset)) {
+					break;
+				}
 
-			if (set_alias) {
-				for (size_t i = 1; i < result.size(); i++) {
-					sprintf_s(alias, 64, "@#Grep_%u_%u", count - 1, (ULONG)i - 1);
-					m_Control2->SetTextReplacement(alias, result[i].str().c_str());
+				LPCSTR match = cursor + offset;
+				count++;
+				if (count > 0x10000) {
+					Err("Too many matches; stopping at 0x10000.\n");
+					break;
+				}
+
+				print_match(match);
+				cursor = match + pattern_length;
+			}
+		}
+		else {
+			std::regex pattern(pattern_text,
+				case_insensitive ? std::regex::icase | std::regex::ECMAScript : std::regex::ECMAScript);
+			std::cmatch result;
+			LPCSTR cur_text = out_text;
+
+			while (std::regex_search(cur_text, result, pattern)) {
+				count++;
+				if (count > 0x10000) {
+					Err("Too many matches; stopping at 0x10000.\n");
+					break;
+				}
+
+				print_match(cur_text + result.position(0));
+				cur_text += result.position(0) + result.length();
+
+				if (set_alias) {
+					for (size_t i = 1; i < result.size(); i++) {
+						sprintf_s(alias, 64, "@#Grep_%u_%u", count - 1, (ULONG)i - 1);
+						m_Control2->SetTextReplacement(alias, result[i].str().c_str());
+					}
 				}
 			}
-
 		}
 
 		if (set_alias) {
 			sprintf_s(alias, 64, "%u", count);
 			m_Control2->SetTextReplacement("@#GrepCount", alias);
 		}
-
-	}
-	catch (...) {
+	}	catch (...) {
 		except_error = TRUE;
 	}
 
@@ -551,6 +644,13 @@ EXT_COMMAND(diag,
 		Out("Debuggee class: unavailable (0x%08X)\n", hr);
 	}
 	Out("Debugger module: %s\n", GetModuleHandleA("dbgeng.dll") != NULL ? "loaded" : "not loaded");
+	auto assembler = CreateLegacyXedBackend();
+	Out("Assembler backend: %s\n", assembler != nullptr ? assembler->Name() : "unavailable");
+	Out("Lua extension: %s\n", GetModuleHandleA("luadbg.dll") != NULL ? "loaded" : "not loaded");
+	Out("Config search: %%USERPROFILE%%\\.0cchext, extension directory\n");
+#ifdef XED_VERSION
+	Out("XED version: %s\n", XED_VERSION);
+#endif
 }
 EXT_COMMAND(version,
 	"Displays the version information for 0cchext.dll",
@@ -615,19 +715,15 @@ EXT_COMMAND(favcmd,
 {
 	size_t display_count = (size_t)GetUnnamedArgU64(0);
 
-	CHAR filename[MAX_PATH];
-	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
-	PathRemoveFileSpecA(filename);
-	PathAppendA(filename, "favcmd.ini");
-
-	if (!PathFileExistsA(filename)) {
-		Err("Failed to open favcmd.ini.\n");
+	std::string config_path;
+	if (!FindConfigPath("favcmd.ini", config_path)) {
+		Err("Failed to find favcmd.ini in %%USERPROFILE%%\\.0cchext or the extension directory.\n");
 		return;
 	}
 
 	std::string file_data;
-	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read favcmd.ini.\n");
+	if (!GetTxtFileDataA(config_path.c_str(), file_data)) {
+		Err("Failed to read %s.\n", config_path.c_str());
 		return;
 	}
 
@@ -973,19 +1069,15 @@ EXT_COMMAND(dtx,
 	"{;s,o;Name;Specifies the name of a structure.}"
 	"{;e,o;Address;Specifies the address of the structure to be displayed.}")
 {
-	CHAR filename[MAX_PATH];
-	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
-	PathRemoveFileSpecA(filename);
-	PathAppendA(filename, "struct.ini");
-
-	if (!PathFileExistsA(filename)) {
-		Err("Failed to open struct.ini.\n");
+	std::string config_path;
+	if (!FindConfigPath("struct.ini", config_path)) {
+		Err("Failed to find struct.ini in %%USERPROFILE%%\\.0cchext or the extension directory.\n");
 		return;
 	}
 
 	std::string file_data;
-	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read struct.ini.\n");
+	if (!GetTxtFileDataA(config_path.c_str(), file_data)) {
+		Err("Failed to read %s.\n", config_path.c_str());
 		return;
 	}
 
@@ -1132,19 +1224,15 @@ EXT_COMMAND(autocmd,
 
 	bool verbose = HasArg("v");
 
-	CHAR filename[MAX_PATH];
-	GetModuleFileNameA(ExtExtension::s_Module, filename, MAX_PATH);
-	PathRemoveFileSpecA(filename);
-	PathAppendA(filename, "autocmd.ini");
-
-	if (!PathFileExistsA(filename)) {
-		Err("Failed to open autocmd.ini.\n");
+	std::string config_path;
+	if (!FindConfigPath("autocmd.ini", config_path)) {
+		Err("Failed to find autocmd.ini in %%USERPROFILE%%\\.0cchext or the extension directory.\n");
 		return;
 	}
 
 	std::string file_data;
-	if (!GetTxtFileDataA(filename, file_data)) {
-		Err("Failed to read autocmd.ini.\n");
+	if (!GetTxtFileDataA(config_path.c_str(), file_data)) {
+		Err("Failed to read %s.\n", config_path.c_str());
 		return;
 	}
 
@@ -1231,6 +1319,16 @@ typedef struct _FUNC_INFO
 	std::string name;
 } EXPORT_FUNC_INFO, IMPORT_FUNC_INFO;
 
+constexpr ULONG kMaxPeExportFunctions = 0x10000;
+constexpr ULONG kMaxPeExportNames = 0x10000;
+constexpr ULONG kMaxPeImportModules = 0x4000;
+constexpr ULONG kMaxPeImportThunks = 0x10000;
+
+static bool IsPeRvaInImage(ULONG rva, ULONG image_size, ULONG length)
+{
+	return image_size != 0 && rva < image_size && length <= image_size - rva;
+}
+
 EXT_COMMAND(pe_export,
 	"Dump PE export functions",
 	"{;ed;Address;Specifies the address of the module.}"
@@ -1256,6 +1354,9 @@ EXT_COMMAND(pe_export,
 	}
 
 	ULONG64 cur = addr + dos_header.e_lfanew;
+	ULONG image_size = 0;
+	ULONG export_rva = 0;
+	ULONG export_size = 0;
 
 	if (GetAddressPtrSize() == 4) {
 		remote_data.Set(cur, sizeof(IMAGE_NT_HEADERS32));
@@ -1273,35 +1374,9 @@ EXT_COMMAND(pe_export,
 			return;
 		}
 
-		cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-		remote_data.Set(cur, sizeof(IMAGE_EXPORT_DIRECTORY));
-
-		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
-
-
-		ULONG func_count = dir.NumberOfFunctions;
-		cur = addr + dir.AddressOfFunctions;
-
-		ULONG func_addr_array_size = func_count * sizeof(ULONG);
-		remote_data.Set(cur, func_addr_array_size);
-
-		ULONG *func_addr_array = (ULONG *)malloc(func_addr_array_size);
-		if (func_addr_array == NULL) {
-			Err("Failed to allocate functions address array.\n");
-			return;
-		}
-
-		remote_data.ReadBuffer(func_addr_array, func_addr_array_size, TRUE);
-
-		for (ULONG i = 0; i < func_count; i++) {
-			EXPORT_FUNC_INFO info;
-			info.address = addr + func_addr_array[i];
-			funcs_info.push_back(info);
-		}
-
-		free(func_addr_array);
-
-
+		image_size = nt_header.OptionalHeader.SizeOfImage;
+		export_rva = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+		export_size = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
 	}
 	else {
 		remote_data.Set(cur, sizeof(IMAGE_NT_HEADERS64));
@@ -1319,71 +1394,84 @@ EXT_COMMAND(pe_export,
 			return;
 		}
 
-		cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-		remote_data.Set(cur, sizeof(IMAGE_EXPORT_DIRECTORY));
+		image_size = nt_header.OptionalHeader.SizeOfImage;
+		export_rva = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+		export_size = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+	}
 
-		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+	if (export_rva == 0 || export_size < sizeof(IMAGE_EXPORT_DIRECTORY) ||
+		!IsPeRvaInImage(export_rva, image_size, sizeof(IMAGE_EXPORT_DIRECTORY))) {
+		Err("Invalid or missing PE export directory.\n");
+		return;
+	}
 
+	cur = addr + export_rva;
+	remote_data.Set(cur, sizeof(IMAGE_EXPORT_DIRECTORY));
+	remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
 
-		ULONG func_count = dir.NumberOfFunctions;
-		cur = addr + dir.AddressOfFunctions;
+	if (dir.NumberOfFunctions > kMaxPeExportFunctions ||
+		dir.NumberOfNames > kMaxPeExportNames) {
+		Err("PE export table is too large.\n");
+		return;
+	}
 
-		ULONG func_addr_array_size = func_count * sizeof(ULONG);
-		remote_data.Set(cur, func_addr_array_size);
-
-		ULONG *func_addr_array = (ULONG *)malloc(func_addr_array_size);
-		if (func_addr_array == NULL) {
-			Err("Failed to allocate functions address array.\n");
+	const ULONG func_count = dir.NumberOfFunctions;
+	const ULONG name_count = dir.NumberOfNames;
+	if (func_count != 0) {
+		const ULONG func_addr_array_size = func_count * sizeof(ULONG);
+		if (!IsPeRvaInImage(dir.AddressOfFunctions, image_size, func_addr_array_size)) {
+			Err("PE export function table is outside the image.\n");
 			return;
 		}
 
-		remote_data.ReadBuffer(func_addr_array, func_addr_array_size, TRUE);
+		std::vector<ULONG> func_addr_array(func_count);
+		remote_data.Set(addr + dir.AddressOfFunctions, func_addr_array_size);
+		remote_data.ReadBuffer(func_addr_array.data(), func_addr_array_size, TRUE);
 
+		funcs_info.reserve(func_count);
 		for (ULONG i = 0; i < func_count; i++) {
-			EXPORT_FUNC_INFO info;
+			EXPORT_FUNC_INFO info = {};
 			info.address = addr + func_addr_array[i];
 			funcs_info.push_back(info);
 		}
-
-		free(func_addr_array);
 	}
 
-	ULONG name_count = dir.NumberOfNames;
-	ULONG name_array_size = name_count * sizeof(ULONG);
-	cur = addr + dir.AddressOfNames;
-	remote_data.Set(cur, name_array_size);
-	ULONG *name_array = (ULONG *)malloc(name_array_size);
-	if (name_array == NULL) {
-		Err("Failed to allocate name array.\n");
-		return;
+	if (name_count != 0) {
+		const ULONG name_array_size = name_count * sizeof(ULONG);
+		const ULONG name_id_size = name_count * sizeof(USHORT);
+		if (!IsPeRvaInImage(dir.AddressOfNames, image_size, name_array_size) ||
+			!IsPeRvaInImage(dir.AddressOfNameOrdinals, image_size, name_id_size)) {
+			Err("PE export name table is outside the image.\n");
+			return;
+		}
+
+		std::vector<ULONG> name_array(name_count);
+		std::vector<USHORT> name_id_array(name_count);
+		remote_data.Set(addr + dir.AddressOfNames, name_array_size);
+		remote_data.ReadBuffer(name_array.data(), name_array_size, TRUE);
+		remote_data.Set(addr + dir.AddressOfNameOrdinals, name_id_size);
+		remote_data.ReadBuffer(name_id_array.data(), name_id_size, TRUE);
+
+		for (ULONG i = 0; i < name_count; i++) {
+			const USHORT func_id = name_id_array[i];
+			if (func_id >= funcs_info.size()) {
+				Err("PE export ordinal is outside the function table.\n");
+				return;
+			}
+
+			const ULONG name_rva = name_array[i];
+			if (!IsPeRvaInImage(name_rva, image_size, 1)) {
+				Err("PE export name is outside the image.\n");
+				return;
+			}
+
+			const ULONG name_max = (image_size - name_rva) < 1024 ? (image_size - name_rva) : 1024;
+			ExtBuffer<char> func_name;
+			remote_data.Set(addr + name_rva, name_max);
+			remote_data.GetString(&func_name);
+			funcs_info[func_id].name = func_name.GetBuffer();
+		}
 	}
-
-	remote_data.ReadBuffer(name_array, name_array_size, TRUE);
-
-	ULONG name_id_size = name_count * sizeof(USHORT);
-	cur = addr + dir.AddressOfNameOrdinals;
-	remote_data.Set(cur, name_id_size);
-
-	USHORT *name_id_array = (USHORT *)malloc(name_id_size);
-	if (name_id_array == NULL) {
-		Err("Failed to allocate name id array.\n");
-		return;
-	}
-
-	remote_data.ReadBuffer(name_id_array, name_id_size, TRUE);
-
-	for (ULONG i = 0; i < name_count; i++) {
-		ExtBuffer<char> func_name;
-		remote_data.Set(addr + name_array[i], 1024);
-		remote_data.GetString(&func_name);
-		USHORT func_id = name_id_array[i];
-		funcs_info[func_id].name = func_name.GetBuffer();
-	}
-
-	free(name_array);
-	free(name_id_array);
-
-
 	if (!simplification) {
 		Out("ID   Address   Export Name    Symbol Name\n");
 	}
@@ -1455,26 +1543,45 @@ EXT_COMMAND(pe_import,
 			return;
 		}
 
-		cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+		const ULONG image_size = nt_header.OptionalHeader.SizeOfImage;
+		const ULONG import_rva = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+		const ULONG import_size = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+		if (import_rva == 0 || import_size < sizeof(IMAGE_IMPORT_DESCRIPTOR) ||
+			!IsPeRvaInImage(import_rva, image_size, sizeof(IMAGE_IMPORT_DESCRIPTOR))) {
+			Err("Invalid or missing PE import directory.\n");
+			return;
+		}
+
+		cur = addr + import_rva;
 		ULONG64 cur_dir = cur;
 		remote_data.Set(cur_dir, sizeof(IMAGE_IMPORT_DESCRIPTOR));
 
 		IMAGE_IMPORT_DESCRIPTOR dir;
 		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+		ULONG descriptor_count = 0;
 
 		for (;;) {
+			if (++descriptor_count > kMaxPeImportModules) {
+				Err("PE import descriptor table is too large.\n");
+				return;
+			}
 			if (dir.Name == 0) {
 				break;
+			}
+			if (!IsPeRvaInImage(dir.Name, image_size, 1) || dir.FirstThunk == 0) {
+				Err("PE import descriptor contains an invalid RVA.\n");
+				return;
 			}
 
 			std::vector<IMPORT_FUNC_INFO> funcs_info;
 
 			ExtBuffer<char> module_name;
-			remote_data.Set(addr + dir.Name, 1024);
+			const ULONG module_name_max = (image_size - dir.Name) < 1024 ? (image_size - dir.Name) : 1024;
+			remote_data.Set(addr + dir.Name, module_name_max);
 			remote_data.GetString(&module_name);
 
 			ULONG64 cur_thunk = addr + dir.FirstThunk;
-			ULONG64 cur_ori_thunk = addr + dir.OriginalFirstThunk;
+			ULONG64 cur_ori_thunk = addr + (dir.OriginalFirstThunk != 0 ? dir.OriginalFirstThunk : dir.FirstThunk);
 
 			IMAGE_THUNK_DATA32 thunk_data;
 			IMAGE_THUNK_DATA32 ori_thunk_data;
@@ -1483,10 +1590,19 @@ EXT_COMMAND(pe_import,
 			remote_data.ReadBuffer(&thunk_data, sizeof(thunk_data), TRUE);
 			remote_data.Set(cur_ori_thunk, sizeof(ori_thunk_data));
 			remote_data.ReadBuffer(&ori_thunk_data, sizeof(ori_thunk_data), TRUE);
+			ULONG thunk_count = 0;
 
 			for (;;) {
+				if (++thunk_count > kMaxPeImportThunks) {
+					Err("PE import thunk table is too large.\n");
+					return;
+				}
 				if (thunk_data.u1.Function == NULL) {
 					break;
+				}
+				if (ori_thunk_data.u1.AddressOfData == 0) {
+					Err("PE import thunk has no name or ordinal.\n");
+					return;
 				}
 
 				IMPORT_FUNC_INFO func_info;
@@ -1537,26 +1653,45 @@ EXT_COMMAND(pe_import,
 			return;
 		}
 
-		cur = addr + nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+		const ULONG image_size = nt_header.OptionalHeader.SizeOfImage;
+		const ULONG import_rva = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+		const ULONG import_size = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+		if (import_rva == 0 || import_size < sizeof(IMAGE_IMPORT_DESCRIPTOR) ||
+			!IsPeRvaInImage(import_rva, image_size, sizeof(IMAGE_IMPORT_DESCRIPTOR))) {
+			Err("Invalid or missing PE import directory.\n");
+			return;
+		}
+
+		cur = addr + import_rva;
 		ULONG64 cur_dir = cur;
 		remote_data.Set(cur_dir, sizeof(IMAGE_IMPORT_DESCRIPTOR));
 
 		IMAGE_IMPORT_DESCRIPTOR dir;
 		remote_data.ReadBuffer(&dir, sizeof(dir), TRUE);
+		ULONG descriptor_count = 0;
 
 		for (;;) {
+			if (++descriptor_count > kMaxPeImportModules) {
+				Err("PE import descriptor table is too large.\n");
+				return;
+			}
 			if (dir.Name == 0) {
 				break;
+			}
+			if (!IsPeRvaInImage(dir.Name, image_size, 1) || dir.FirstThunk == 0) {
+				Err("PE import descriptor contains an invalid RVA.\n");
+				return;
 			}
 
 			std::vector<IMPORT_FUNC_INFO> funcs_info;
 
 			ExtBuffer<char> module_name;
-			remote_data.Set(addr + dir.Name, 1024);
+			const ULONG module_name_max = (image_size - dir.Name) < 1024 ? (image_size - dir.Name) : 1024;
+			remote_data.Set(addr + dir.Name, module_name_max);
 			remote_data.GetString(&module_name);
 
 			ULONG64 cur_thunk = addr + dir.FirstThunk;
-			ULONG64 cur_ori_thunk = addr + dir.OriginalFirstThunk;
+			ULONG64 cur_ori_thunk = addr + (dir.OriginalFirstThunk != 0 ? dir.OriginalFirstThunk : dir.FirstThunk);
 
 			IMAGE_THUNK_DATA64 thunk_data;
 			IMAGE_THUNK_DATA64 ori_thunk_data;
@@ -1565,10 +1700,19 @@ EXT_COMMAND(pe_import,
 			remote_data.ReadBuffer(&thunk_data, sizeof(thunk_data), TRUE);
 			remote_data.Set(cur_ori_thunk, sizeof(ori_thunk_data));
 			remote_data.ReadBuffer(&ori_thunk_data, sizeof(ori_thunk_data), TRUE);
+			ULONG thunk_count = 0;
 
 			for (;;) {
+				if (++thunk_count > kMaxPeImportThunks) {
+					Err("PE import thunk table is too large.\n");
+					return;
+				}
 				if (thunk_data.u1.Function == NULL) {
 					break;
+				}
+				if (ori_thunk_data.u1.AddressOfData == 0) {
+					Err("PE import thunk has no name or ordinal.\n");
+					return;
 				}
 
 				IMPORT_FUNC_INFO func_info;
@@ -2245,7 +2389,7 @@ EXT_COMMAND(filepath,
 
 EXT_COMMAND(stackstat,
 	"Statistics duplicate stack data.",
-	"")
+	"{t;ed,o;Top;Show only the first N stack groups.}")
 {
 	ULONG thread_count = 0;
 	m_System->GetNumberThreads(&thread_count);
@@ -2292,8 +2436,12 @@ EXT_COMMAND(stackstat,
 
 	m_System->SetCurrentThreadId(current_dtid);
 	Dml("Duplicate threads stack:\r\n\r\n");
-	int i = 0;
+	const ULONG64 top = HasArg("t") ? GetArgU64("t") : 0;
+	ULONG i = 0;
 	for (std::map<CString, std::vector<CString>>::iterator it = stat_info.begin(); it != stat_info.end(); ++it) {
+		if (top != 0 && i >= top) {
+			break;
+		}
 		Dml("%u:\tCount = %Iu\r\n\t", i++, (*it).second.size());
 		for (std::vector<CString>::iterator it2 = (*it).second.begin(); it2 != (*it).second.end(); ++it2) {
 			Dml("%S ", (*it2).GetString());
@@ -2338,7 +2486,8 @@ CStringA FormatSize(ULONGLONG size)
 
 EXT_COMMAND(memstat,
 	"Statistics virtual memory allocation.",
-	"{m;b,o;Sort;Sort by total memory.}")
+	"{m;b,o;Sort;Sort by total memory.}"
+	"{t;ed,o;Top;Show only the first N entries.}")
 {
 	struct MemStatEntry {
 		DBG_MEMORY_BASIC_INFORMATION64 sample = {};
@@ -2389,9 +2538,14 @@ EXT_COMMAND(memstat,
 			});
 	}
 
+	const ULONG64 top = HasArg("t") ? GetArgU64("t") : 0;
 	Dml("Size              Count     Total(MB)      State     Protect   Type\r\n");
+	ULONG64 shown = 0;
 	for (std::vector<const MemStatEntry *>::const_iterator it = sort_result.begin();
 		it != sort_result.end(); ++it) {
+		if (top != 0 && shown++ >= top) {
+			break;
+		}
 		const MemStatEntry *entry = *it;
 		Dml("%016I64x  %8Iu  %s  %08x  %08x  %08x\r\n",
 			entry->sample.RegionSize, entry->count, FormatSize(entry->total_size).GetString(),
@@ -2832,10 +2986,12 @@ EXT_COMMAND(dlsym,
 	// AutoSetProxy auto_proxy;
 	if (HasArg("t")) {
 		timeout = (ULONG)GetArgU64("t");
+		timeout = timeout > 300000 ? 300000 : timeout;
 	}
 
 	if (HasArg("r")) {
 		retries = (ULONG)GetArgU64("r");
+		retries = retries == 0 ? 1 : (retries > 10 ? 10 : retries);
 	}
 
 	if (HasArg("p")) {
@@ -2949,7 +3105,13 @@ EXT_COMMAND(dlsym,
 			return;
 		}
 
-		DWORD expand_wait = WaitForSingleObject(exp_handle, INFINITE);
+		DWORD expand_wait = WaitForSingleObject(exp_handle, 30000);
+		if (expand_wait == WAIT_TIMEOUT) {
+			TerminateProcess(exp_handle, ERROR_TIMEOUT);
+			CloseHandle(exp_handle);
+			Err("Timed out expanding downloaded PDB file.\r\n");
+			return;
+		}
 		CloseHandle(exp_handle);
 		if (expand_wait != WAIT_OBJECT_0) {
 			Err("Failed to expand downloaded PDB file.\r\n");
@@ -3037,15 +3199,27 @@ EXT_COMMAND(carray,
 		return;
 	}
 
+	if (readlength == 0) {
+		Err("Failed to read any data.\r\n");
+		return;
+	}
+	if (readlength != length) {
+		Out("Warning: only 0x%x of 0x%x bytes were readable.\r\n", readlength, length);
+	}
+
+	std::string output;
+	output.reserve(static_cast<size_t>(readlength) * 7 + 64);
+	char byte_text[8] = {0};
 	Out("const unsigned char buffer[0x%x] = {", readlength);
 	for (ULONG i = 0; i < readlength; i++) {
 		if (i % 16 == 0) {
-			Out("\r\n\t");
+			output += "\r\n\t";
 		}
-
-		Out("0x%02x, ", buffer[i]);
+		sprintf_s(byte_text, "0x%02x, ", buffer[i]);
+		output += byte_text;
 	}
-	Out("\b\b };\r\n");
+	output += "\r\n};\r\n";
+	Out("%s", output.c_str());
 }
 
 HANDLE g_raw_socket_thread = NULL;

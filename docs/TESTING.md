@@ -20,10 +20,12 @@ The integration smoke test loads both extensions into `cdb.exe` and checks:
 - `0cchext.dll` loads
 - `!0cchext.version`
 - `!0cchext.diag`
+- `!0cchext.grep -F`
 - `luadbg.dll` loads
 - Lua file execution
 - Lua load/list/unload lifecycle
 - Lua syntax-error recovery without dangling state
+- Lua cyclic-table listing remains bounded
 
 Run manually:
 

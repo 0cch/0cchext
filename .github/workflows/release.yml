@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release base version, for example 1.20.3 or 1.20.3.8"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -34,7 +40,8 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $version = (& ./scripts/Resolve-ReleaseVersion.ps1 -Tag "${{ github.ref_name }}").Trim()
+          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.version }}" } else { "${{ github.ref_name }}" }
+          $version = (& ./scripts/Resolve-ReleaseVersion.ps1 -Tag $tag).Trim()
           "value=$version" >> $env:GITHUB_OUTPUT
 
       - name: Configure
@@ -82,22 +89,28 @@ jobs:
       - name: Package
         shell: pwsh
         run: |
-          $out = Join-Path $env:GITHUB_WORKSPACE "package"
-          New-Item -ItemType Directory -Force -Path "$out/x86", "$out/x64" | Out-Null
-          Copy-Item artifacts/release-x86/* "$out/x86" -Force
-          Copy-Item artifacts/release-x64/* "$out/x64" -Force
-          Copy-Item LICENSE, README.md "$out" -Force
-          Compress-Archive -Path "$out/*" -DestinationPath "0cchext-${{ github.ref_name }}.zip"
-          Get-FileHash "0cchext-${{ github.ref_name }}.zip" -Algorithm SHA256 |
+          $runtime = Join-Path $env:GITHUB_WORKSPACE "runtime"
+          $symbols = Join-Path $env:GITHUB_WORKSPACE "symbols"
+          New-Item -ItemType Directory -Force -Path "$runtime/x86", "$runtime/x64", "$symbols/x86", "$symbols/x64" | Out-Null
+          Copy-Item artifacts/release-x86/0cchext.dll, artifacts/release-x86/luadbg.dll "$runtime/x86" -Force
+          Copy-Item artifacts/release-x64/0cchext.dll, artifacts/release-x64/luadbg.dll "$runtime/x64" -Force
+          Copy-Item artifacts/release-x86/*.pdb "$symbols/x86" -Force
+          Copy-Item artifacts/release-x64/*.pdb "$symbols/x64" -Force
+          Copy-Item LICENSE, README.md "$runtime" -Force
+          Compress-Archive -Path "$runtime/*" -DestinationPath "0cchext-runtime-${{ github.ref_name }}.zip"
+          Compress-Archive -Path "$symbols/*" -DestinationPath "0cchext-symbols-${{ github.ref_name }}.zip"
+          Get-FileHash "0cchext-runtime-${{ github.ref_name }}.zip", "0cchext-symbols-${{ github.ref_name }}.zip" -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
             Set-Content "0cchext-${{ github.ref_name }}.sha256"
 
       - name: Publish
+        if: github.event_name == 'push'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ github.ref_name }}" `
-            "0cchext-${{ github.ref_name }}.zip" `
+            "0cchext-runtime-${{ github.ref_name }}.zip" `
+            "0cchext-symbols-${{ github.ref_name }}.zip" `
             "0cchext-${{ github.ref_name }}.sha256" `
             --generate-notes

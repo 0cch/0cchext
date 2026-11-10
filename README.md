@@ -27,6 +27,7 @@ The repository produces two extensions:
 ## Install
 
 1. Download the latest release from [GitHub Releases](https://github.com/0cch/0cchext/releases/latest).
+   The release provides a small runtime package and a separate symbols/PDB package.
 2. Choose the directory matching the debugger architecture:
    - `x64` for the 64-bit WinDbg or `cdb`
    - `x86` for the 32-bit WinDbg or `cdb`

@@ -5,6 +5,13 @@
 #include "lua.hpp"
 #include <mutex>
 
+namespace
+{
+constexpr size_t kMaxCapturedOutput = 1024 * 1024;
+constexpr int kMaxTableDepth = 16;
+constexpr size_t kMaxTableNodes = 4096;
+}
+
 class EXT_CLASS : public ExtExtension
 {
 public:
@@ -1189,7 +1196,12 @@ static int exec_tostring(lua_State* L)
 	capture_exec.Execute(cmd);
 	LPCSTR out_text = capture_exec.GetTextNonNull();
 
-	lua_pushstring(L, out_text);
+	const size_t output_length = strnlen_s(out_text, kMaxCapturedOutput);
+	std::string output(out_text, output_length);
+	if (output_length == kMaxCapturedOutput) {
+		output += "\n[debugger output truncated]";
+	}
+	lua_pushlstring(L, output.data(), output.size());
 
 	return 1;
 }
@@ -1657,6 +1669,10 @@ EXT_COMMAND(lua,
 	"{;x,r;path;Execute lua file path.}")
 {
 	LPCSTR path = GetUnnamedArgStr(0);
+	if (path == NULL || path[0] == '\0') {
+		Err("Missing Lua file path.\r\n");
+		return;
+	}
 	lua_State* L = CreateLuaState();
 	if (L == NULL) {
 		Err("Failed to create Lua state.\r\n");
@@ -1705,6 +1721,7 @@ EXT_COMMAND(luacmd,
 }
 
 std::map<CStringA, lua_State*> g_lua_loaded_list;
+std::set<CStringA> g_loading_list;
 std::set<CStringA> g_black_list;
 std::mutex g_lua_state_mutex;
 
@@ -1716,6 +1733,7 @@ void EXT_CLASS::Uninitialize(void)
 		lua_close(it->second);
 	}
 	g_lua_loaded_list.clear();
+	g_loading_list.clear();
 	g_black_list.clear();
 	__super::Uninitialize();
 }
@@ -1740,8 +1758,12 @@ EXT_COMMAND(luaload,
 	"{;x,r;path;lua file path.}")
 {
 	LPCSTR lua_file = GetUnnamedArgStr(0);
+	if (lua_file == NULL || lua_file[0] == '\0') {
+		Err("Missing Lua file path.\r\n");
+		return;
+	}
 	LPCSTR lua_name = PathFindFileNameA(lua_file);
-	if (lua_name == NULL) {
+	if (lua_name == NULL || lua_name[0] == '\0') {
 		Err("Cannot find lua file name.\r\n");
 		return;
 	}
@@ -1754,14 +1776,18 @@ EXT_COMMAND(luaload,
 
 	{
 		std::lock_guard<std::mutex> lock(g_lua_state_mutex);
-		if (g_lua_loaded_list.find(lua_lwr) != g_lua_loaded_list.end()) {
-			Err("script '%s' is loaded.\r\n", lua_name);
+		if (g_lua_loaded_list.find(lua_lwr) != g_lua_loaded_list.end() ||
+			g_loading_list.find(lua_lwr) != g_loading_list.end()) {
+			Err("script '%s' is already loaded or loading.\r\n", lua_name);
 			return;
 		}
+		g_loading_list.insert(lua_lwr);
 	}
 
 	lua_State* L = CreateLuaState();
 	if (L == NULL) {
+		std::lock_guard<std::mutex> lock(g_lua_state_mutex);
+		g_loading_list.erase(lua_lwr);
 		Err("Failed to create Lua state.\r\n");
 		return;
 	}
@@ -1776,12 +1802,15 @@ EXT_COMMAND(luaload,
 	if (luaL_dofile(L, lua_file) != 0) {
 		Err("lua error: %s\r\n", lua_tostring(L, -1));
 		lua_close(L);
+		std::lock_guard<std::mutex> lock(g_lua_state_mutex);
+		g_loading_list.erase(lua_lwr);
 		return;
 	}
 
 	{
 		std::lock_guard<std::mutex> lock(g_lua_state_mutex);
 		g_lua_loaded_list[lua_lwr] = L;
+		g_loading_list.erase(lua_lwr);
 	}
 }
 
@@ -1790,6 +1819,10 @@ EXT_COMMAND(luaunload,
 	"{;x,r;name;lua file name.}")
 {
 	LPCSTR lua_name = GetUnnamedArgStr(0);
+	if (lua_name == NULL || lua_name[0] == '\0') {
+		Err("Missing Lua script name.\r\n");
+		return;
+	}
 	CStringA lua_lwr = lua_name;
 	lua_lwr.MakeLower();
 
@@ -1811,6 +1844,10 @@ EXT_COMMAND(luado,
 	"{;x,r;lua string;lua code.}")
 {
 	LPCSTR lua_code = GetUnnamedArgStr(0);
+	if (lua_code == NULL || lua_code[0] == '\0') {
+		Err("Missing Lua code.\r\n");
+		return;
+	}
 
 	CStringA lua_code_str = lua_code;
 	int pos = lua_code_str.Find("!");
@@ -1824,16 +1861,13 @@ EXT_COMMAND(luado,
 
 	CStringA code_str(lua_code_str.GetString() + pos + 1);
 
-	lua_State* L = NULL;
-	{
-		std::lock_guard<std::mutex> lock(g_lua_state_mutex);
-		std::map<CStringA, lua_State*>::iterator ret = g_lua_loaded_list.find(script_name);
-		if (ret == g_lua_loaded_list.end()) {
-			Err("Cannot find script in loaded list.\r\n");
-			return;
-		}
-		L = ret->second;
+	std::lock_guard<std::mutex> lock(g_lua_state_mutex);
+	std::map<CStringA, lua_State*>::iterator ret = g_lua_loaded_list.find(script_name);
+	if (ret == g_lua_loaded_list.end()) {
+		Err("Cannot find script in loaded list.\r\n");
+		return;
 	}
+	lua_State* L = ret->second;
 	if (luaL_dostring(L, code_str.GetString()) != 0) {
 		Err("lua error: %s\r\n", lua_tostring(L, -1));
 	}
@@ -1846,11 +1880,25 @@ void PrintIndent(int indent)
 	}
 }
 
-void PrintTable(lua_State *L, int indent)
+void PrintTable(lua_State *L, int indent, std::set<const void*> &visited, size_t &node_count)
 {
+	const void *table_pointer = lua_topointer(L, -1);
+	if (table_pointer == NULL || indent > kMaxTableDepth ||
+		node_count >= kMaxTableNodes || !visited.insert(table_pointer).second) {
+		PrintIndent(indent);
+		g_Ext->Out("...\r\n");
+		return;
+	}
+
 	lua_pushnil(L);
 
 	while(lua_next(L, -2) != 0) {
+		if (++node_count > kMaxTableNodes) {
+			lua_pop(L, 2);
+			PrintIndent(indent);
+			g_Ext->Out("...\r\n");
+			break;
+		}
 
 		lua_pushvalue(L, -2);
 		lua_pushvalue(L, -2);
@@ -1865,7 +1913,6 @@ void PrintTable(lua_State *L, int indent)
 		g_Ext->Out("[%s] %s ", lua_typename(L, lua_type(L, -1)), key);
 
 		if(lua_isstring(L, -1)) {
-
 			g_Ext->Out("= %s\r\n", lua_tostring(L, -1));
 		}
 		else if(lua_isnumber(L, -1)) {
@@ -1873,7 +1920,7 @@ void PrintTable(lua_State *L, int indent)
 		}
 		else if(lua_istable(L, -1)) {
 			g_Ext->Out("\r\n");
-			PrintTable(L, indent + 1);
+			PrintTable(L, indent + 1, visited, node_count);
 		}
 		else {
 			g_Ext->Out("\r\n");
@@ -1882,7 +1929,6 @@ void PrintTable(lua_State *L, int indent)
 		lua_pop(L, 3);
 	}
 }
-
 EXT_COMMAND(lualist,
 	"list loaded scripts.",
 	"")
@@ -1893,9 +1939,11 @@ EXT_COMMAND(lualist,
 			Out("script: %s\r\n", it->first.GetString());
 
 			lua_State* L = it->second;
+			std::set<const void*> visited;
+			size_t node_count = 0;
 
 			lua_pushglobaltable(L);
-			PrintTable(L, 1);
+			PrintTable(L, 1, visited, node_count);
 			lua_pop(L,1);
 	}
 

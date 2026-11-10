@@ -36,6 +36,8 @@ SDK. Microsoft SDK headers and libraries are not copied into the repository.
 
 The release binaries are written to:
 
+Release workflow artifacts are split into a small runtime package (DLLs, README, license) and a separate symbols package (PDBs).
+
 ```text
 build/x86/bin
 build/x64/bin
@@ -61,7 +63,7 @@ cmake --preset vs2022-x64 -D0CCHEXT_USE_XED_2026=OFF
 - CI uses the first three components from `VERSION` plus the GitHub run number as the fourth component.
 - Pushes to ordinary branches do not run a workflow.
 - Pull requests and manual dispatches run `.github/workflows/ci.yml`.
-- Pushing a dotted numeric tag runs `.github/workflows/release.yml`, which builds and tests x86/x64, runs the cdb smoke test, and publishes a GitHub Release.
+- Pushing a dotted numeric tag runs `.github/workflows/release.yml`, which builds and tests x86/x64, runs the cdb smoke test, and publishes runtime and symbols packages to a GitHub Release.
 - A three-component tag such as `v1.20.3` selects the next fourth component from existing tags, for example `1.20.3.5`.
 - A four-component tag such as `v1.20.3.6` is treated as an exact version override.
 - Re-running the same release tag produces the same computed version when no newer matching tag exists.

@@ -16,7 +16,11 @@ class LegacyXedBackend final : public IAssemblerBackend
 public:
 	const char *Name() const override
 	{
-		return "Intel XED (legacy XEDParse)";
+#ifdef XEDPARSE_NEW_XED
+		return "Intel XED 2026 (XEDParse)";
+#else
+		return "Intel XED legacy (XEDParse)";
+#endif
 	}
 
 	HRESULT Assemble(const AssemblerRequest &request, AssemblerResult &result) override
