@@ -1,0 +1,3 @@
+interface:
+  display_name: "WinDbg Debugging"
+  short_description: "Triage Windows crashes with WinDbg, cdb, and 0cchext MCP"

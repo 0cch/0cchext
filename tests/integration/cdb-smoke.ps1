@@ -45,6 +45,8 @@ $outputPath = Join-Path $env:TEMP ("0cchext-cdb-" + [guid]::NewGuid().ToString("
 .load "$dllCommandPath"
 !0cchext.version
 !0cchext.diag
+!0cchext.agent capabilities
+!0cchext.agent status
 !0cchext.grep -F lm cmd
 !0cchext.accessmask process 0x1fffff
 !0cchext.carray $stackPointer 16
@@ -71,7 +73,7 @@ try {
     }
 
     $output = Get-Content -Raw $outputPath
-    if ($output -notmatch "0CCh Extension diagnostics" -or $output -notmatch "Version:" -or $output -notmatch "Only http and https URLs" -or $output -notmatch "lua-smoke") {
+    if ($output -notmatch "0CCh Extension diagnostics" -or $output -notmatch "Version:" -or $output -notmatch "Only http and https URLs" -or $output -notmatch "lua-smoke" -or $output -notmatch "mcp_server") {
         throw "Extension smoke test did not produce the expected diagnostics output."
     }
 }

@@ -88,6 +88,7 @@ public:
 	EXT_COMMAND_METHOD(gt);
 	EXT_COMMAND_METHOD(a64);
 	EXT_COMMAND_METHOD(diag);
+	EXT_COMMAND_METHOD(agent);
 
 	virtual HRESULT Initialize(void);
 	virtual void Uninitialize(void);
@@ -651,6 +652,46 @@ EXT_COMMAND(diag,
 #ifdef XED_VERSION
 	Out("XED version: %s\n", XED_VERSION);
 #endif
+}
+EXT_COMMAND(agent,
+	"Expose machine-readable agent capabilities and debugger status.",
+	"{;s,o;subcommand;capabilities or status}")
+{
+	PCSTR subcommand = HasUnnamedArg(0) ? GetUnnamedArgStr(0) : NULL;
+	if (subcommand == NULL || _stricmp(subcommand, "capabilities") == 0) {
+		Out("{\"ok\":true,\"data\":{\"mcp_server\":\"0cchext-agent.exe\",\"protocol\":\"mcp-stdio\",\"tools\":[");
+		Out("\"windbg.status\",\"windbg.snapshot\",\"windbg.registers\",\"windbg.modules\",\"windbg.stack\",");
+		Out("\"windbg.read_memory\",\"windbg.symbol\",\"windbg.evaluate\",\"windbg.execute\",");
+		Out("\"windbg.continue\",\"windbg.open_dump\",\"windbg.attach\",\"windbg.create\",");
+		Out("\"windbg.load_extension\"]}}\r\n");
+		return;
+	}
+	if (_stricmp(subcommand, "status") == 0) {
+		ULONG class_type = 0, qualifier_type = 0, execution_status = 0;
+		ULONG process_id = 0, thread_id = 0;
+		HRESULT hr = m_Control->GetDebuggeeType(&class_type, &qualifier_type);
+		if (FAILED(hr)) {
+			Out("{\"ok\":false,\"error\":{\"code\":\"DBGENG_ERROR\",\"message\":\"GetDebuggeeType failed\"}}\r\n");
+			return;
+		}
+		m_Control->GetExecutionStatus(&execution_status);
+		m_System->GetCurrentProcessId(&process_id);
+		m_System->GetCurrentThreadId(&thread_id);
+		ULONG event_type = 0, event_process_id = 0, event_thread_id = 0;
+		char event_description[256] = {0};
+		ULONG event_description_size = 0;
+		m_Control->GetLastEventInformation(&event_type, &event_process_id, &event_thread_id, nullptr, 0, nullptr,
+			event_description, _countof(event_description), &event_description_size);
+		if (process_id == 0) process_id = event_process_id;
+		if (thread_id == 0) thread_id = event_thread_id;
+		Out("{\"ok\":true,\"data\":{\"architecture\":\"%s\",\"debuggee_class\":\"%s\",\"state\":\"%s\",\"process_id\":%u,\"thread_id\":%u}}\r\n",
+			GetAddressPtrSize() == 8 ? "x64" : "x86",
+			class_type == DEBUG_CLASS_KERNEL ? "kernel" : "user",
+			execution_status == DEBUG_STATUS_BREAK ? "break" : (execution_status == DEBUG_STATUS_GO ? "running" : "unknown"),
+			process_id, thread_id);
+		return;
+	}
+	Err("Unknown agent subcommand '%s'. Use capabilities or status.\r\n", subcommand);
 }
 EXT_COMMAND(version,
 	"Displays the version information for 0cchext.dll",

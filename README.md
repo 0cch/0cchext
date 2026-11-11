@@ -10,10 +10,11 @@
 
 **Keywords:** WinDbg extension, cdb extension, Windows debugging, reverse engineering, x64 assembler, PE inspection, Lua automation.
 
-The repository produces two extensions:
+The repository produces two debugger extensions and an optional MCP sidecar:
 
 - `0cchext.dll` — the main extension
 - `luadbg.dll` — an optional Lua 5.4 extension
+- `0cchext-agent.exe` — a DbgEng MCP server for AI agents
 
 ## Why use it?
 
@@ -22,6 +23,7 @@ The repository produces two extensions:
 - **Focused commands**: inspect memory, stacks, threads, PE images, import/export tables, handles, errors, and WMI data.
 - **Workflow helpers**: run command queues, import Visual Studio breakpoints, log commands, search output, and create trace events.
 - **Lua automation**: load reusable scripts with `luadbg.dll` and keep script state isolated from the main extension.
+- **Agent-ready access**: `0cchext-agent.exe` exposes structured MCP tools for AI-assisted debugging workflows.
 - **Reproducible builds**: pinned dependencies, static CRT, CMake presets, unit tests, and cdb smoke tests.
 
 ## Install
@@ -102,7 +104,7 @@ Use `!0cchext.help <command>` for command-specific syntax. The full command inde
 | Assembly and data | `!a`, `!a64`, `!carray`, `!dpx`, `!du8`, `!rr`, `!accessmask`, `!dtx` |
 | Diagnostics and state | `!diag`, `!version`, `!memstat`, `!stackstat`, `!threadname`, `!filepath`, `!hwnd`, `!wql` |
 | PE and symbols | `!pe_export`, `!pe_import`, `!addmodule`, `!listmodule`, `!addsymbol`, `!listsymbol`, `!dlsym` |
-| Workflow | `!autocmd`, `!favcmd`, `!grep`, `!logcmd`, `!gt`, `!tracecreate`, `!traceclose`, `!tracedisplay` |
+| Workflow | `!agent`, `!autocmd`, `!favcmd`, `!grep`, `!logcmd`, `!gt`, `!tracecreate`, `!traceclose`, `!tracedisplay` |
 | Utilities | `!url`, `!google`, `!bing`, `!setvprot`, `!err`, `!dttoc`, `!rawpcap_start`, `!rawpcap_stop` |
 | Lua | `!luadbg.lua`, `!luadbg.luacmd`, `!luadbg.luaload`, `!luadbg.lualist`, `!luadbg.luaunload`, `!luadbg.luado` |
 
@@ -155,11 +157,13 @@ See [docs/TESTING.md](docs/TESTING.md) for the test matrix and manual smoke test
 ```text
 0cchext/          Main WinDbg extension sources
 extensions/luadbg Optional Lua extension
+agent/             MCP stdio server and JSON protocol implementation
 compat/windbg/    EngExtCpp compatibility sources for CI
 cmake/            Build integration and dependency pinning
 docs/             User, build, command, and test documentation
 tests/            Unit and cdb integration tests
 scripts/          Release/version helpers
+.agents/skills/   Agent debugging skill and references
 ```
 
 ## Contributing
@@ -176,6 +180,8 @@ If this project saves you debugging time, a star helps other reverse engineers f
 ## Links
 
 - [Command Reference](docs/COMMANDS.md)
+- [Agent Integration](docs/AGENT.md)
+- [WinDbg Agent Skill](.agents/skills/windbg-debugging/SKILL.md)
 - [Build Guide](docs/BUILD.md)
 - [Testing Guide](docs/TESTING.md)
 - [Chinese introduction](http://0cch.com/debugging/2015/10/06/0cchext.html)

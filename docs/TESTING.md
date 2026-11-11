@@ -11,6 +11,7 @@ Current unit tests cover:
 
 - command-line/text utility behavior
 - URL component encoding
+- MCP stdio protocol and tool discovery (`agent_mcp`)
 - x86/x64 assembler regressions for `nop`, `mov`, `xor`, `push`, memory operands, branches, AVX-512, `lock` prefixes, and invalid input
 
 ## CDB smoke tests

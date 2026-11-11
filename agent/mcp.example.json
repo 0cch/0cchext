@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "0cchext-x64": {
+      "command": "C:\\tools\\0cchext\\x64\\0cchext-agent.exe",
+      "args": [
+        "--extension",
+        "C:\\tools\\0cchext\\x64\\0cchext.dll",
+        "--create",
+        "C:\\target\\app.exe"
+      ]
+    }
+  }
+}

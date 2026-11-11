@@ -27,3 +27,16 @@ set_target_properties(assembler_tests PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 add_test(NAME assembler COMMAND assembler_tests)
+find_program(PWSH_EXECUTABLE NAMES pwsh)
+if(PWSH_EXECUTABLE)
+    add_test(NAME agent_mcp
+        COMMAND "${PWSH_EXECUTABLE}" -NoProfile -File
+            "${CMAKE_CURRENT_SOURCE_DIR}/agent/mcp-smoke.ps1"
+            -AgentExe "$<TARGET_FILE:0cchext-agent>"
+    )
+    add_test(NAME agent_mcp_session
+        COMMAND "${PWSH_EXECUTABLE}" -NoProfile -File
+            "${CMAKE_CURRENT_SOURCE_DIR}/agent/mcp-session-smoke.ps1"
+            -AgentExe "$<TARGET_FILE:0cchext-agent>"
+    )
+endif()

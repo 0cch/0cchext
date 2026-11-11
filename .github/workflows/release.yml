@@ -69,6 +69,8 @@ jobs:
             build/${{ matrix.arch }}/bin/0cchext.pdb
             build/${{ matrix.arch }}/bin/luadbg.dll
             build/${{ matrix.arch }}/bin/luadbg.pdb
+            build/${{ matrix.arch }}/bin/0cchext-agent.exe
+            build/${{ matrix.arch }}/bin/0cchext-agent.pdb
           if-no-files-found: error
 
   publish:
@@ -92,8 +94,8 @@ jobs:
           $runtime = Join-Path $env:GITHUB_WORKSPACE "runtime"
           $symbols = Join-Path $env:GITHUB_WORKSPACE "symbols"
           New-Item -ItemType Directory -Force -Path "$runtime/x86", "$runtime/x64", "$symbols/x86", "$symbols/x64" | Out-Null
-          Copy-Item artifacts/release-x86/0cchext.dll, artifacts/release-x86/luadbg.dll "$runtime/x86" -Force
-          Copy-Item artifacts/release-x64/0cchext.dll, artifacts/release-x64/luadbg.dll "$runtime/x64" -Force
+          Copy-Item artifacts/release-x86/0cchext.dll, artifacts/release-x86/luadbg.dll, artifacts/release-x86/0cchext-agent.exe "$runtime/x86" -Force
+          Copy-Item artifacts/release-x64/0cchext.dll, artifacts/release-x64/luadbg.dll, artifacts/release-x64/0cchext-agent.exe "$runtime/x64" -Force
           Copy-Item artifacts/release-x86/*.pdb "$symbols/x86" -Force
           Copy-Item artifacts/release-x64/*.pdb "$symbols/x64" -Force
           Copy-Item LICENSE, README.md "$runtime" -Force

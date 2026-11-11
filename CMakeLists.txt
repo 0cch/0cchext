@@ -52,6 +52,27 @@ if(0CCHEXT_BUILD_LUADBG)
     add_subdirectory(extensions/luadbg)
 endif()
 
+add_executable(0cchext-agent
+    agent/main.cpp
+    agent/debug_session.cpp
+    agent/debug_session.h
+    agent/json_value.cpp
+    agent/json_value.h
+    agent/mcp_server.cpp
+    agent/mcp_server.h
+)
+target_include_directories(0cchext-agent PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/agent"
+    "${WINDOWS_SDK_INCLUDE_DIR}"
+    "${WINDBG_ENGEXTCPP_INCLUDE_DIR}"
+)
+target_link_libraries(0cchext-agent PRIVATE
+    "${DBGENG_LIBRARY}"
+    "${DBGHELP_LIBRARY}"
+    ole32
+)
+cchext_configure_project_target(0cchext-agent)
+
 include(CTest)
 add_subdirectory(tests)
 
@@ -59,4 +80,5 @@ install(TARGETS 0cchext RUNTIME DESTINATION "bin/${WINDBG_ARCH}")
 if(TARGET luadbg)
     install(TARGETS luadbg RUNTIME DESTINATION "bin/${WINDBG_ARCH}")
 endif()
+install(TARGETS 0cchext-agent RUNTIME DESTINATION "bin/${WINDBG_ARCH}")
 install(FILES LICENSE README.md DESTINATION ".")

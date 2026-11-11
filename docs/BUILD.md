@@ -36,7 +36,7 @@ SDK. Microsoft SDK headers and libraries are not copied into the repository.
 
 The release binaries are written to:
 
-Release workflow artifacts are split into a small runtime package (DLLs, README, license) and a separate symbols package (PDBs).
+Release workflow artifacts are split into a small runtime package (DLLs, `0cchext-agent.exe`, README, license) and a separate symbols package (PDBs).
 
 ```text
 build/x86/bin

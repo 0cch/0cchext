@@ -7,7 +7,7 @@ Run `!0cchext.help` in WinDbg to list commands and `!0cchext.help <command>` for
 | Area | Commands |
 |---|---|
 | Assembly and data | `!a`, `!a64`, `!carray`, `!dpx`, `!du8`, `!rr`, `!accessmask`, `!dtx` |
-| Diagnostics and process state | `!diag`, `!version`, `!memstat`, `!stackstat`, `!threadname`, `!filepath`, `!hwnd`, `!wql` |
+| Diagnostics and process state | `!agent`, `!diag`, `!version`, `!memstat`, `!stackstat`, `!threadname`, `!filepath`, `!hwnd`, `!wql` |
 | PE, modules, and symbols | `!pe_export`, `!pe_import`, `!addmodule`, `!removemodule`, `!listmodule`, `!addsymbol`, `!removesymbol`, `!listsymbol`, `!dlsym`, `!setdlsympath` |
 | Workflow and debugging | `!autocmd`, `!favcmd`, `!grep`, `!logcmd`, `!gt`, `!tracecreate`, `!traceclose`, `!traceclear`, `!tracedisplay`, `!setvprot`, `!init_script_env`, `!import_vs_bps`, `!err`, `!dttoc` |
 | Network and capture | `!url`, `!google`, `!bing`, `!rawpcap_start`, `!rawpcap_stop` |
@@ -58,6 +58,16 @@ Search captured debugger command output for matching lines.
 - `-o` suppresses matching lines and is useful when only aliases or the count are needed.
 
 Output is capped at 4 MiB to prevent a runaway search from freezing the debugger.
+### !agent
+
+Machine-readable discovery for the companion MCP server.
+
+```text
+!0cchext.agent capabilities
+!0cchext.agent status
+```
+
+`capabilities` lists the available MCP tools. `status` returns the current architecture, target class, execution state, process ID, and thread ID as JSON. The companion server is `0cchext-agent.exe`; see [docs/AGENT.md](../docs/AGENT.md).
 ### !autocmd
 > !autocmd         - Execute the debugger commands.(The config file is
                      autocmd.ini)

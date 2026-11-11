@@ -69,5 +69,7 @@ jobs:
             build/${{ matrix.arch }}/bin/0cchext.pdb
             build/${{ matrix.arch }}/bin/luadbg.dll
             build/${{ matrix.arch }}/bin/luadbg.pdb
+            build/${{ matrix.arch }}/bin/0cchext-agent.exe
+            build/${{ matrix.arch }}/bin/0cchext-agent.pdb
           if-no-files-found: error
           retention-days: 14

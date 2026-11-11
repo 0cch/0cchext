@@ -10,6 +10,7 @@ EXPORTS
 	grep
 	version
 	diag
+	agent
 	url
 	favcmd
 	dtx
